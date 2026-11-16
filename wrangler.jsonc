@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "barista-order-lab",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-11-15",
+  "workers_dev": true,
+  "preview_urls": false,
+  "build": { "command": "npm run build" },
+  "vars": {
+    "DECISION_PROVIDER": "decider",
+    "DECISION_MODEL": "perplexity/pplx-decider-v1.3:free",
+    "MENU_QUESTION_PROFILE": "lean-v9",
+    "DECISION_SCHEDULING": "guarded-overlap",
+    "REQUIRE_TURN_RATE_LIMIT": "true"
+  },
+  "ratelimits": [
+    {
+      "name": "TURN_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ]
+}

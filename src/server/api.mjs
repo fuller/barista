@@ -14,6 +14,22 @@ const decisionCache=createDecisionCache();
 const registry=createRegistry({decider:createMenuDeciderAdapter});
 const menuQuestionProfiles=new Set(['lean-v8','lean-v9']);
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+const admissionConfigured=env=>env.REQUIRE_TURN_RATE_LIMIT!=='true'||typeof env.TURN_RATE_LIMITER?.limit==='function';
+async function admitTurn(request,env){
+ const limiter=env.TURN_RATE_LIMITER;
+ if(!admissionConfigured(env))return json({error:'Ordering is temporarily unavailable.'},503);
+ if(!limiter)return null;
+ // Cloudflare overwrites this header at its edge. Never trust a user-supplied
+ // address when adapting this boundary to a different hosting platform.
+ const address=request.headers.get('CF-Connecting-IP');
+ if(!address)return json({error:'Ordering is temporarily unavailable.'},503);
+ try{
+  const result=await limiter.limit({key:`turn:${address}`});
+  if(result.success===true)return null;
+  const response=json({error:'Too many ordering requests. Please wait a minute and try again.'},429);
+  response.headers.set('Retry-After','60');return response;
+ }catch{return json({error:'Ordering is temporarily unavailable.'},503);}
+}
 async function limitedJson(request){
  const reader=request.body?.getReader();if(!reader)throw new Error('Missing request body');let length=0;const chunks=[];
  while(true){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>65536){await reader.cancel();throw Object.assign(new Error('Request is too large'),{status:413});}chunks.push(value);}
@@ -46,7 +62,7 @@ export async function handleApi(request,env={}){
   if(request.method!=='GET')return json({error:'Method not allowed'},405);
   const result=catalogResponse(request);return new Response(result.body===null?null:JSON.stringify(result.body),{status:result.status,headers:result.headers});
  }
- if(path==='/api/config'&&request.method==='GET')return json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{zip:'11201',estimated:true,taxCalculated:false}});
+ if(path==='/api/config'&&request.method==='GET')return json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{zip:'11201',estimated:true,taxCalculated:false}});
  if(path!=='/api/turn')return json({error:'Not found'},404);
  if(request.method!=='POST')return json({error:'Method not allowed'},405);
  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'Origin not allowed'},403);
@@ -56,6 +72,7 @@ export async function handleApi(request,env={}){
   if(!schedulingValid)return json({error:'The server decision scheduling is not configured correctly.'},503);
   if(questionProfile===null)return json({error:'The server menu question profile is not configured correctly.'},503);
   if(!env.OPENROUTER_API_KEY||!registry.has(provider))return json({error:'Live decision provider is not configured. Configure a supported provider and the server-only OPENROUTER_API_KEY.'},503);
+  const denied=await admitTurn(request,env);if(denied)return denied;
   const adapter=registry.resolve(provider,{apiKey:env.OPENROUTER_API_KEY,model,questionProfile,scheduling,cache:decisionCache});
   // Legacy pending slots still receive revision/cancel checks, but the generic
   // menu path treats a new utterance literally instead of concatenating history.

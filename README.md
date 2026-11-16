@@ -2,6 +2,8 @@
 
 A text and browser-voice ordering simulator using a recorded Starbucks public menu. Browse products, build a cart, and attach literal customization requests. No payment or café submission. Not affiliated with Starbucks.
 
+[Try the live app](https://barista-order-lab.andrew-fuller.workers.dev).
+
 ## Run locally
 
 Clone this repository, enter its directory, then use Node 22.22.3 (pinned in `.node-version`) or Node 24.8+:
@@ -16,6 +18,10 @@ npm run dev
 Open http://127.0.0.1:4173. Restart after source or configuration changes. Keep `.env` private. Credentials belong only on the server. Without a configured provider, conversational ordering is unavailable; manual menu controls remain usable. Live interpretation sends text and relevant cart context to OpenRouter and can incur provider charges.
 
 The default model is `perplexity/pplx-decider-v1.3:free`. `MENU_QUESTION_PROFILE=lean-v9` selects the current profile; `lean-v8` provides rollback. `DECISION_SCHEDULING=guarded-overlap` is the default; `sequential` provides rollback. A different model requires independent validation.
+
+## Deploy
+
+Deploy the portable Worker to Cloudflare: [deployment guide](docs/deployment.md).
 
 ## Scope
 

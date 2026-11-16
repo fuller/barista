@@ -17,3 +17,8 @@ live-*-results.json
 live-results.json
 .openai/
 .DS_Store
+
+# Wrangler local state and server-only development secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
