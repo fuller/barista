@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createOrder,applyCommands} from '../src/domain/order.mjs';
+import {PRICE_BOOK,quoteOrder,formatMoney} from '../src/domain/pricing.mjs';
+const order=(changes={},productId='latte')=>applyCommands(createOrder(),[{type:'add',productId,changes}]);
+test('sample latte cents',()=>assert.equal(quoteOrder(order()).subtotalCents,525));
+test('size reprices',()=>assert.equal(quoteOrder(order({size:'venti'})).subtotalCents,575));
+test('extra shot',()=>assert.equal(quoteOrder(order({shots:3})).subtotalCents,650));
+test('no credit fewer shots',()=>assert.equal(quoteOrder(order({shots:0})).subtotalCents,525));
+test('added syrup per pump',()=>assert.equal(quoteOrder(order({syrup:'vanilla',pumps:9})).subtotalCents,705));
+test('zero pumps no syrup charge',()=>assert.equal(quoteOrder(order({syrup:'vanilla',pumps:0})).subtotalCents,525));
+test('recipe syrup included',()=>assert.equal(quoteOrder(order({},'mocha')).subtotalCents,575));
+test('added whip',()=>assert.equal(quoteOrder(order({whip:true})).subtotalCents,585));
+test('quantity and lines',()=>{const q=quoteOrder(order({shots:3,quantity:3}));assert.equal(q.totalCents,1950);assert.equal(q.items[0].lines.reduce((s,l)=>s+l.amountCents,0),q.items[0].unitCents)});
+test('tax unknown',()=>{const q=quoteOrder(order());assert.equal(q.taxCents,null);assert.equal(q.estimated,true);assert.equal(q.taxLabel,'Tax not calculated')});
+test('replace book',()=>{const b=structuredClone(PRICE_BOOK);b.basePrices.latte.grande=100;b.modifiers.milkSurcharges.oat=25;assert.equal(quoteOrder(order({milk:'oat'}),b).subtotalCents,125)});
+test('format money',()=>assert.equal(formatMoney(525),'$5.25'));

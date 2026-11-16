@@ -1,0 +1,7 @@
+{
+  "fetchedAt": "2026-11-14T15:12:26.607Z",
+  "sourceUrl": "https://www.starbucks.com/apiproxy/v1/ordering/2123425/iced",
+  "status": 200,
+  "contentType": "application/json",
+  "transport": "Existing fixed-origin StarbucksWebsiteSource; credentials omit; no authentication/cookies/bypass"
+}

@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "menuVersion": "starbucks-menu-b06e76b0e1761aef",
+  "evidenceClass": "targeted-development-regression",
+  "cases": [
+    {
+      "id": "explicit-one",
+      "text": "one latte",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "one-size",
+      "text": "one grande latte",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "one-ingredient-count",
+      "text": "one latte with two extra shots",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "article-ingredient-one",
+      "text": "a latte with one extra shot",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "correct-two-to-one",
+      "text": "two lattes, actually just one latte",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "correct-one-to-two",
+      "text": "one latte, actually two lattes",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 2
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "two-one-pound-packages",
+      "text": "Two one-pound bags of Pike Place Roast whole beans",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "24:Whole-Bean",
+            "size": "1-lb",
+            "quantity": 2,
+            "instructionIncludes": [
+              "one-pound"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "package-contents-one",
+      "text": "One 12-count box of Starbucks VIA Instant Pike Place Roast",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "24:VIA",
+            "size": "12-count",
+            "quantity": 1,
+            "instructionIncludes": [
+              "12-count"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "zero-count",
+      "text": "add zero lattes",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "outside-count-range",
+      "text": "add 101 lattes",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "separate-one-and-two",
+      "text": "one latte and two Americanos",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          },
+          {
+            "identity": "406:Hot",
+            "size": null,
+            "quantity": 2
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu",
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "invalid-source-size",
+      "text": "one Trenta hot latte",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      },
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "split": "dev"
+    }
+  ]
+}

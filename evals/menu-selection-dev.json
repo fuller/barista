@@ -1,0 +1,849 @@
+{
+  "schemaVersion": 1,
+  "split": "dev",
+  "menuVersion": "starbucks-menu-b06e76b0e1761aef",
+  "cases": [
+    {
+      "id": "plain-latte",
+      "text": "a latte",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "defaults",
+        "beverage"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "iced-latte-modifiers",
+      "text": "A grande iced latte with oat milk and two pumps vanilla",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Iced",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "oat milk",
+              "two pumps vanilla"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "size",
+        "notes",
+        "modifier-quantity"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "bearista-cake-pop",
+      "text": "one Bearista cake pop",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "40739:Single",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "food",
+        "unmapped"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "short-rib-sandwich",
+      "text": "A Braised Short Rib Grilled Cheese, warmed please",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "40734:Single",
+            "size": null,
+            "quantity": 1,
+            "instructionIncludes": [
+              "warmed"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "food",
+        "notes"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "whole-bean-pike",
+      "text": "A one-pound bag of Pike Place Roast whole beans",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "24:Whole-Bean",
+            "size": "1-lb",
+            "quantity": 1,
+            "instructionIncludes": [
+              "one-pound"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "packaged-coffee",
+        "source-size"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "instant-pike",
+      "text": "One 12-count box of Starbucks VIA Instant Pike Place Roast",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "24:VIA",
+            "size": "12-count",
+            "quantity": 1,
+            "instructionIncludes": [
+              "12-count"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "packaged-coffee",
+        "product-form",
+        "package-not-quantity"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "packaged-water",
+      "text": "One 20-ounce DASANI water bottle",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2123597:Packaged",
+            "size": "20-Packaged",
+            "quantity": 1,
+            "instructionIncludes": [
+              "20-ounce"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "simple",
+        "packaged-beverage",
+        "source-size"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "shared-milk",
+      "text": "Add one latte and one mocha, both with oat milk",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1,
+            "instructionIncludes": [
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": null,
+            "quantity": 1,
+            "instructionIncludes": [
+              "oat milk"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "compound",
+        "shared-scope",
+        "notes"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "voice-american",
+      "text": "one American",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "406:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "voice-variant",
+        "defaults"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "voice-americana-compound",
+      "text": "one Americana and one cold brew",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "406:Hot",
+            "size": null,
+            "quantity": 1
+          },
+          {
+            "identity": "2121255:Iced",
+            "size": null,
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "voice-variant",
+        "compound",
+        "defaults"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "two-warmed-croissants",
+      "text": "Two chocolate croissants, warmed",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "1028:Single",
+            "size": null,
+            "quantity": 2,
+            "instructionIncludes": [
+              "warmed"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "food",
+        "quantity",
+        "notes"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "local-milk-ownership",
+      "text": "Add a tall latte with oat milk and add a grande mocha with whole milk",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "oat milk"
+            ],
+            "instructionExcludes": [
+              "whole milk"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "whole milk"
+            ],
+            "instructionExcludes": [
+              "oat milk"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "compound",
+        "local-scope",
+        "size",
+        "notes"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "add-to-populated-cart",
+      "text": "Add a latte",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "40739:Single",
+          "size": null,
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "40739:Single",
+            "size": null,
+            "quantity": 1
+          },
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "add-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "addition"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "ordinal-size-update",
+      "text": "Make the first item Venti",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "with oat milk"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "2121255:Iced",
+          "size": "Grande",
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "first item Venti",
+              "with oat milk"
+            ]
+          },
+          {
+            "identity": "2121255:Iced",
+            "size": "Grande",
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "update",
+        "ordinal",
+        "size"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "ingredient-removal-is-update",
+      "text": "Remove whipped cream from the latte",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Remove whipped cream from the latte"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "update",
+        "ingredient-removal",
+        "notes"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "duplicate-existing-item",
+      "text": "Duplicate the latte",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1,
+          "instructions": [
+            "with oat milk"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "with oat milk"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Duplicate the latte",
+              "with oat milk"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "duplicate"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "duplicate"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "duplicate-with-product-change",
+      "text": "Duplicate the latte as a grande iced Americano",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1
+          },
+          {
+            "identity": "406:Iced",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "grande iced Americano"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "duplicate"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "duplicate",
+        "replacement",
+        "product-form"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "replace-first-product",
+      "text": "Replace the first item with a tall cold brew",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "40739:Single",
+          "size": null,
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2121255:Iced",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "tall cold brew"
+            ]
+          },
+          {
+            "identity": "40739:Single",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "replacement",
+        "ordinal",
+        "size"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "remove-whole-second-item",
+      "text": "Remove the second item",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "40739:Single",
+          "size": null,
+          "quantity": 2
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "remove"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "remove",
+        "ordinal"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "clear-cart",
+      "text": "Clear my order",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": null,
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "40739:Single",
+          "size": null,
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [],
+        "expectedCommandTypes": [
+          "clear"
+        ],
+        "confirmed": false
+      },
+      "tags": [
+        "populated-cart",
+        "global",
+        "clear"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "confirm-cart",
+      "text": "Confirm my order",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": null,
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "40739:Single",
+          "size": null,
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          },
+          {
+            "identity": "40739:Single",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "expectedCommandTypes": [
+          "confirm"
+        ],
+        "confirmed": true
+      },
+      "tags": [
+        "populated-cart",
+        "global",
+        "confirm"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "conflicting-global-actions",
+      "text": "Confirm this order and clear it at the same time",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": null,
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "clarify",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": null,
+            "quantity": 1
+          }
+        ],
+        "confirmed": false
+      },
+      "tags": [
+        "populated-cart",
+        "global",
+        "conflict"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "ambiguous-existing-target",
+      "text": "Make one of the two lattes iced",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Tall",
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "clarify",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Tall",
+            "quantity": 1
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "ambiguous-target",
+        "no-mutation"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "unknown-base-product",
+      "text": "Add a dragon volcano milkshake",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      },
+      "tags": [
+        "no-match",
+        "no-mutation"
+      ],
+      "split": "dev"
+    },
+    {
+      "id": "explicit-product-correction",
+      "split": "dev",
+      "text": "A latte, actually make it an Americano",
+      "seedCommands": [],
+      "tags": [
+        "correction",
+        "product-identity",
+        "single-final-item"
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "406:Hot",
+            "size": null,
+            "quantity": 1,
+            "instructionIncludes": [
+              "actually make it an Americano"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nationality-is-not-coffee",
+      "split": "dev",
+      "text": "I am American",
+      "seedCommands": [],
+      "tags": [
+        "voice-variant",
+        "false-homophone",
+        "no-order",
+        "no-mutation"
+      ],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      }
+    },
+    {
+      "id": "negated-hot-format",
+      "split": "dev",
+      "text": "An iced latte, not the hot latte",
+      "seedCommands": [],
+      "tags": [
+        "negation",
+        "product-form",
+        "single-final-item"
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Iced",
+            "size": null,
+            "quantity": 1,
+            "instructionIncludes": [
+              "not the hot latte"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

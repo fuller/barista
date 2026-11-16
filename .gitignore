@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.sites-runtime/
+.sites-checkout/
+.superpowers/
+.e2e/
+.gstack/
+
+# Local experiments, generated evidence, source archives
+work/
+release/
+*.log
+live-*-results.json
+live-results.json
+.openai/
+.DS_Store

@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "split": "holdout",
+  "menuVersion": "starbucks-menu-b06e76b0e1761aef",
+  "cases": [
+    {
+      "id": "held-beverage-01",
+      "text": "A grande Caramel Snowy Apple Drink",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "41392:Iced",
+            "size": "Grande",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "simple",
+        "beverage",
+        "source-size"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-beverage-02",
+      "text": "One venti Iced Protein Matcha",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "28502:Iced",
+            "size": "Venti",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "simple",
+        "beverage",
+        "source-size"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-beverage-03",
+      "text": "A tall iced gingerbread chai, light ice",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "28520:Iced",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "light ice"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "simple",
+        "beverage",
+        "notes"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-food-01",
+      "text": "One Sugar Plum Cheese Danish",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2122869:Single",
+            "size": null,
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "simple",
+        "food"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-beverage-04",
+      "text": "A short Brown Sugar Oatmilk Cortado",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2124651:Hot",
+            "size": "Short",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "simple",
+        "beverage",
+        "product-identity"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-food-02",
+      "text": "Two Bacon and Gruyere Egg Bites, warmed",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2122116:Single",
+            "size": null,
+            "quantity": 2,
+            "instructionIncludes": [
+              "warmed"
+            ]
+          }
+        ]
+      },
+      "tags": [
+        "food",
+        "quantity",
+        "notes"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-packaged-01",
+      "text": "One pound of Sumatra whole bean coffee",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "8:Whole-Bean",
+            "size": "1-lb",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "packaged-coffee",
+        "source-size"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-packaged-02",
+      "text": "An eleven-ounce Koia Cacao Bean Nutrition Shake",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "27527:Packaged",
+            "size": "11-Packaged",
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "packaged-beverage",
+        "source-size"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-compound-01",
+      "text": "One tall Lavender Latte and one Blueberry Streusel Muffin",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "34919:Hot",
+            "size": "Tall",
+            "quantity": 1
+          },
+          {
+            "identity": "2123882:Single",
+            "size": null,
+            "quantity": 1
+          }
+        ]
+      },
+      "tags": [
+        "compound",
+        "food",
+        "beverage"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-update-01",
+      "text": "Take caramel drizzle off the second drink",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "2123644:Iced",
+          "size": "Tall",
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "413:Hot",
+          "size": "Grande",
+          "quantity": 1
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "2123644:Iced",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionExcludes": [
+              "caramel drizzle"
+            ]
+          },
+          {
+            "identity": "413:Hot",
+            "size": "Grande",
+            "quantity": 1,
+            "instructionIncludes": [
+              "caramel drizzle"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "update",
+        "ingredient-removal",
+        "ordinal"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-replacement-01",
+      "text": "Swap the first item for a Cheese Danish",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "1033:Single",
+          "size": null,
+          "quantity": 1
+        },
+        {
+          "type": "add-menu",
+          "identity": "1130:Single",
+          "size": null,
+          "quantity": 2
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "1040:Single",
+            "size": null,
+            "quantity": 1
+          },
+          {
+            "identity": "1130:Single",
+            "size": null,
+            "quantity": 2
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "populated-cart",
+        "replacement",
+        "food",
+        "ordinal"
+      ],
+      "split": "holdout"
+    },
+    {
+      "id": "held-no-match-01",
+      "text": "Add a starship nebula smoothie",
+      "seedCommands": [],
+      "expected": {
+        "outcome": "clarify",
+        "items": []
+      },
+      "tags": [
+        "no-match",
+        "no-mutation"
+      ],
+      "split": "holdout"
+    }
+  ]
+}

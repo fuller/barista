@@ -1,0 +1,1 @@
+export const PRODUCT_IDS={'2123425':'shaken-espresso','407':'latte','406':'americano','408':'mocha','2121255':'cold-brew','466':'chai','409':'cappuccino','565':'flat-white','410':'espresso','468':'matcha','457':'black-tea','2121342':'refresher','426':'mocha-frappuccino'};

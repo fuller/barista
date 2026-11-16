@@ -1,0 +1,13 @@
+import snapshot from './data/starbucks.snapshot.json' with {type:'json'};
+import {CATALOG,getDefaults} from './legacy-recipes.mjs';
+export const LEGACY_CATALOG_VERSION='legacy-sample-v1';
+const copy=value=>structuredClone(value);
+export {validateCatalogSnapshot} from './validate-snapshot.mjs';
+import {validateCatalogSnapshot} from './validate-snapshot.mjs';
+export function createCatalogService(input){const data=copy(validateCatalogSnapshot(input));const find=(identity,temperature)=>data.products.find(p=>p.identity===identity||p.productId===identity&&(!temperature||p.temperature===temperature));return Object.freeze({version:data.version,provenance:copy(data.provenance),getSnapshot:()=>copy(data),getProduct(identity,temperature){const p=find(identity,temperature);return p?copy(p):undefined;},getRecipe(identity,size='grande',temperature){const p=find(identity,temperature);const recipe=p?.sizes.find(s=>s.size===size)?.recipe;if(!recipe)throw new Error('Unsupported catalog product, size or temperature');return copy(recipe);},getSupportedOptions(identity,size,temperature){const p=find(identity,temperature);if(!p||size&&!p.sizes.some(s=>s.size===size))throw new Error('Unsupported catalog product or size');return copy(p.options.filter(o=>o.mapping));},get products(){return copy(data.supportedProducts);},isStale(now=Date.now()){return now-Date.parse(data.provenance.fetchedAt)>86400000;}});}
+const legacy=Object.freeze({version:LEGACY_CATALOG_VERSION,provenance:{source:'Illustrative sample catalog',fetchedAt:null,sourceUrls:[],storeContext:null},products:CATALOG,getRecipe:(id,size,temperature)=>({defaults:getDefaults(id,size,temperature),included:[],unsupported:[]}),getProduct:id=>CATALOG.find(p=>p.id===id)});
+const registry=new Map([[LEGACY_CATALOG_VERSION,legacy]]);export const defaultCatalogService=createCatalogService(snapshot);registry.set(defaultCatalogService.version,defaultCatalogService);
+export function registerCatalogSnapshot(data){const service=createCatalogService(data);if(registry.has(service.version)){const existing=registry.get(service.version);const facts=s=>{const {provenance,...content}=s;return JSON.stringify(content);};if(!existing.getSnapshot||facts(existing.getSnapshot())!==facts(service.getSnapshot()))throw new Error('Catalog version collision');return existing;}registry.set(service.version,service);return service;}
+export function getCatalogService(version=LEGACY_CATALOG_VERSION){const service=registry.get(version);if(!service)throw new Error('Catalog version unavailable; start a new order');return service;}
+export function hasCatalogVersion(version){return registry.has(version??LEGACY_CATALOG_VERSION);}
+export const currentCatalogSnapshot=defaultCatalogService.getSnapshot();

@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createDemoAdapter} from './support/demo.mjs';
+import {createOrder,applyCommands} from '../src/domain/order.mjs';
+const adapter=createDemoAdapter();
+const turn=(text,order=createOrder())=>adapter.interpretTurn({text,order});
+const cart=(productId='latte')=>applyCommands(createOrder(),[{type:'add',productId}]);
+for(const text of ['not oat milk','a latte or mocha','a latte but actually a mocha','a latte and another latte'])test(`clarify ${text}`,async()=>{const r=await turn(text,cart());assert.equal(r.commands.length,0);assert.ok(r.clarification)});
+for(const text of ['no milk','no syrup','no whip','oat milk and an extra shot'])test(`retain ${text}`,async()=>{const r=await turn(text,cart());assert.equal(r.commands[0].type,'update');assert.equal(r.clarification,null)});
+for(const [text,existing,shots] of [['a tall latte with an extra shot',null,2],['a tall latte with an extra shot','americano',2],['a grande latte with an extra shot',null,3]])test(`relative addition ${text} after ${existing}`,async()=>{const r=await turn(text,existing?cart(existing):createOrder());assert.equal(r.commands[0].changes.shots,shots)});
+test('relative edit increments existing',async()=>{const r=await turn('an extra shot',cart('americano'));assert.equal(r.commands[0].changes.shots,4)});

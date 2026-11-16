@@ -1,0 +1,36 @@
+{
+  "fetchedAt": "2026-11-14T01:45:16.953Z",
+  "source": "Credential-free public website JSON via normal server transport; HTTP200 application/json",
+  "sourceUrls": [
+    "https://www.starbucks.com/apiproxy/v1/ordering/menu",
+    "https://www.starbucks.com/apiproxy/v1/ordering/2121255/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/2121342/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/406/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/406/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/407/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/407/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/408/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/408/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/409/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/410/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/410/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/426/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/457/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/466/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/466/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/468/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/468/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/565/hot",
+    "https://www.starbucks.com/apiproxy/v1/ordering/565/iced",
+    "https://www.starbucks.com/apiproxy/v1/ordering/2123425/iced"
+  ],
+  "acquisitions": [
+    {
+      "fetchedAt": "2026-11-14T15:12:26.607Z",
+      "sourceUrl": "https://www.starbucks.com/apiproxy/v1/ordering/2123425/iced",
+      "status": 200,
+      "contentType": "application/json",
+      "transport": "Existing fixed-origin StarbucksWebsiteSource; credentials omit; no authentication/cookies/bypass"
+    }
+  ]
+}
