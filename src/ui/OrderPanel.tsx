@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useId,useRef,useState} from 'react';
 import type {Command,Drink,IngredientPath,Order,Quote} from '../contracts';
 import type {MenuDirectory,MenuDirectoryProduct} from '../catalog/menu-directory-contracts';
 import directory from '../catalog/data/starbucks-menu-directory.json';
@@ -12,25 +12,58 @@ const displayPrice=(amount:number|null)=>amount===null?'Price unavailable':forma
 type MenuLine=NonNullable<Order['menuItems']>[number];
 function MenuOrderRow({item,product,commit}:{item:MenuLine;product?:MenuDirectoryProduct;commit:(commands:Command[])=>boolean}){
  const [notes,setNotes]=useState(item.instructions.join('\n'));
- useEffect(()=>setNotes(item.instructions.join('\n')),[item.instructions]);
- return <article className="drink" data-item-id={item.id}><div className="drink-heading"><h2 data-change-key="name"><span data-change-key="quantity">{item.quantity>1&&item.quantity+' × '}</span><span data-change-key="identity">{item.name}</span></h2><strong data-item-price={item.id}>Price unavailable</strong></div><p className="drink-summary" data-change-key="size">{item.size??'Default size'}</p><div className="custom-fields">{(product?.sizes.length??0)>1&&<label data-change-key="size">Size<select aria-label={item.name+' size'} value={item.size??''} onChange={event=>commit([{type:'update-menu',itemId:item.id,changes:{size:event.target.value||null}}])}><option value="">Default size</option>{product?.sizes.map(option=><option key={option.sizeCode} value={option.sizeCode}>{option.sizeCode}</option>)}</select></label>}<label data-change-key="quantity">Quantity<input type="number" aria-label={item.name+' quantity'} min={1} max={100} value={item.quantity} onChange={event=>{const quantity=Number(event.target.value);if(Number.isInteger(quantity)&&quantity>=1&&quantity<=100)commit([{type:'update-menu',itemId:item.id,changes:{quantity}}]);}}/></label><label data-change-key="instructions">Request history<textarea aria-label={item.name+' instructions'} value={notes} maxLength={2400} onChange={event=>setNotes(event.target.value)} onBlur={()=>{const instructions=notes.split('\n').map(value=>value.trim()).filter(Boolean);if(JSON.stringify(instructions)!==JSON.stringify(item.instructions))commit([{type:'update-menu',itemId:item.id,changes:{instructions}}]);}}/></label></div><p className="pricing-note">Requests are recorded in order, as written. Price is not available.</p><div className="item-actions"><button onClick={()=>commit([{type:'duplicate',itemId:item.id}])}>Duplicate</button><button onClick={()=>commit([{type:'remove',itemId:item.id}])}>Remove</button></div></article>;
+ const [notesError,setNotesError]=useState('');
+ const notesHelpId=useId(),notesErrorId=useId();
+ const savedNotes=item.instructions.join('\n');
+ useEffect(()=>{setNotes(savedNotes);setNotesError('');},[savedNotes]);
+ const saveNotes=()=>{
+  const instructions=notes.split('\n').map(value=>value.trim()).filter(Boolean);
+  if(instructions.length>20){setNotesError('Keep up to 20 requests. Your edits are still here.');return;}
+  if(instructions.some(value=>value.length>600)){setNotesError('Keep each request within 600 characters. Your edits are still here.');return;}
+  if(JSON.stringify(instructions)===JSON.stringify(item.instructions)){setNotesError('');return;}
+  if(commit([{type:'update-menu',itemId:item.id,changes:{instructions}}]))setNotesError('');
+  else setNotesError('Requests could not be saved. Your edits are still here.');
+ };
+ return <article className="drink" data-item-id={item.id}>
+  <div className="drink-heading"><h2 data-change-key="name"><span data-change-key="quantity">{item.quantity>1&&item.quantity+' × '}</span><span data-change-key="identity">{item.name}</span></h2><strong data-item-price={item.id}>Price unavailable</strong></div>
+  <p className="drink-summary"><span data-change-key="size">{item.size??'Default size'}</span> · <span data-change-key="quantity">Qty {item.quantity}</span></p>
+  {item.instructions.length>0&&<p className="request-summary" data-change-key="instructions">{item.instructions.join(' · ')}</p>}
+  <details className="menu-item-editor"><summary aria-label={'Edit '+item.name}>Edit item <span aria-hidden="true">+</span></summary><div className="custom-fields">
+   {(product?.sizes.length??0)>1&&<label data-change-key="size">Size<select aria-label={item.name+' size'} value={item.size??''} onChange={event=>commit([{type:'update-menu',itemId:item.id,changes:{size:event.target.value||null}}])}><option value="">Default size</option>{product?.sizes.map(option=><option key={option.sizeCode} value={option.sizeCode}>{option.sizeCode}</option>)}</select></label>}
+   <label data-change-key="quantity">Quantity<input type="number" aria-label={item.name+' quantity'} min={1} max={100} value={item.quantity} onChange={event=>{const quantity=Number(event.target.value);if(Number.isInteger(quantity)&&quantity>=1&&quantity<=100)commit([{type:'update-menu',itemId:item.id,changes:{quantity}}]);}}/></label>
+   <label data-change-key="instructions">Request history<textarea aria-label={item.name+' instructions'} aria-describedby={notesHelpId+(notesError?' '+notesErrorId:'')} aria-invalid={Boolean(notesError)} value={notes} maxLength={2400} onChange={event=>{setNotes(event.target.value);setNotesError('');}} onBlur={saveNotes}/></label>
+   <p className="pricing-note" id={notesHelpId}>One request per line, up to 20. Saved when you leave the field.</p>
+  </div></details>
+  {notesError&&<p className="request-error" id={notesErrorId} role="alert">{notesError}</p>}
+  <div className="item-actions"><button onClick={()=>commit([{type:'duplicate',itemId:item.id}])}>Duplicate</button><button onClick={()=>commit([{type:'remove',itemId:item.id}])}>Remove</button></div>
+ </article>;
+
 }
 export function OrderPanel({menuDirectory,order,quote,change,mobile,open,onClose,commit,update}:Props){
  const dialog=useRef<HTMLDialogElement>(null),panel=useRef<HTMLElement>(null);
+ const keyboardInput=useRef(false);
+ useEffect(()=>{
+  document.documentElement.dataset.inputModality='pointer';
+  const keyboard=()=>{keyboardInput.current=true;document.documentElement.dataset.inputModality='keyboard';};
+  const pointer=()=>{keyboardInput.current=false;document.documentElement.dataset.inputModality='pointer';};
+  document.addEventListener('keydown',keyboard,true);
+  document.addEventListener('pointerdown',pointer,true);
+  return()=>{document.removeEventListener('keydown',keyboard,true);document.removeEventListener('pointerdown',pointer,true);};
+ },[]);
  const [removed,setRemoved]=useState<Array<Drink|MenuLine>>([]);
  useEffect(()=>{const node=dialog.current;if(!node)return;if(mobile&&open&&!node.open)node.showModal();else if((!mobile||!open)&&node.open)node.close();},[mobile,open]);
  useEffect(()=>{
   const root=panel.current;if(!root||!change)return;
   root.getAnimations({subtree:true}).forEach(animation=>animation.cancel());
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){setRemoved([]);return;}
-  const animate=(node:Element|null)=>node?.animate([{opacity:.3,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:200,easing:'ease-out'});
+  if(keyboardInput.current||window.matchMedia('(prefers-reduced-motion: reduce)').matches){setRemoved([]);return;}
+  const animate=(node:Element|null)=>node&&node.getClientRects().length>0?node.animate([{opacity:.55,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(0.23, 1, 0.32, 1)'}):undefined;
   for(const id of change.diff.added)animate(root.querySelector('[data-item-id="'+id+'"]'));
   for(const item of change.diff.updated){const card=root.querySelector('[data-item-id="'+item.id+'"]');for(const key of [...item.fields,...item.ingredients])card?.querySelectorAll('[data-change-key="'+key+'"]').forEach(animate);}
   const previous=quoteOrder(change.before) as Quote;
   for(const item of quote.items)if(previous.items.find(p=>p.itemId===item.itemId)?.totalCents!==item.totalCents)animate(root.querySelector('[data-item-price="'+item.itemId+'"]'));
   if(previous.subtotalCents!==quote.subtotalCents)animate(root.querySelector('[data-subtotal]'));
   setRemoved([...change.before.items,...(change.before.menuItems??[])].filter(item=>change.diff.removed.includes(item.id)));
-  const timer=setTimeout(()=>setRemoved([]),220);return()=>clearTimeout(timer);
+  const timer=setTimeout(()=>setRemoved([]),180);return()=>{clearTimeout(timer);root.getAnimations({subtree:true}).forEach(animation=>animation.cancel());};
  },[change,quote]);
  const menuItems=order.menuItems??[],hasItems=order.items.length+menuItems.length>0,count=[...order.items,...menuItems].reduce((n,item)=>n+item.quantity,0);
  const countLabel=menuItems.length?(count===1?'item':'items'):(count===1?'drink':'drinks');
