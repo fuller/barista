@@ -6,17 +6,17 @@ import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {validateMenuCases,runMenuEvaluation,menuHash} from '../src/evals/menu-runner.mjs';
 import {createMenuDeciderAdapter} from '../src/adapters/menu-decider.mjs';
-import {DEFAULT_MODEL} from '../src/adapters/config.mjs';
+import {DEFAULT_MODEL,DEFAULT_MENU_PROFILE} from '../src/adapters/config.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 export function parseLatencyArgs(args){
- const options={live:false,maxRequests:250,concurrency:3,controlScheduling:'sequential',scheduling:'sequential',split:'dev',profile:'lean-v9'};const fields={'--max-requests':'maxRequests','--concurrency':'concurrency','--output':'output','--model':'model','--scheduling':'scheduling','--split':'split','--profile':'profile','--control-profile':'controlProfile','--control-scheduling':'controlScheduling'};
+ const options={live:false,maxRequests:250,concurrency:3,controlScheduling:'sequential',scheduling:'sequential',split:'dev',profile:DEFAULT_MENU_PROFILE};const fields={'--max-requests':'maxRequests','--concurrency':'concurrency','--output':'output','--model':'model','--scheduling':'scheduling','--split':'split','--profile':'profile','--control-profile':'controlProfile','--control-scheduling':'controlScheduling'};
  for(let i=0;i<args.length;i++){if(args[i]==='--live'){options.live=true;continue;}const field=fields[args[i]],value=args[++i];if(!field||!value||value.startsWith('--'))throw new Error('Invalid latency benchmark arguments');options[field]=['maxRequests','concurrency'].includes(field)?Number(value):value;}
  options.controlProfile??=options.profile;
  if(options.split==='holdout'){if(!args.includes('--max-requests'))options.maxRequests=150;if(!args.includes('--scheduling'))options.scheduling='guarded-overlap';}
- if(!['lean-v8','lean-v9'].includes(options.profile)||!['lean-v8','lean-v9'].includes(options.controlProfile)||!['dev','holdout'].includes(options.split)||options.split==='holdout'&&options.maxRequests>150||!['sequential','guarded-overlap'].includes(options.scheduling)||!['sequential','guarded-overlap'].includes(options.controlScheduling)||!Number.isInteger(options.maxRequests)||options.maxRequests<1||options.maxRequests>250||!Number.isInteger(options.concurrency)||options.concurrency<1||options.concurrency>3||options.model!==undefined&&!/^[\w./:-]{1,160}$/.test(options.model))throw new Error('Invalid latency benchmark bounds');return options;
+ if(!['lean-v8','lean-v9','lean-v10'].includes(options.profile)||!['lean-v8','lean-v9','lean-v10'].includes(options.controlProfile)||!['dev','holdout'].includes(options.split)||options.split==='holdout'&&options.maxRequests>150||!['sequential','guarded-overlap'].includes(options.scheduling)||!['sequential','guarded-overlap'].includes(options.controlScheduling)||!Number.isInteger(options.maxRequests)||options.maxRequests<1||options.maxRequests>250||!Number.isInteger(options.concurrency)||options.concurrency<1||options.concurrency>3||options.model!==undefined&&!/^[\w./:-]{1,160}$/.test(options.model))throw new Error('Invalid latency benchmark bounds');return options;
 }
 /** Existing strict runner owns cart grading and sanitizes provider observations. No gold reaches adapters. */
-export async function runLatencyBenchmark(cases,{apiKey,model=DEFAULT_MODEL,maxRequests=250,concurrency=3,controlScheduling='sequential',scheduling='sequential',profile='lean-v9',controlProfile=profile,createCache,adapterFactory=createMenuDeciderAdapter,fetchImpl=fetch,corpusSHA}={}){
+export async function runLatencyBenchmark(cases,{apiKey,model=DEFAULT_MODEL,maxRequests=250,concurrency=3,controlScheduling='sequential',scheduling='sequential',profile=DEFAULT_MENU_PROFILE,controlProfile=profile,createCache,adapterFactory=createMenuDeciderAdapter,fetchImpl=fetch,corpusSHA}={}){
  parseLatencyArgs(['--max-requests',String(maxRequests),'--concurrency',String(concurrency),'--scheduling',scheduling,'--profile',profile,'--control-profile',controlProfile,'--control-scheduling',controlScheduling]);
  if(typeof createCache!=='function')throw new Error('Cache factory required');
  const cache=createCache(),conditions=[];let totalRequests=0;

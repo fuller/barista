@@ -1,0 +1,1396 @@
+{
+  "schemaVersion": 1,
+  "menuVersion": "starbucks-menu-b06e76b0e1761aef",
+  "evidenceClass": "authored-development-regression",
+  "authorship": {
+    "split": "dev",
+    "liveEvaluated": true,
+    "consumed": true,
+    "notes": "Authored to exercise lossless columnar cart context. Standard item/notes gold only; source instructions copied verbatim. Development regressions, not independent holdout evidence. Independent gold audit disambiguated the missing-target case to explicitly require an existing line; clarification expectation unchanged. Earlier ambiguous-wording runs are development diagnostics only."
+  },
+  "cases": [
+    {
+      "id": "cart-six-ordinal",
+      "split": "dev",
+      "text": "Make the third item venti",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Venti",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "ordinal",
+        "size"
+      ]
+    },
+    {
+      "id": "cart-custom-note-target",
+      "split": "dev",
+      "text": "Make the oat milk latte four copies",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 4,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "customization-reference",
+        "quantity"
+      ]
+    },
+    {
+      "id": "cart-soy-not-oat",
+      "split": "dev",
+      "text": "Make the soy milk latte decaf",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ],
+            "instructionExcludes": [
+              "decaf"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla",
+              "decaf"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "customization-reference",
+        "scope"
+      ]
+    },
+    {
+      "id": "cart-all-shared-update",
+      "split": "dev",
+      "text": "Make every item oat milk",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615",
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on",
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla",
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw",
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream",
+              "oat milk"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping",
+              "oat milk"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "shared-update",
+        "all-cart"
+      ]
+    },
+    {
+      "id": "cart-mixed-relative-clarify",
+      "split": "dev",
+      "text": "Add one more of each latte",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "clarify",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": []
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "mixed-prior-counts",
+        "relative-quantity",
+        "atomic-retry"
+      ]
+    },
+    {
+      "id": "cart-unknown-custom-target",
+      "split": "dev",
+      "text": "Change the existing pistachio-milk latte in my cart to decaf. Do not add another item.",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "clarify",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": []
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "unknown-target",
+        "atomic-retry"
+      ]
+    },
+    {
+      "id": "cart-duplicate-fourth",
+      "split": "dev",
+      "text": "Duplicate the fourth item",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "duplicate"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "duplicate",
+        "ordinal",
+        "note-inheritance"
+      ]
+    },
+    {
+      "id": "cart-remove-second",
+      "split": "dev",
+      "text": "Remove the second item",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "remove"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "remove",
+        "ordinal"
+      ]
+    },
+    {
+      "id": "cart-last-size-correction",
+      "split": "dev",
+      "text": "Make the last item grande, actually venti",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "last-item",
+        "self-correction"
+      ]
+    },
+    {
+      "id": "cart-eight-last-quantity",
+      "split": "dev",
+      "text": "Make the last item two copies",
+      "seedCommands": [
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 2,
+          "instructions": [
+            "  Oat milk, please  ",
+            "Write \"Ada\" on cup \u2615"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "No room; keep lid on"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Hot",
+          "size": "Grande",
+          "quantity": 3,
+          "instructions": [
+            "Soy milk",
+            "One pump vanilla"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Light ice",
+            "No straw"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "408:Hot",
+          "size": "Short",
+          "quantity": 1,
+          "instructions": [
+            "Extra hot",
+            "No whipped cream"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "414:Hot",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Almond milk",
+            "Keep cinnamon topping"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "406:Hot",
+          "size": "Venti",
+          "quantity": 1,
+          "instructions": [
+            "Decaf",
+            "For Sam"
+          ]
+        },
+        {
+          "type": "add-menu",
+          "identity": "407:Iced",
+          "size": "Tall",
+          "quantity": 1,
+          "instructions": [
+            "Whole milk",
+            "Extra ice"
+          ]
+        }
+      ],
+      "expected": {
+        "outcome": "commit",
+        "items": [
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 2,
+            "instructionIncludes": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "identity": "407:Hot",
+            "size": "Grande",
+            "quantity": 3,
+            "instructionIncludes": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "identity": "408:Hot",
+            "size": "Short",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "identity": "414:Hot",
+            "size": "Tall",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          },
+          {
+            "identity": "406:Hot",
+            "size": "Venti",
+            "quantity": 1,
+            "instructionIncludes": [
+              "Decaf",
+              "For Sam"
+            ]
+          },
+          {
+            "identity": "407:Iced",
+            "size": "Tall",
+            "quantity": 2,
+            "instructionIncludes": [
+              "Whole milk",
+              "Extra ice"
+            ]
+          }
+        ],
+        "expectedCommandTypes": [
+          "update-menu"
+        ]
+      },
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "eight-lines",
+        "last-item",
+        "quantity"
+      ]
+    }
+  ]
+}

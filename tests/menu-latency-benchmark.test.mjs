@@ -34,7 +34,7 @@ test('holdout selection is explicitly consumed regression, bounded150 and never 
  const report=await mainLatencyBenchmark(['--split','holdout']);assert.equal(report.selectedCases,12);assert.equal(report.evidenceClass,'consumed-holdout-regression');assert.equal(report.blindHoldout,false);assert.equal(report.inferenceCalls,0);
 });
 test('candidate and control profiles are independently selectable and stamped',async()=>{
- assert.equal(parseLatencyArgs([]).profile,'lean-v9');assert.equal(parseLatencyArgs([]).controlProfile,'lean-v9');
+ assert.equal(parseLatencyArgs([]).profile,'lean-v10');assert.equal(parseLatencyArgs([]).controlProfile,'lean-v10');
  assert.equal(parseLatencyArgs(['--profile','lean-v8']).controlProfile,'lean-v8');
  assert.throws(()=>parseLatencyArgs(['--profile','unknown']));assert.throws(()=>parseLatencyArgs(['--control-profile','unknown']));
  const profiles=[];const c=corpus.cases.find(c=>c.id==='unknown-base-product');

@@ -17,7 +17,7 @@ npm run dev
 
 Open http://127.0.0.1:4173. Restart after source or configuration changes. Keep `.env` private. Credentials belong only on the server. Without a configured provider, conversational ordering is unavailable; manual menu controls remain usable. Live interpretation sends text and relevant cart context to OpenRouter and can incur provider charges.
 
-The default model is `perplexity/pplx-decider-v1.3:free`. `MENU_QUESTION_PROFILE=lean-v9` selects the current profile; `lean-v8` provides rollback. `DECISION_SCHEDULING=guarded-overlap` is the default; `sequential` provides rollback. A different model requires independent validation.
+The default model is `perplexity/pplx-decider-v1.3:free`. `MENU_QUESTION_PROFILE=lean-v10` selects the current profile; `lean-v9` and `lean-v8` provide rollback. `DECISION_SCHEDULING=guarded-overlap` is the default; `sequential` provides rollback. A different model requires independent validation.
 
 ## Deploy
 
@@ -29,7 +29,7 @@ The bundled directory contains 313 product/form identities. It is a recorded sna
 
 Browser SpeechRecognition transcribes speech; availability depends on browser and service. Its final transcript follows the same path as typed input. The application stores no audio. Physical microphone accuracy is unmeasured.
 
-The guarded single-item path can reduce a plain latte from three cold provider calls to two. It applies only to confident one-copy beverage requests into an empty cart without explicit size/weight. Uncertain requests retain the detail stage. Mixed-suite token savings were modest and latency varied; see [evaluation evidence](docs/evaluation.md).
+The guarded single-item path can reduce a plain latte from three cold provider calls to two. It applies only to confident one-copy beverage requests into an empty cart without explicit size/weight. Uncertain requests retain the detail stage. Routing uses a lossless columnar cart when smaller. Uncertain size/count applicability gets a selected-product decision at the same confidence threshold. Exact pure requests can share pending work; cart routing always runs live. Full undo history stays local; requests carry only the next undo snapshot. See [evaluation evidence](docs/evaluation.md).
 
 ## Develop
 

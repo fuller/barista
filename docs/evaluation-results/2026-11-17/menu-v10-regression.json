@@ -1,0 +1,6442 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "startedAt": "2026-11-18T02:53:59.839Z",
+    "finishedAt": "2026-11-18T02:54:49.214Z",
+    "model": "perplexity/pplx-decider-v1.3:free",
+    "profile": "lean-v10",
+    "corpusSHA": "8168d5f355b2f10faddc69366ac40abcf2cc270d1006801776fa50ccd25fbed6",
+    "menuVersion": "starbucks-menu-b06e76b0e1761aef",
+    "repeats": 1,
+    "maxRequests": 300,
+    "concurrency": 2,
+    "caseIds": [
+      "plain-latte",
+      "iced-latte-modifiers",
+      "bearista-cake-pop",
+      "short-rib-sandwich",
+      "whole-bean-pike",
+      "instant-pike",
+      "packaged-water",
+      "shared-milk",
+      "voice-american",
+      "voice-americana-compound",
+      "two-warmed-croissants",
+      "local-milk-ownership",
+      "add-to-populated-cart",
+      "ordinal-size-update",
+      "ingredient-removal-is-update",
+      "duplicate-existing-item",
+      "duplicate-with-product-change",
+      "replace-first-product",
+      "remove-whole-second-item",
+      "clear-cart",
+      "confirm-cart",
+      "conflicting-global-actions",
+      "ambiguous-existing-target",
+      "unknown-base-product",
+      "explicit-product-correction",
+      "nationality-is-not-coffee",
+      "negated-hot-format",
+      "held-beverage-01",
+      "held-beverage-02",
+      "held-beverage-03",
+      "held-food-01",
+      "held-beverage-04",
+      "held-food-02",
+      "held-packaged-01",
+      "held-packaged-02",
+      "held-compound-01",
+      "held-update-01",
+      "held-replacement-01",
+      "held-no-match-01",
+      "explicit-one",
+      "one-size",
+      "one-ingredient-count",
+      "article-ingredient-one",
+      "correct-two-to-one",
+      "correct-one-to-two",
+      "two-one-pound-packages",
+      "package-contents-one",
+      "zero-count",
+      "outside-count-range",
+      "separate-one-and-two",
+      "invalid-source-size",
+      "cart-six-ordinal",
+      "cart-custom-note-target",
+      "cart-soy-not-oat",
+      "cart-all-shared-update",
+      "cart-mixed-relative-clarify",
+      "cart-unknown-custom-target",
+      "cart-duplicate-fourth",
+      "cart-remove-second",
+      "cart-last-size-correction",
+      "cart-eight-last-quantity"
+    ],
+    "sourceSHA": "12a52f94f01a0cb84c3d6b1cd4dd2a7e22826565029558e7b50ce3bdaa463f34",
+    "sourceChangedDuringRun": false,
+    "graderSHA": "767e8326001c44e1a111e28cd4d97c02515dd4a27b12b97a96d2dd998e396f5d",
+    "harnessSHA": "edfa24d0077555c946f17a6f1d9eb4f02a6a3b1cc543170bbea2d2068e0c5db8",
+    "runtime": "v22.22.3"
+  },
+  "summary": {
+    "cases": 61,
+    "passed": 60,
+    "failed": 1,
+    "requests": 168,
+    "requestBodyBytes": 1037347,
+    "requestBodyChars": 1018168,
+    "usage": {
+      "available": true,
+      "promptTokens": 321402,
+      "completionTokens": 664,
+      "totalTokens": null,
+      "cachedTokens": null,
+      "costUSD": 0
+    },
+    "categories": {
+      "pass": 60,
+      "wrong_mutation": 0,
+      "false_clarification": 1,
+      "bad_clarification": 0,
+      "error": 0
+    },
+    "unsafeMutations": 0,
+    "notRun": 0,
+    "latency": {
+      "medianMs": 1460.2001249999958,
+      "p95Ms": 3633.235291
+    }
+  },
+  "results": [
+    {
+      "caseId": "plain-latte",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "defaults",
+        "beverage"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1573.25725,
+      "requestCount": 2,
+      "requestBodyBytes": 19550,
+      "requestBodyChars": 19038,
+      "usage": {
+        "available": true,
+        "promptTokens": 6196,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7630,
+          "requestBodyChars": 7623,
+          "status": 200,
+          "latencyMs": 1050.623916,
+          "usage": {
+            "available": true,
+            "promptTokens": 1556,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11920,
+          "requestBodyChars": 11415,
+          "status": 200,
+          "latencyMs": 496.80204200000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 4640,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "a latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "iced-latte-modifiers",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "size",
+        "notes",
+        "modifier-quantity"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 4049.557375,
+      "requestCount": 4,
+      "requestBodyBytes": 22949,
+      "requestBodyChars": 22434,
+      "usage": {
+        "available": true,
+        "promptTokens": 7732,
+        "completionTokens": 12,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1527,
+          "requestBodyChars": 1527,
+          "status": 200,
+          "latencyMs": 1344.685708,
+          "usage": {
+            "available": true,
+            "promptTokens": 331,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6832,
+          "requestBodyChars": 6825,
+          "status": 200,
+          "latencyMs": 787.9174169999999,
+          "usage": {
+            "available": true,
+            "promptTokens": 1403,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11968,
+          "requestBodyChars": 11463,
+          "status": 200,
+          "latencyMs": 951.5492920000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 4650,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2622,
+          "requestBodyChars": 2619,
+          "status": 200,
+          "latencyMs": 962.2304999999997,
+          "usage": {
+            "available": true,
+            "promptTokens": 1348,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "A grande iced latte with oat milk and two pumps vanilla"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "bearista-cake-pop",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "food",
+        "unmapped"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1567.7414170000002,
+      "requestCount": 3,
+      "requestBodyBytes": 14875,
+      "requestBodyChars": 14664,
+      "usage": {
+        "available": true,
+        "promptTokens": 4614,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6798,
+          "requestBodyChars": 6791,
+          "status": 200,
+          "latencyMs": 431.8169580000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1396,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 5990,
+          "requestBodyChars": 5790,
+          "status": 200,
+          "latencyMs": 769.367084,
+          "usage": {
+            "available": true,
+            "promptTokens": 1987,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2087,
+          "requestBodyChars": 2083,
+          "status": 200,
+          "latencyMs": 364.3933750000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1231,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "40739:Single",
+            "name": "Bearista\u2122 Cake Pop",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one Bearista cake pop"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "short-rib-sandwich",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "food",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1767.0003339999998,
+      "requestCount": 4,
+      "requestBodyBytes": 16486,
+      "requestBodyChars": 16277,
+      "usage": {
+        "available": true,
+        "promptTokens": 4963,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1515,
+          "requestBodyChars": 1515,
+          "status": 200,
+          "latencyMs": 399.4390000000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 329,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6826,
+          "requestBodyChars": 6819,
+          "status": 200,
+          "latencyMs": 443.5450420000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1402,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6018,
+          "requestBodyChars": 5818,
+          "status": 200,
+          "latencyMs": 486.1306249999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1993,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2127,
+          "requestBodyChars": 2125,
+          "status": 200,
+          "latencyMs": 434.61954199999946,
+          "usage": {
+            "available": true,
+            "promptTokens": 1239,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "40734:Single",
+            "name": "Braised Short Rib Grilled Cheese",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "A Braised Short Rib Grilled Cheese, warmed please"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "whole-bean-pike",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "packaged-coffee",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1596.9920839999995,
+      "requestCount": 3,
+      "requestBodyBytes": 11989,
+      "requestBodyChars": 11903,
+      "usage": {
+        "available": true,
+        "promptTokens": 3494,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6824,
+          "requestBodyChars": 6817,
+          "status": 200,
+          "latencyMs": 472.2410410000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1402,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2651,
+          "requestBodyChars": 2575,
+          "status": 200,
+          "latencyMs": 669.3255410000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 768,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2514,
+          "requestBodyChars": 2511,
+          "status": 200,
+          "latencyMs": 451.3297080000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1324,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "24:Whole-Bean",
+            "name": "Pike Place\u00ae Roast",
+            "size": "1-lb",
+            "quantity": 1,
+            "instructions": [
+              "A one-pound bag of Pike Place Roast whole beans"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "instant-pike",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "packaged-coffee",
+        "product-form",
+        "package-not-quantity"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1331.029125,
+      "requestCount": 3,
+      "requestBodyBytes": 12055,
+      "requestBodyChars": 11968,
+      "usage": {
+        "available": true,
+        "promptTokens": 3506,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6835,
+          "requestBodyChars": 6828,
+          "status": 200,
+          "latencyMs": 442.76887499999975,
+          "usage": {
+            "available": true,
+            "promptTokens": 1405,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2662,
+          "requestBodyChars": 2586,
+          "status": 200,
+          "latencyMs": 463.70745799999986,
+          "usage": {
+            "available": true,
+            "promptTokens": 771,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2558,
+          "requestBodyChars": 2554,
+          "status": 200,
+          "latencyMs": 422.6346249999997,
+          "usage": {
+            "available": true,
+            "promptTokens": 1330,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "24:VIA",
+            "name": "Starbucks VIA\u00ae Instant Pike Place\u00ae Roast",
+            "size": "12-count",
+            "quantity": 1,
+            "instructions": [
+              "One 12-count box of Starbucks VIA Instant Pike Place Roast"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "packaged-water",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "packaged-beverage",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1514.152916,
+      "requestCount": 3,
+      "requestBodyBytes": 21280,
+      "requestBodyChars": 20765,
+      "usage": {
+        "available": true,
+        "promptTokens": 7379,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6809,
+          "requestBodyChars": 6802,
+          "status": 200,
+          "latencyMs": 425.15400000000045,
+          "usage": {
+            "available": true,
+            "promptTokens": 1401,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11945,
+          "requestBodyChars": 11440,
+          "status": 200,
+          "latencyMs": 636.1775420000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 4648,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2526,
+          "requestBodyChars": 2523,
+          "status": 200,
+          "latencyMs": 450.8151660000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 1330,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2123597:Packaged",
+            "name": "DASANI\u00ae Water",
+            "size": "20-Packaged",
+            "quantity": 1,
+            "instructions": [
+              "One 20-ounce DASANI water bottle"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "shared-milk",
+      "split": "dev",
+      "tags": [
+        "compound",
+        "shared-scope",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3633.235291,
+      "requestCount": 8,
+      "requestBodyBytes": 51857,
+      "requestBodyChars": 50814,
+      "usage": {
+        "available": true,
+        "promptTokens": 16721,
+        "completionTokens": 30,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2689,
+          "requestBodyChars": 2689,
+          "status": 200,
+          "latencyMs": 455.6945829999995,
+          "usage": {
+            "available": true,
+            "promptTokens": 562,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6791,
+          "requestBodyChars": 6784,
+          "status": 200,
+          "latencyMs": 432.3457499999995,
+          "usage": {
+            "available": true,
+            "promptTokens": 1394,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11927,
+          "requestBodyChars": 11422,
+          "status": 200,
+          "latencyMs": 604.9341250000007,
+          "usage": {
+            "available": true,
+            "promptTokens": 4641,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2140,
+          "requestBodyChars": 2137,
+          "status": 200,
+          "latencyMs": 433.3437079999994,
+          "usage": {
+            "available": true,
+            "promptTokens": 1244,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7053,
+          "requestBodyChars": 7044,
+          "status": 200,
+          "latencyMs": 470.30966700000135,
+          "usage": {
+            "available": true,
+            "promptTokens": 1470,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11926,
+          "requestBodyChars": 11421,
+          "status": 200,
+          "latencyMs": 399.81195800000023,
+          "usage": {
+            "available": true,
+            "promptTokens": 4642,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2139,
+          "requestBodyChars": 2136,
+          "status": 200,
+          "latencyMs": 407.25579199999993,
+          "usage": {
+            "available": true,
+            "promptTokens": 1245,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7192,
+          "requestBodyChars": 7181,
+          "status": 200,
+          "latencyMs": 423.9333340000012,
+          "usage": {
+            "available": true,
+            "promptTokens": 1523,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu",
+          "add-menu",
+          "update-menu",
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "Add one latte ",
+              ", both with oat milk"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "and one mocha",
+              ", both with oat milk"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "voice-american",
+      "split": "dev",
+      "tags": [
+        "voice-variant",
+        "defaults"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1580.2157910000005,
+      "requestCount": 3,
+      "requestBodyBytes": 20856,
+      "requestBodyChars": 20341,
+      "usage": {
+        "available": true,
+        "promptTokens": 7276,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6789,
+          "requestBodyChars": 6782,
+          "status": 200,
+          "latencyMs": 464.38216699999975,
+          "usage": {
+            "available": true,
+            "promptTokens": 1393,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11925,
+          "requestBodyChars": 11420,
+          "status": 200,
+          "latencyMs": 655.7210409999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 4640,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2142,
+          "requestBodyChars": 2139,
+          "status": 200,
+          "latencyMs": 450.7005829999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1243,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one American"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "voice-americana-compound",
+      "split": "dev",
+      "tags": [
+        "voice-variant",
+        "compound",
+        "defaults"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 5515.829874999999,
+      "requestCount": 7,
+      "requestBodyBytes": 43482,
+      "requestBodyChars": 42451,
+      "usage": {
+        "available": true,
+        "promptTokens": 14954,
+        "completionTokens": 21,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1479,
+          "requestBodyChars": 1479,
+          "status": 200,
+          "latencyMs": 494.97600000000057,
+          "usage": {
+            "available": true,
+            "promptTokens": 319,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6791,
+          "requestBodyChars": 6784,
+          "status": 200,
+          "latencyMs": 450.2626249999994,
+          "usage": {
+            "available": true,
+            "promptTokens": 1393,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11927,
+          "requestBodyChars": 11422,
+          "status": 200,
+          "latencyMs": 892.2139160000006,
+          "usage": {
+            "available": true,
+            "promptTokens": 4640,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2144,
+          "requestBodyChars": 2141,
+          "status": 200,
+          "latencyMs": 1110.4102920000005,
+          "usage": {
+            "available": true,
+            "promptTokens": 1243,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7065,
+          "requestBodyChars": 7056,
+          "status": 200,
+          "latencyMs": 768.4114160000008,
+          "usage": {
+            "available": true,
+            "promptTokens": 1469,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11930,
+          "requestBodyChars": 11425,
+          "status": 200,
+          "latencyMs": 1322.6773329999996,
+          "usage": {
+            "available": true,
+            "promptTokens": 4642,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2146,
+          "requestBodyChars": 2144,
+          "status": 200,
+          "latencyMs": 472.39337500000147,
+          "usage": {
+            "available": true,
+            "promptTokens": 1248,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu",
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one Americana "
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "2121255:Iced",
+            "name": "Cold Brew",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "and one cold brew"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "two-warmed-croissants",
+      "split": "dev",
+      "tags": [
+        "food",
+        "quantity",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1984.5713749999995,
+      "requestCount": 4,
+      "requestBodyBytes": 16387,
+      "requestBodyChars": 16178,
+      "usage": {
+        "available": true,
+        "promptTokens": 4933,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1481,
+          "requestBodyChars": 1481,
+          "status": 200,
+          "latencyMs": 609.2502910000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 319,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6809,
+          "requestBodyChars": 6802,
+          "status": 200,
+          "latencyMs": 461.1947080000009,
+          "usage": {
+            "available": true,
+            "promptTokens": 1397,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6001,
+          "requestBodyChars": 5801,
+          "status": 200,
+          "latencyMs": 493.77649999999994,
+          "usage": {
+            "available": true,
+            "promptTokens": 1988,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2096,
+          "requestBodyChars": 2094,
+          "status": 200,
+          "latencyMs": 418.52750000000015,
+          "usage": {
+            "available": true,
+            "promptTokens": 1229,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "1028:Single",
+            "name": "Chocolate Croissant",
+            "size": null,
+            "quantity": 2,
+            "instructions": [
+              "Two chocolate croissants, warmed"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "local-milk-ownership",
+      "split": "dev",
+      "tags": [
+        "compound",
+        "local-scope",
+        "size",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3549.9699170000004,
+      "requestCount": 7,
+      "requestBodyBytes": 44650,
+      "requestBodyChars": 43618,
+      "usage": {
+        "available": true,
+        "promptTokens": 15221,
+        "completionTokens": 23,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1555,
+          "requestBodyChars": 1555,
+          "status": 200,
+          "latencyMs": 600.8520420000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 339,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6808,
+          "requestBodyChars": 6801,
+          "status": 200,
+          "latencyMs": 413.8614170000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1398,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11944,
+          "requestBodyChars": 11439,
+          "status": 200,
+          "latencyMs": 458.5549580000006,
+          "usage": {
+            "available": true,
+            "promptTokens": 4645,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2643,
+          "requestBodyChars": 2640,
+          "status": 200,
+          "latencyMs": 507.0685420000009,
+          "usage": {
+            "available": true,
+            "promptTokens": 1355,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7099,
+          "requestBodyChars": 7090,
+          "status": 200,
+          "latencyMs": 469.3261250000014,
+          "usage": {
+            "available": true,
+            "promptTokens": 1480,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11951,
+          "requestBodyChars": 11446,
+          "status": 200,
+          "latencyMs": 634.5656670000008,
+          "usage": {
+            "available": true,
+            "promptTokens": 4647,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2650,
+          "requestBodyChars": 2647,
+          "status": 200,
+          "latencyMs": 459.98133400000006,
+          "usage": {
+            "available": true,
+            "promptTokens": 1357,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu",
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Add a tall latte with oat milk "
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "and add a grande mocha with whole milk"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "add-to-populated-cart",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "addition"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 2213.6507919999985,
+      "requestCount": 3,
+      "requestBodyBytes": 21052,
+      "requestBodyChars": 20533,
+      "usage": {
+        "available": true,
+        "promptTokens": 7339,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6991,
+          "requestBodyChars": 6980,
+          "status": 200,
+          "latencyMs": 457.3167919999996,
+          "usage": {
+            "available": true,
+            "promptTokens": 1454,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11924,
+          "requestBodyChars": 11419,
+          "status": 200,
+          "latencyMs": 1234.6315830000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 4641,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2137,
+          "requestBodyChars": 2134,
+          "status": 200,
+          "latencyMs": 519.5018750000017,
+          "usage": {
+            "available": true,
+            "promptTokens": 1244,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "40739:Single",
+            "name": "Bearista\u2122 Cake Pop",
+            "size": null,
+            "quantity": 1,
+            "instructions": []
+          },
+          {
+            "id": "menu-2",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "Add a latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "ordinal-size-update",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "update",
+        "ordinal",
+        "size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 848.5242500000004,
+      "requestCount": 2,
+      "requestBodyBytes": 7861,
+      "requestBodyChars": 7851,
+      "usage": {
+        "available": true,
+        "promptTokens": 1699,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7114,
+          "requestBodyChars": 7105,
+          "status": 200,
+          "latencyMs": 452.7654170000005,
+          "usage": {
+            "available": true,
+            "promptTokens": 1502,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 747,
+          "requestBodyChars": 746,
+          "status": 200,
+          "latencyMs": 391.8148340000007,
+          "usage": {
+            "available": true,
+            "promptTokens": 197,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "with oat milk",
+              "Make the first item Venti"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "2121255:Iced",
+            "name": "Cold Brew",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "ingredient-removal-is-update",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "update",
+        "ingredient-removal",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 451.26729200000045,
+      "requestCount": 1,
+      "requestBodyBytes": 7000,
+      "requestBodyChars": 6991,
+      "usage": {
+        "available": true,
+        "promptTokens": 1455,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7000,
+          "requestBodyChars": 6991,
+          "status": 200,
+          "latencyMs": 449.8542499999967,
+          "usage": {
+            "available": true,
+            "promptTokens": 1455,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "Remove whipped cream from the latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "duplicate-existing-item",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "duplicate"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1150.1855840000026,
+      "requestCount": 1,
+      "requestBodyBytes": 7001,
+      "requestBodyChars": 6992,
+      "usage": {
+        "available": true,
+        "promptTokens": 1455,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7001,
+          "requestBodyChars": 6992,
+          "status": 200,
+          "latencyMs": 1148.795083000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1455,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "duplicate"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "with oat milk"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "with oat milk",
+              "Duplicate the latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "duplicate-with-product-change",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "duplicate",
+        "replacement",
+        "product-form"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1685.4878330000029,
+      "requestCount": 3,
+      "requestBodyBytes": 19722,
+      "requestBodyChars": 19207,
+      "usage": {
+        "available": true,
+        "promptTokens": 6301,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7011,
+          "requestBodyChars": 7002,
+          "status": 200,
+          "latencyMs": 722.133167,
+          "usage": {
+            "available": true,
+            "promptTokens": 1459,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11959,
+          "requestBodyChars": 11454,
+          "status": 200,
+          "latencyMs": 574.5715830000008,
+          "usage": {
+            "available": true,
+            "promptTokens": 4648,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 752,
+          "requestBodyChars": 751,
+          "status": 200,
+          "latencyMs": 384.15149999999994,
+          "usage": {
+            "available": true,
+            "promptTokens": 194,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "duplicate"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": []
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Iced",
+            "name": "Iced Caff\u00e8 Americano",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "Duplicate the latte as a grande iced Americano"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "replace-first-product",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "replacement",
+        "ordinal",
+        "size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 2660.1560839999984,
+      "requestCount": 3,
+      "requestBodyBytes": 19862,
+      "requestBodyChars": 19344,
+      "usage": {
+        "available": true,
+        "promptTokens": 6356,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7134,
+          "requestBodyChars": 7121,
+          "status": 200,
+          "latencyMs": 671.5403340000012,
+          "usage": {
+            "available": true,
+            "promptTokens": 1504,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11957,
+          "requestBodyChars": 11452,
+          "status": 200,
+          "latencyMs": 663.7697919999991,
+          "usage": {
+            "available": true,
+            "promptTokens": 4647,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 771,
+          "requestBodyChars": 771,
+          "status": 200,
+          "latencyMs": 1322.1840410000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 205,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2121255:Iced",
+            "name": "Cold Brew",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Replace the first item with a tall cold brew"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "40739:Single",
+            "name": "Bearista\u2122 Cake Pop",
+            "size": null,
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "remove-whole-second-item",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "remove",
+        "ordinal"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 449.49979200000234,
+      "requestCount": 1,
+      "requestBodyBytes": 7112,
+      "requestBodyChars": 7099,
+      "usage": {
+        "available": true,
+        "promptTokens": 1499,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7112,
+          "requestBodyChars": 7099,
+          "status": 200,
+          "latencyMs": 448.0844160000015,
+          "usage": {
+            "available": true,
+            "promptTokens": 1499,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "remove"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "clear-cart",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "global",
+        "clear"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 617.0329999999994,
+      "requestCount": 1,
+      "requestBodyBytes": 7098,
+      "requestBodyChars": 7085,
+      "usage": {
+        "available": true,
+        "promptTokens": 1497,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7098,
+          "requestBodyChars": 7085,
+          "status": 200,
+          "latencyMs": 616.0182499999974,
+          "usage": {
+            "available": true,
+            "promptTokens": 1497,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "clear"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "confirm-cart",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "global",
+        "confirm"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 823.9172909999979,
+      "requestCount": 1,
+      "requestBodyBytes": 7100,
+      "requestBodyChars": 7087,
+      "usage": {
+        "available": true,
+        "promptTokens": 1497,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7100,
+          "requestBodyChars": 7087,
+          "status": 200,
+          "latencyMs": 823.0241669999996,
+          "usage": {
+            "available": true,
+            "promptTokens": 1497,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "confirm"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": []
+          },
+          {
+            "id": "menu-2",
+            "identity": "40739:Single",
+            "name": "Bearista\u2122 Cake Pop",
+            "size": null,
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": true,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "conflicting-global-actions",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "global",
+        "conflict"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1418.9798749999973,
+      "requestCount": 3,
+      "requestBodyBytes": 15479,
+      "requestBodyChars": 15461,
+      "usage": {
+        "available": true,
+        "promptTokens": 3233,
+        "completionTokens": 17,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1513,
+          "requestBodyChars": 1513,
+          "status": 200,
+          "latencyMs": 458.4495840000018,
+          "usage": {
+            "available": true,
+            "promptTokens": 327,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6978,
+          "requestBodyChars": 6969,
+          "status": 200,
+          "latencyMs": 524.2944580000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 1451,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6988,
+          "requestBodyChars": 6979,
+          "status": 200,
+          "latencyMs": 434.148459,
+          "usage": {
+            "available": true,
+            "promptTokens": 1455,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please say one item or change at a time.",
+        "diagnostics": {
+          "stage": "decision",
+          "reason": "decision_low_confidence"
+        },
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "ambiguous-existing-target",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "ambiguous-target",
+        "no-mutation"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 423.14104099999895,
+      "requestCount": 1,
+      "requestBodyBytes": 7104,
+      "requestBodyChars": 7093,
+      "usage": {
+        "available": true,
+        "promptTokens": 1502,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7104,
+          "requestBodyChars": 7093,
+          "status": 200,
+          "latencyMs": 421.93866700000217,
+          "usage": {
+            "available": true,
+            "promptTokens": 1502,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please say one item or change at a time.",
+        "diagnostics": {
+          "stage": "decision",
+          "reason": "decision_low_confidence"
+        },
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": []
+          },
+          {
+            "id": "menu-2",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "unknown-base-product",
+      "split": "dev",
+      "tags": [
+        "no-match",
+        "no-mutation"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1145.658041999999,
+      "requestCount": 2,
+      "requestBodyBytes": 18750,
+      "requestBodyChars": 18238,
+      "usage": {
+        "available": true,
+        "promptTokens": 6041,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6807,
+          "requestBodyChars": 6800,
+          "status": 200,
+          "latencyMs": 560.2219999999979,
+          "usage": {
+            "available": true,
+            "promptTokens": 1397,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11943,
+          "requestBodyChars": 11438,
+          "status": 200,
+          "latencyMs": 581.7023330000011,
+          "usage": {
+            "available": true,
+            "promptTokens": 4644,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Which exact menu item would you like?",
+        "diagnostics": {
+          "stage": "decision",
+          "field": "identity",
+          "reason": "field_unrepresented"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "field_unrepresented"
+      }
+    },
+    {
+      "caseId": "explicit-product-correction",
+      "split": "dev",
+      "tags": [
+        "correction",
+        "product-identity",
+        "single-final-item"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 2059.863874999999,
+      "requestCount": 3,
+      "requestBodyBytes": 21104,
+      "requestBodyChars": 20592,
+      "usage": {
+        "available": true,
+        "promptTokens": 6534,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1492,
+          "requestBodyChars": 1492,
+          "status": 200,
+          "latencyMs": 464.05983299999934,
+          "usage": {
+            "available": true,
+            "promptTokens": 324,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7661,
+          "requestBodyChars": 7654,
+          "status": 200,
+          "latencyMs": 448.4626669999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1563,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11951,
+          "requestBodyChars": 11446,
+          "status": 200,
+          "latencyMs": 1145.729374999999,
+          "usage": {
+            "available": true,
+            "promptTokens": 4647,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "A latte, actually make it an Americano"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "nationality-is-not-coffee",
+      "split": "dev",
+      "tags": [
+        "voice-variant",
+        "false-homophone",
+        "no-order",
+        "no-mutation"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 724.9600830000018,
+      "requestCount": 1,
+      "requestBodyBytes": 6790,
+      "requestBodyChars": 6783,
+      "usage": {
+        "available": true,
+        "promptTokens": 1394,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6790,
+          "requestBodyChars": 6783,
+          "status": 200,
+          "latencyMs": 723.4659580000007,
+          "usage": {
+            "available": true,
+            "promptTokens": 1394,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please say one item or change at a time.",
+        "diagnostics": {
+          "stage": "decision",
+          "reason": "decision_low_confidence"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "negated-hot-format",
+      "split": "dev",
+      "tags": [
+        "negation",
+        "product-form",
+        "single-final-item"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1341.1414589999986,
+      "requestCount": 3,
+      "requestBodyBytes": 21081,
+      "requestBodyChars": 20569,
+      "usage": {
+        "available": true,
+        "promptTokens": 6535,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1481,
+          "requestBodyChars": 1481,
+          "status": 200,
+          "latencyMs": 432.3819999999978,
+          "usage": {
+            "available": true,
+            "promptTokens": 325,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7655,
+          "requestBodyChars": 7648,
+          "status": 200,
+          "latencyMs": 394.03608299999905,
+          "usage": {
+            "available": true,
+            "promptTokens": 1563,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11945,
+          "requestBodyChars": 11440,
+          "status": 200,
+          "latencyMs": 511.26195799999914,
+          "usage": {
+            "available": true,
+            "promptTokens": 4647,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "An iced latte, not the hot latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-beverage-01",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "beverage",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1738.6394589999982,
+      "requestCount": 3,
+      "requestBodyBytes": 21271,
+      "requestBodyChars": 20757,
+      "usage": {
+        "available": true,
+        "promptTokens": 7359,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6811,
+          "requestBodyChars": 6804,
+          "status": 200,
+          "latencyMs": 634.2100419999988,
+          "usage": {
+            "available": true,
+            "promptTokens": 1399,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11947,
+          "requestBodyChars": 11442,
+          "status": 200,
+          "latencyMs": 652.2699169999978,
+          "usage": {
+            "available": true,
+            "promptTokens": 4646,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2513,
+          "requestBodyChars": 2511,
+          "status": 200,
+          "latencyMs": 450.1392500000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1314,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "41392:Iced",
+            "name": "Caramel Snowy Apple Drink",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "A grande Caramel Snowy Apple Drink"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-beverage-02",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "beverage",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1965.4651660000018,
+      "requestCount": 3,
+      "requestBodyBytes": 21348,
+      "requestBodyChars": 20834,
+      "usage": {
+        "available": true,
+        "promptTokens": 7387,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6806,
+          "requestBodyChars": 6799,
+          "status": 200,
+          "latencyMs": 949.6015420000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 1398,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11942,
+          "requestBodyChars": 11437,
+          "status": 200,
+          "latencyMs": 580.7566249999982,
+          "usage": {
+            "available": true,
+            "promptTokens": 4645,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2600,
+          "requestBodyChars": 2598,
+          "status": 200,
+          "latencyMs": 430.4499160000014,
+          "usage": {
+            "available": true,
+            "promptTokens": 1344,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "28502:Iced",
+            "name": "Iced Protein Matcha",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "One venti Iced Protein Matcha"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-beverage-03",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "beverage",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1934.2914999999994,
+      "requestCount": 4,
+      "requestBodyBytes": 22875,
+      "requestBodyChars": 22361,
+      "usage": {
+        "available": true,
+        "promptTokens": 7724,
+        "completionTokens": 12,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1495,
+          "requestBodyChars": 1495,
+          "status": 200,
+          "latencyMs": 468.36058400000184,
+          "usage": {
+            "available": true,
+            "promptTokens": 327,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6816,
+          "requestBodyChars": 6809,
+          "status": 200,
+          "latencyMs": 450.16737499999726,
+          "usage": {
+            "available": true,
+            "promptTokens": 1401,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11952,
+          "requestBodyChars": 11447,
+          "status": 200,
+          "latencyMs": 550.6657080000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 4648,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2612,
+          "requestBodyChars": 2610,
+          "status": 200,
+          "latencyMs": 459.3177080000023,
+          "usage": {
+            "available": true,
+            "promptTokens": 1348,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "28520:Iced",
+            "name": "Iced Gingerbread Chai",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "A tall iced gingerbread chai, light ice"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-food-01",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "food"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1557.2645420000008,
+      "requestCount": 3,
+      "requestBodyBytes": 14902,
+      "requestBodyChars": 14693,
+      "usage": {
+        "available": true,
+        "promptTokens": 4615,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6805,
+          "requestBodyChars": 6798,
+          "status": 200,
+          "latencyMs": 469.5657919999976,
+          "usage": {
+            "available": true,
+            "promptTokens": 1396,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 5997,
+          "requestBodyChars": 5797,
+          "status": 200,
+          "latencyMs": 523.6421249999985,
+          "usage": {
+            "available": true,
+            "promptTokens": 1987,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2100,
+          "requestBodyChars": 2098,
+          "status": 200,
+          "latencyMs": 562.1561660000007,
+          "usage": {
+            "available": true,
+            "promptTokens": 1232,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2122869:Single",
+            "name": "Sugar Plum Cheese Danish",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "One Sugar Plum Cheese Danish"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-beverage-04",
+      "split": "dev",
+      "tags": [
+        "simple",
+        "beverage",
+        "product-identity"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1495.7760000000017,
+      "requestCount": 3,
+      "requestBodyBytes": 21273,
+      "requestBodyChars": 20759,
+      "usage": {
+        "available": true,
+        "promptTokens": 7367,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6812,
+          "requestBodyChars": 6805,
+          "status": 200,
+          "latencyMs": 447.9007500000007,
+          "usage": {
+            "available": true,
+            "promptTokens": 1401,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11948,
+          "requestBodyChars": 11443,
+          "status": 200,
+          "latencyMs": 564.1060410000027,
+          "usage": {
+            "available": true,
+            "promptTokens": 4648,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2513,
+          "requestBodyChars": 2511,
+          "status": 200,
+          "latencyMs": 478.9784589999981,
+          "usage": {
+            "available": true,
+            "promptTokens": 1318,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2124651:Hot",
+            "name": "Brown Sugar Oatmilk Cortado",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "A short Brown Sugar Oatmilk Cortado"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-food-02",
+      "split": "dev",
+      "tags": [
+        "food",
+        "quantity",
+        "notes"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 2010.5707919999986,
+      "requestCount": 4,
+      "requestBodyBytes": 17602,
+      "requestBodyChars": 17392,
+      "usage": {
+        "available": true,
+        "promptTokens": 5197,
+        "completionTokens": 12,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2665,
+          "requestBodyChars": 2665,
+          "status": 200,
+          "latencyMs": 384.8067090000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 559,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6816,
+          "requestBodyChars": 6809,
+          "status": 200,
+          "latencyMs": 738.2333749999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1402,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6008,
+          "requestBodyChars": 5808,
+          "status": 200,
+          "latencyMs": 444.4687909999993,
+          "usage": {
+            "available": true,
+            "promptTokens": 1993,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2113,
+          "requestBodyChars": 2110,
+          "status": 200,
+          "latencyMs": 441.6939999999995,
+          "usage": {
+            "available": true,
+            "promptTokens": 1243,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2122116:Single",
+            "name": "Bacon & Gruy\u00e8re Egg Bites",
+            "size": null,
+            "quantity": 2,
+            "instructions": [
+              "Two Bacon and Gruyere Egg Bites, warmed"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-packaged-01",
+      "split": "dev",
+      "tags": [
+        "packaged-coffee",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1677.1289580000011,
+      "requestCount": 3,
+      "requestBodyBytes": 11950,
+      "requestBodyChars": 11865,
+      "usage": {
+        "available": true,
+        "promptTokens": 3480,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6815,
+          "requestBodyChars": 6808,
+          "status": 200,
+          "latencyMs": 746.3948339999988,
+          "usage": {
+            "available": true,
+            "promptTokens": 1399,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2642,
+          "requestBodyChars": 2566,
+          "status": 200,
+          "latencyMs": 454.90441700000156,
+          "usage": {
+            "available": true,
+            "promptTokens": 765,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2493,
+          "requestBodyChars": 2491,
+          "status": 200,
+          "latencyMs": 474.16525000000183,
+          "usage": {
+            "available": true,
+            "promptTokens": 1316,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "8:Whole-Bean",
+            "name": "Sumatra",
+            "size": "1-lb",
+            "quantity": 1,
+            "instructions": [
+              "One pound of Sumatra whole bean coffee"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-packaged-02",
+      "split": "dev",
+      "tags": [
+        "packaged-beverage",
+        "source-size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1629.406750000002,
+      "requestCount": 3,
+      "requestBodyBytes": 21342,
+      "requestBodyChars": 20827,
+      "usage": {
+        "available": true,
+        "promptTokens": 7383,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6824,
+          "requestBodyChars": 6817,
+          "status": 200,
+          "latencyMs": 606.7439999999988,
+          "usage": {
+            "available": true,
+            "promptTokens": 1402,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11960,
+          "requestBodyChars": 11455,
+          "status": 200,
+          "latencyMs": 569.5010000000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 4649,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2558,
+          "requestBodyChars": 2555,
+          "status": 200,
+          "latencyMs": 447.45191599999816,
+          "usage": {
+            "available": true,
+            "promptTokens": 1332,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "27527:Packaged",
+            "name": "Koia\u00ae Cacao Bean Nutrition Shake",
+            "size": "11-Packaged",
+            "quantity": 1,
+            "instructions": [
+              "An eleven-ounce Koia Cacao Bean Nutrition Shake"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-compound-01",
+      "split": "dev",
+      "tags": [
+        "compound",
+        "food",
+        "beverage"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3373.8567919999987,
+      "requestCount": 7,
+      "requestBodyBytes": 38110,
+      "requestBodyChars": 37387,
+      "usage": {
+        "available": true,
+        "promptTokens": 12443,
+        "completionTokens": 22,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1531,
+          "requestBodyChars": 1531,
+          "status": 200,
+          "latencyMs": 476.5935419999987,
+          "usage": {
+            "available": true,
+            "promptTokens": 337,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6801,
+          "requestBodyChars": 6794,
+          "status": 200,
+          "latencyMs": 481.12287500000093,
+          "usage": {
+            "available": true,
+            "promptTokens": 1397,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11937,
+          "requestBodyChars": 11432,
+          "status": 200,
+          "latencyMs": 570.2104590000017,
+          "usage": {
+            "available": true,
+            "promptTokens": 4644,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2640,
+          "requestBodyChars": 2638,
+          "status": 200,
+          "latencyMs": 452.0740420000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1355,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7093,
+          "requestBodyChars": 7086,
+          "status": 200,
+          "latencyMs": 389.52899999999863,
+          "usage": {
+            "available": true,
+            "promptTokens": 1480,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6002,
+          "requestBodyChars": 5802,
+          "status": 200,
+          "latencyMs": 532.4041660000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 1991,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2106,
+          "requestBodyChars": 2104,
+          "status": 200,
+          "latencyMs": 467.47941600000195,
+          "usage": {
+            "available": true,
+            "promptTokens": 1239,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu",
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "34919:Hot",
+            "name": "Lavender Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "One tall Lavender Latte "
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "2123882:Single",
+            "name": "Blueberry Streusel Muffin",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "and one Blueberry Streusel Muffin"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-update-01",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "update",
+        "ingredient-removal",
+        "ordinal"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 492.00883299999987,
+      "requestCount": 1,
+      "requestBodyBytes": 7155,
+      "requestBodyChars": 7148,
+      "usage": {
+        "available": true,
+        "promptTokens": 1505,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7155,
+          "requestBodyChars": 7148,
+          "status": 200,
+          "latencyMs": 490.713584000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1505,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "2123644:Iced",
+            "name": "Chocolate Cream Cold Brew",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": []
+          },
+          {
+            "id": "menu-2",
+            "identity": "413:Hot",
+            "name": "Caramel Macchiato",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "Take caramel drizzle off the second drink"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-replacement-01",
+      "split": "dev",
+      "tags": [
+        "populated-cart",
+        "replacement",
+        "food",
+        "ordinal"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 980.617624999999,
+      "requestCount": 2,
+      "requestBodyBytes": 13150,
+      "requestBodyChars": 12943,
+      "usage": {
+        "available": true,
+        "promptTokens": 3488,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7142,
+          "requestBodyChars": 7135,
+          "status": 200,
+          "latencyMs": 476.59462500000154,
+          "usage": {
+            "available": true,
+            "promptTokens": 1498,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6008,
+          "requestBodyChars": 5808,
+          "status": 200,
+          "latencyMs": 501.7119590000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1990,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "1040:Single",
+            "name": "Cheese Danish",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "Swap the first item for a Cheese Danish"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "1130:Single",
+            "name": "Double Chocolate Brownie",
+            "size": null,
+            "quantity": 2,
+            "instructions": []
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "held-no-match-01",
+      "split": "dev",
+      "tags": [
+        "no-match",
+        "no-mutation"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1153.7866669999967,
+      "requestCount": 2,
+      "requestBodyBytes": 18750,
+      "requestBodyChars": 18238,
+      "usage": {
+        "available": true,
+        "promptTokens": 6045,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6807,
+          "requestBodyChars": 6800,
+          "status": 200,
+          "latencyMs": 489.6782500000045,
+          "usage": {
+            "available": true,
+            "promptTokens": 1399,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11943,
+          "requestBodyChars": 11438,
+          "status": 200,
+          "latencyMs": 661.8300420000014,
+          "usage": {
+            "available": true,
+            "promptTokens": 4646,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Which exact menu item would you like?",
+        "diagnostics": {
+          "stage": "decision",
+          "field": "identity",
+          "reason": "field_unrepresented"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "field_unrepresented"
+      }
+    },
+    {
+      "caseId": "explicit-one",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1682.2126669999998,
+      "requestCount": 2,
+      "requestBodyBytes": 19554,
+      "requestBodyChars": 19042,
+      "usage": {
+        "available": true,
+        "promptTokens": 6196,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7632,
+          "requestBodyChars": 7625,
+          "status": 200,
+          "latencyMs": 453.862291999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1556,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11922,
+          "requestBodyChars": 11417,
+          "status": 200,
+          "latencyMs": 1226.4228750000038,
+          "usage": {
+            "available": true,
+            "promptTokens": 4640,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "one-size",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1550.893458999999,
+      "requestCount": 3,
+      "requestBodyBytes": 21350,
+      "requestBodyChars": 20835,
+      "usage": {
+        "available": true,
+        "promptTokens": 7386,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6793,
+          "requestBodyChars": 6786,
+          "status": 200,
+          "latencyMs": 503.34354200000234,
+          "usage": {
+            "available": true,
+            "promptTokens": 1394,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11929,
+          "requestBodyChars": 11424,
+          "status": 200,
+          "latencyMs": 514.9650000000038,
+          "usage": {
+            "available": true,
+            "promptTokens": 4641,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2628,
+          "requestBodyChars": 2625,
+          "status": 200,
+          "latencyMs": 530.8742920000004,
+          "usage": {
+            "available": true,
+            "promptTokens": 1351,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 1,
+            "instructions": [
+              "one grande latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "one-ingredient-count",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1169.169167,
+      "requestCount": 2,
+      "requestBodyBytes": 19596,
+      "requestBodyChars": 19084,
+      "usage": {
+        "available": true,
+        "promptTokens": 6204,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7653,
+          "requestBodyChars": 7646,
+          "status": 200,
+          "latencyMs": 541.2517500000031,
+          "usage": {
+            "available": true,
+            "promptTokens": 1560,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11943,
+          "requestBodyChars": 11438,
+          "status": 200,
+          "latencyMs": 619.1390829999946,
+          "usage": {
+            "available": true,
+            "promptTokens": 4644,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one latte with two extra shots"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "article-ingredient-one",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1036.384708999998,
+      "requestCount": 2,
+      "requestBodyBytes": 19590,
+      "requestBodyChars": 19078,
+      "usage": {
+        "available": true,
+        "promptTokens": 6204,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7650,
+          "requestBodyChars": 7643,
+          "status": 200,
+          "latencyMs": 479.6886250000025,
+          "usage": {
+            "available": true,
+            "promptTokens": 1560,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11940,
+          "requestBodyChars": 11435,
+          "status": 200,
+          "latencyMs": 554.7728329999954,
+          "usage": {
+            "available": true,
+            "promptTokens": 4644,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "a latte with one extra shot"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "correct-two-to-one",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1452.8391669999983,
+      "requestCount": 3,
+      "requestBodyBytes": 21093,
+      "requestBodyChars": 20581,
+      "usage": {
+        "available": true,
+        "promptTokens": 6531,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1487,
+          "requestBodyChars": 1487,
+          "status": 200,
+          "latencyMs": 453.71566699999676,
+          "usage": {
+            "available": true,
+            "promptTokens": 323,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7658,
+          "requestBodyChars": 7651,
+          "status": 200,
+          "latencyMs": 470.5218329999989,
+          "usage": {
+            "available": true,
+            "promptTokens": 1562,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11948,
+          "requestBodyChars": 11443,
+          "status": 200,
+          "latencyMs": 526.3986250000016,
+          "usage": {
+            "available": true,
+            "promptTokens": 4646,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "two lattes, actually just one latte"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "correct-one-to-two",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3481.302625000004,
+      "requestCount": 4,
+      "requestBodyBytes": 23228,
+      "requestBodyChars": 22713,
+      "usage": {
+        "available": true,
+        "promptTokens": 7774,
+        "completionTokens": 12,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1476,
+          "requestBodyChars": 1476,
+          "status": 200,
+          "latencyMs": 1132.1082089999982,
+          "usage": {
+            "available": true,
+            "promptTokens": 320,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7653,
+          "requestBodyChars": 7646,
+          "status": 200,
+          "latencyMs": 461.3052910000042,
+          "usage": {
+            "available": true,
+            "promptTokens": 1561,
+            "completionTokens": 9,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11943,
+          "requestBodyChars": 11438,
+          "status": 200,
+          "latencyMs": 552.4526669999977,
+          "usage": {
+            "available": true,
+            "promptTokens": 4645,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2156,
+          "requestBodyChars": 2153,
+          "status": 200,
+          "latencyMs": 1332.0842499999999,
+          "usage": {
+            "available": true,
+            "promptTokens": 1248,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 2,
+            "instructions": [
+              "one latte, actually two lattes"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "two-one-pound-packages",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 2052.4894170000043,
+      "requestCount": 3,
+      "requestBodyBytes": 11998,
+      "requestBodyChars": 11912,
+      "usage": {
+        "available": true,
+        "promptTokens": 3494,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6827,
+          "requestBodyChars": 6820,
+          "status": 200,
+          "latencyMs": 573.4197920000006,
+          "usage": {
+            "available": true,
+            "promptTokens": 1402,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2654,
+          "requestBodyChars": 2578,
+          "status": 200,
+          "latencyMs": 776.1160420000015,
+          "usage": {
+            "available": true,
+            "promptTokens": 768,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2517,
+          "requestBodyChars": 2514,
+          "status": 200,
+          "latencyMs": 700.7457919999943,
+          "usage": {
+            "available": true,
+            "promptTokens": 1324,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "24:Whole-Bean",
+            "name": "Pike Place\u00ae Roast",
+            "size": "1-lb",
+            "quantity": 2,
+            "instructions": [
+              "Two one-pound bags of Pike Place Roast whole beans"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "package-contents-one",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1338.8693330000024,
+      "requestCount": 3,
+      "requestBodyBytes": 12055,
+      "requestBodyChars": 11968,
+      "usage": {
+        "available": true,
+        "promptTokens": 3506,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6835,
+          "requestBodyChars": 6828,
+          "status": 200,
+          "latencyMs": 458.9750000000058,
+          "usage": {
+            "available": true,
+            "promptTokens": 1405,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2662,
+          "requestBodyChars": 2586,
+          "status": 200,
+          "latencyMs": 481.8262089999989,
+          "usage": {
+            "available": true,
+            "promptTokens": 771,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2558,
+          "requestBodyChars": 2554,
+          "status": 200,
+          "latencyMs": 396.22929199999635,
+          "usage": {
+            "available": true,
+            "promptTokens": 1330,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "24:VIA",
+            "name": "Starbucks VIA\u00ae Instant Pike Place\u00ae Roast",
+            "size": "12-count",
+            "quantity": 1,
+            "instructions": [
+              "One 12-count box of Starbucks VIA Instant Pike Place Roast"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "zero-count",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 461.97908299999835,
+      "requestCount": 1,
+      "requestBodyBytes": 6792,
+      "requestBodyChars": 6785,
+      "usage": {
+        "available": true,
+        "promptTokens": 1395,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6792,
+          "requestBodyChars": 6785,
+          "status": 200,
+          "latencyMs": 461.18116700000246,
+          "usage": {
+            "available": true,
+            "promptTokens": 1395,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Which exact menu item would you like?",
+        "diagnostics": {
+          "stage": "decision",
+          "field": "identity",
+          "reason": "field_unrepresented"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "field_unrepresented"
+      }
+    },
+    {
+      "caseId": "outside-count-range",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1460.2001249999958,
+      "requestCount": 3,
+      "requestBodyBytes": 20858,
+      "requestBodyChars": 20343,
+      "usage": {
+        "available": true,
+        "promptTokens": 7291,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6791,
+          "requestBodyChars": 6784,
+          "status": 200,
+          "latencyMs": 473.218584000002,
+          "usage": {
+            "available": true,
+            "promptTokens": 1398,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11927,
+          "requestBodyChars": 11422,
+          "status": 200,
+          "latencyMs": 513.1210409999985,
+          "usage": {
+            "available": true,
+            "promptTokens": 4645,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2140,
+          "requestBodyChars": 2137,
+          "status": 200,
+          "latencyMs": 470.8148749999964,
+          "usage": {
+            "available": true,
+            "promptTokens": 1248,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please clarify the item quantity.",
+        "diagnostics": {
+          "stage": "decision",
+          "field": "quantity",
+          "reason": "decision_low_confidence"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "separate-one-and-two",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3988.4017079999976,
+      "requestCount": 7,
+      "requestBodyBytes": 43452,
+      "requestBodyChars": 42420,
+      "usage": {
+        "available": true,
+        "promptTokens": 14951,
+        "completionTokens": 21,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1473,
+          "requestBodyChars": 1473,
+          "status": 200,
+          "latencyMs": 1222.3163329999952,
+          "usage": {
+            "available": true,
+            "promptTokens": 319,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6787,
+          "requestBodyChars": 6780,
+          "status": 200,
+          "latencyMs": 462.6345419999998,
+          "usage": {
+            "available": true,
+            "promptTokens": 1393,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11923,
+          "requestBodyChars": 11418,
+          "status": 200,
+          "latencyMs": 555.3617920000033,
+          "usage": {
+            "available": true,
+            "promptTokens": 4640,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2136,
+          "requestBodyChars": 2133,
+          "status": 200,
+          "latencyMs": 415.99491699999635,
+          "usage": {
+            "available": true,
+            "promptTokens": 1243,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7054,
+          "requestBodyChars": 7045,
+          "status": 200,
+          "latencyMs": 467.5754589999997,
+          "usage": {
+            "available": true,
+            "promptTokens": 1469,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11931,
+          "requestBodyChars": 11426,
+          "status": 200,
+          "latencyMs": 482.80683300000237,
+          "usage": {
+            "available": true,
+            "promptTokens": 4642,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2148,
+          "requestBodyChars": 2145,
+          "status": 200,
+          "latencyMs": 374.53833300000406,
+          "usage": {
+            "available": true,
+            "promptTokens": 1245,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "add-menu",
+          "add-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": null,
+            "quantity": 1,
+            "instructions": [
+              "one latte "
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": null,
+            "quantity": 2,
+            "instructions": [
+              "and two Americanos"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "invalid-source-size",
+      "split": "dev",
+      "tags": [
+        "single-copy-fast-path",
+        "regression"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 3026.995707999995,
+      "requestCount": 3,
+      "requestBodyBytes": 21362,
+      "requestBodyChars": 20847,
+      "usage": {
+        "available": true,
+        "promptTokens": 7392,
+        "completionTokens": 11,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 6797,
+          "requestBodyChars": 6790,
+          "status": 200,
+          "latencyMs": 1419.4667499999996,
+          "usage": {
+            "available": true,
+            "promptTokens": 1396,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 11933,
+          "requestBodyChars": 11428,
+          "status": 200,
+          "latencyMs": 483.7868330000056,
+          "usage": {
+            "available": true,
+            "promptTokens": 4643,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2632,
+          "requestBodyChars": 2629,
+          "status": 200,
+          "latencyMs": 1122.469041999997,
+          "usage": {
+            "available": true,
+            "promptTokens": 1353,
+            "completionTokens": 2,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "That size is not listed for this item. Please choose a listed size.",
+        "diagnostics": {
+          "stage": "catalog",
+          "field": "size",
+          "reason": "unsupported_catalog_choice"
+        },
+        "items": [],
+        "confirmed": false,
+        "reason": "unsupported_catalog_choice"
+      }
+    },
+    {
+      "caseId": "cart-six-ordinal",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "ordinal",
+        "size"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1411.8321250000008,
+      "requestCount": 2,
+      "requestBodyBytes": 8431,
+      "requestBodyChars": 8411,
+      "usage": {
+        "available": true,
+        "promptTokens": 1902,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7684,
+          "requestBodyChars": 7665,
+          "status": 200,
+          "latencyMs": 885.2605420000036,
+          "usage": {
+            "available": true,
+            "promptTokens": 1706,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 747,
+          "requestBodyChars": 746,
+          "status": 200,
+          "latencyMs": 517.5292919999993,
+          "usage": {
+            "available": true,
+            "promptTokens": 196,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla",
+              "Make the third item venti"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-custom-note-target",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "customization-reference",
+        "quantity"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": false,
+      "category": "false_clarification",
+      "failures": [
+        {
+          "code": "false_clarification"
+        },
+        {
+          "code": "missing_commit"
+        },
+        {
+          "code": "wrong_command_types"
+        },
+        {
+          "code": "wrong_quantity",
+          "itemIndex": 0
+        }
+      ],
+      "unsafeMutation": false,
+      "latencyMs": 998.5095839999994,
+      "requestCount": 1,
+      "requestBodyBytes": 7694,
+      "requestBodyChars": 7675,
+      "usage": {
+        "available": true,
+        "promptTokens": 1708,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7694,
+          "requestBodyChars": 7675,
+          "status": 200,
+          "latencyMs": 996.221249999995,
+          "usage": {
+            "available": true,
+            "promptTokens": 1708,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please say one item or change at a time.",
+        "diagnostics": {
+          "stage": "decision",
+          "reason": "decision_low_confidence"
+        },
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "cart-soy-not-oat",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "customization-reference",
+        "scope"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 480.97350000000006,
+      "requestCount": 1,
+      "requestBodyBytes": 7688,
+      "requestBodyChars": 7669,
+      "usage": {
+        "available": true,
+        "promptTokens": 1708,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7688,
+          "requestBodyChars": 7669,
+          "status": 200,
+          "latencyMs": 479.12720799999806,
+          "usage": {
+            "available": true,
+            "promptTokens": 1708,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla",
+              "Make the soy milk latte decaf"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-all-shared-update",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "shared-update",
+        "all-cart"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 593.3202919999967,
+      "requestCount": 1,
+      "requestBodyBytes": 7683,
+      "requestBodyChars": 7664,
+      "usage": {
+        "available": true,
+        "promptTokens": 1706,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7683,
+          "requestBodyChars": 7664,
+          "status": 200,
+          "latencyMs": 590.5395419999986,
+          "usage": {
+            "available": true,
+            "promptTokens": 1706,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu",
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615",
+              "Make every item oat milk"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on",
+              "Make every item oat milk"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla",
+              "Make every item oat milk"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw",
+              "Make every item oat milk"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream",
+              "Make every item oat milk"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping",
+              "Make every item oat milk"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-mixed-relative-clarify",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "mixed-prior-counts",
+        "relative-quantity",
+        "atomic-retry"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 490.13045799999963,
+      "requestCount": 1,
+      "requestBodyBytes": 1469,
+      "requestBodyChars": 1469,
+      "usage": {
+        "available": true,
+        "promptTokens": 319,
+        "completionTokens": 1,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1469,
+          "requestBodyChars": 1469,
+          "status": 200,
+          "latencyMs": 489.57441599999584,
+          "usage": {
+            "available": true,
+            "promptTokens": 319,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Please say no more than six items or changes at a time, preserving their instructions.",
+        "diagnostics": {
+          "stage": "extraction",
+          "reason": "decision_low_confidence"
+        },
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": "decision_low_confidence"
+      }
+    },
+    {
+      "caseId": "cart-unknown-custom-target",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "unknown-target",
+        "atomic-retry"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "clarify",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 547.5060840000006,
+      "requestCount": 1,
+      "requestBodyBytes": 7745,
+      "requestBodyChars": 7726,
+      "usage": {
+        "available": true,
+        "promptTokens": 1722,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7745,
+          "requestBodyChars": 7726,
+          "status": 200,
+          "latencyMs": 545.8770420000001,
+          "usage": {
+            "available": true,
+            "promptTokens": 1722,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [],
+        "clarified": true,
+        "clarification": "Which items should receive this change?",
+        "diagnostics": {
+          "stage": "decision",
+          "field": "target",
+          "reason": "ambiguous_target"
+        },
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": "ambiguous_target"
+      }
+    },
+    {
+      "caseId": "cart-duplicate-fourth",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "duplicate",
+        "ordinal",
+        "note-inheritance"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 447.82712499999616,
+      "requestCount": 1,
+      "requestBodyBytes": 7684,
+      "requestBodyChars": 7665,
+      "usage": {
+        "available": true,
+        "promptTokens": 1705,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7684,
+          "requestBodyChars": 7665,
+          "status": 200,
+          "latencyMs": 445.99962499999674,
+          "usage": {
+            "available": true,
+            "promptTokens": 1705,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "duplicate"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          },
+          {
+            "id": "menu-7",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw",
+              "Duplicate the fourth item"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-remove-second",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "remove",
+        "ordinal"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 583.3064170000071,
+      "requestCount": 1,
+      "requestBodyBytes": 7681,
+      "requestBodyChars": 7662,
+      "usage": {
+        "available": true,
+        "promptTokens": 1705,
+        "completionTokens": 8,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7681,
+          "requestBodyChars": 7662,
+          "status": 200,
+          "latencyMs": 582.6344160000008,
+          "usage": {
+            "available": true,
+            "promptTokens": 1705,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "remove"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-last-size-correction",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "last-item",
+        "self-correction"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1318.8925000000017,
+      "requestCount": 3,
+      "requestBodyBytes": 9970,
+      "requestBodyChars": 9951,
+      "usage": {
+        "available": true,
+        "promptTokens": 2231,
+        "completionTokens": 10,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 1499,
+          "requestBodyChars": 1499,
+          "status": 200,
+          "latencyMs": 460.2504589999953,
+          "usage": {
+            "available": true,
+            "promptTokens": 323,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7700,
+          "requestBodyChars": 7681,
+          "status": 200,
+          "latencyMs": 475.2199169999949,
+          "usage": {
+            "available": true,
+            "promptTokens": 1709,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 771,
+          "requestBodyChars": 771,
+          "status": 200,
+          "latencyMs": 382.2406669999982,
+          "usage": {
+            "available": true,
+            "promptTokens": 199,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping",
+              "Make the last item grande, actually venti"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    },
+    {
+      "caseId": "cart-eight-last-quantity",
+      "split": "dev",
+      "tags": [
+        "columnar-cart",
+        "authored-regression",
+        "eight-lines",
+        "last-item",
+        "quantity"
+      ],
+      "repeat": 0,
+      "expectedOutcome": "commit",
+      "status": "completed",
+      "pass": true,
+      "category": "pass",
+      "failures": [],
+      "unsafeMutation": false,
+      "latencyMs": 1210.0242080000025,
+      "requestCount": 2,
+      "requestBodyBytes": 10114,
+      "requestBodyChars": 10088,
+      "usage": {
+        "available": true,
+        "promptTokens": 3053,
+        "completionTokens": 9,
+        "totalTokens": null,
+        "cachedTokens": null,
+        "costUSD": 0
+      },
+      "requests": [
+        {
+          "route": "decisions",
+          "requestBodyBytes": 7923,
+          "requestBodyChars": 7900,
+          "status": 200,
+          "latencyMs": 612.9503750000003,
+          "usage": {
+            "available": true,
+            "promptTokens": 1798,
+            "completionTokens": 8,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        },
+        {
+          "route": "decisions",
+          "requestBodyBytes": 2191,
+          "requestBodyChars": 2188,
+          "status": 200,
+          "latencyMs": 595.1347079999978,
+          "usage": {
+            "available": true,
+            "promptTokens": 1255,
+            "completionTokens": 1,
+            "totalTokens": null,
+            "cachedTokens": null,
+            "costUSD": 0
+          }
+        }
+      ],
+      "actual": {
+        "commandTypes": [
+          "update-menu"
+        ],
+        "clarified": false,
+        "clarification": null,
+        "items": [
+          {
+            "id": "menu-1",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 2,
+            "instructions": [
+              "  Oat milk, please  ",
+              "Write \"Ada\" on cup \u2615"
+            ]
+          },
+          {
+            "id": "menu-2",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "No room; keep lid on"
+            ]
+          },
+          {
+            "id": "menu-3",
+            "identity": "407:Hot",
+            "name": "Caff\u00e8 Latte",
+            "size": "Grande",
+            "quantity": 3,
+            "instructions": [
+              "Soy milk",
+              "One pump vanilla"
+            ]
+          },
+          {
+            "id": "menu-4",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Light ice",
+              "No straw"
+            ]
+          },
+          {
+            "id": "menu-5",
+            "identity": "408:Hot",
+            "name": "Caff\u00e8 Mocha",
+            "size": "Short",
+            "quantity": 1,
+            "instructions": [
+              "Extra hot",
+              "No whipped cream"
+            ]
+          },
+          {
+            "id": "menu-6",
+            "identity": "414:Hot",
+            "name": "Cinnamon Dolce Latte",
+            "size": "Tall",
+            "quantity": 1,
+            "instructions": [
+              "Almond milk",
+              "Keep cinnamon topping"
+            ]
+          },
+          {
+            "id": "menu-7",
+            "identity": "406:Hot",
+            "name": "Caff\u00e8 Americano",
+            "size": "Venti",
+            "quantity": 1,
+            "instructions": [
+              "Decaf",
+              "For Sam"
+            ]
+          },
+          {
+            "id": "menu-8",
+            "identity": "407:Iced",
+            "name": "Iced Caff\u00e8 Latte",
+            "size": "Tall",
+            "quantity": 2,
+            "instructions": [
+              "Whole milk",
+              "Extra ice",
+              "Make the last item two copies"
+            ]
+          }
+        ],
+        "confirmed": false,
+        "reason": null
+      }
+    }
+  ],
+  "evidence": {
+    "class": "consumed-development-regression",
+    "blindHoldout": false,
+    "assembly": {
+      "corpora": [
+        "evals/menu-selection-dev.json",
+        "evals/menu-selection-holdout.json",
+        "evals/menu-single-copy-regression.json",
+        "evals/menu-cart-context-regression.json"
+      ],
+      "order": "concatenated in listed order",
+      "splitNormalization": "All case split fields set to dev for CLI suite execution; original consumed holdout remains consumed, not blind."
+    }
+  }
+}

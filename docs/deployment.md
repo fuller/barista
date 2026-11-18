@@ -12,7 +12,7 @@ Wrangler opens Cloudflare authentication in your browser. Choose the intended ac
 
 `deploy:dry-run` runs the application build and validates/bundles the Worker without publishing it. It does not prove that production credentials, provider access, or Cloudflare runtime bindings work. The build embeds the browser assets in `dist/server/index.js`; no separate static hosting step is needed.
 
-Review `wrangler.jsonc` and choose a unique Worker `name` before the first deployment. The checked-in non-secret settings select `lean-v9` and `guarded-overlap` explicitly. Upload the provider key only as a Worker secret:
+Review `wrangler.jsonc` and choose a unique Worker `name` before the first deployment. The checked-in non-secret settings select `lean-v10` and `guarded-overlap` explicitly. Upload the provider key only as a Worker secret:
 
 ```sh
 npx wrangler secret put OPENROUTER_API_KEY
@@ -29,7 +29,7 @@ The `TURN_RATE_LIMITER` native binding permits approximately 10 turn requests pe
 
 Cloudflare's limiter is approximate and local to each location, not a globally exact quota. Shared-IP users share a limit; distributed clients and traffic across locations can exceed it. It is abuse friction, not a spending cap or authentication system. Set a hard key budget or credit limit with the provider where supported, and monitor usage. Provider limits remain necessary even with this limiter.
 
-Changing providers/models requires independent validation. To roll back the evaluated profile or scheduling, set `MENU_QUESTION_PROFILE` to `lean-v8` or `DECISION_SCHEDULING` to `sequential` in `wrangler.jsonc` and redeploy. Existing provider secrets remain server-side.
+Changing providers/models requires independent validation. To roll back the evaluated profile or scheduling, set `MENU_QUESTION_PROFILE` to `lean-v9` (or `lean-v8`) or `DECISION_SCHEDULING` to `sequential` in `wrangler.jsonc` and redeploy. Existing provider secrets remain server-side.
 
 ## Automatic deployment from GitHub
 

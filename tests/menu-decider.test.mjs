@@ -144,3 +144,53 @@ test('retained profiles preserve established wire packets across add, size, scop
  const cases=[{text:'one Americano',plans:[{identity:coffee.identity,quantity:'1',singleAddQuantity:'single'}]},{text:'two Tall Americanos',plans:[{identity:coffee.identity,sizeRequested:'requested',size:'Tall',quantityRequested:'requested',quantity:'2'}]},{text:'a one-pound Pike Place roast',plans:[{identity:beans.identity,quantity:'1'}]},{text:'both with oat milk',order,plans:[{action:'update',identity:'unchanged',targetScope:'all_cart',quantityRequested:'absent'}]},{text:'duplicate the first item',order,plans:[{action:'duplicate',target:order.menuItems[0].id,quantityRequested:'absent'}]}];
  for(const questionProfile of ['lean-v8','lean-v9']){const packets=[];for(const c of cases){const f=fixture({...c,questionProfile});const result=await f.adapter.interpretTurn({text:c.text,order:c.order??createOrder()});assert.equal(result.clarification,null);packets.push(f.requests);}const hash=createHash('sha256').update(JSON.stringify(packets)).digest('hex');assert.equal(hash,{'lean-v8':'28cf5062f6f5f409f2b44c77d3f1c378f9842051885709e4300a272889f4ca99','lean-v9':'a27fa30812f44fa642601d06b067bfc029f647e78bdc10e7def96756825ef2ba'}[questionProfile]);}
 });
+
+test('lean-v10 preserves v9 questions and all cart context while compacting repeated field names',async()=>{
+ const seed=Array.from({length:8},(_,i)=>({type:'add-menu',identity:i%2?coffee.identity:pastry.identity,quantity:i+1,instructions:[`original request ${i}`,i%2?'oat milk':'warmed ☕']}));
+ const order=applyCommands(createOrder(),seed),before=structuredClone(order),text='Remove the seventh item';
+ const results=[];
+ for(const questionProfile of ['lean-v9','lean-v10']){
+  const f=fixture({text,questionProfile,plans:[{action:'remove',identity:'unchanged',target:order.menuItems[6].id}]});
+  const result=await f.adapter.interpretTurn({text,order});results.push({result,body:f.requests[0].body});
+ }
+ assert.deepEqual(results[1].result.commands,results[0].result.commands);
+ assert.equal(results[1].result.clarification,null);
+ assert.deepEqual(Object.keys(results[1].body.questions),Object.keys(results[0].body.questions));
+ for(const key of Object.keys(results[0].body.questions))assert.deepEqual(Object.keys(results[1].body.questions[key].criteria),Object.keys(results[0].body.questions[key].criteria));
+ const oldState=JSON.parse(results[0].body.state),newState=JSON.parse(results[1].body.state);
+ const {columns,rows}=newState.cart;
+ newState.cart=rows.map(row=>Object.fromEntries(columns.map((key,i)=>[key,row[i]])));
+ assert.deepEqual(newState,oldState);assert.deepEqual(order,before);
+ assert.ok(results[1].body.state.length<results[0].body.state.length);
+});
+test('lean-v10 empty-cart context and candidate sets remain identical to lean-v9',async()=>{
+ const bodies=[];
+ for(const questionProfile of ['lean-v9','lean-v10']){
+  const f=fixture({text:'a latte',questionProfile,plans:[{identity:'407:Hot',singleAddQuantity:'single'}]});
+  await f.adapter.interpretTurn({text:'a latte',order:createOrder()});bodies.push(f.requests.map(r=>r.body));
+ }
+ assert.equal(bodies[1].length,bodies[0].length);
+ for(let i=0;i<bodies[0].length;i++){assert.equal(bodies[1][i].state,bodies[0][i].state);for(const key of Object.keys(bodies[0][i].questions))assert.deepEqual(Object.keys(bodies[1][i].questions[key].criteria),Object.keys(bodies[0][i].questions[key].criteria));}
+});
+
+test('lean-v10 resolves uncertain applicability with confident selected-product detail, never weaker thresholds',async()=>{
+ const text='one 12-count box of VIA Pike Place';
+ const f=fixture({text,questionProfile:'lean-v10',low:'sizeRequested',plans:[{identity:'24:VIA',size:'12-count'}]});
+ const result=await f.adapter.interpretTurn({text,order:createOrder()});assert.equal(result.clarification,null);assert.equal(result.commands[0].size,'12-count');
+ assert.ok(f.requests.find(r=>r.body.questions.size)?.body.questions.size.criteria.unchanged);
+ const order=applyCommands(createOrder(),[{type:'add-menu',identity:coffee.identity,quantity:3}]),change='make the first one oat milk';
+ const g=fixture({text:change,questionProfile:'lean-v10',low:'quantityRequested',plans:[{action:'update',identity:'unchanged',target:order.menuItems[0].id,quantity:'unchanged'}]});
+ const updated=await g.adapter.interpretTurn({text:change,order});assert.equal(updated.clarification,null);assert.equal(applyCommands(order,updated.commands).menuItems[0].quantity,3);
+ const h=fixture({text,questionProfile:'lean-v10',low:'size',plans:[{identity:'24:VIA',sizeRequested:'uncertain',size:'12-count'}]});
+ assert.deepEqual((await h.adapter.interpretTurn({text,order:createOrder()})).commands,[]);
+});
+
+test('v10 package and correction instructions survive final packet construction',async()=>{
+ const f=fixture({text:'one Americano',questionProfile:'lean-v10',plans:[{identity:'406:Hot',singleAddQuantity:'single'}]});
+ await f.adapter.interpretTurn({text:'one Americano',order:createOrder()});
+ const q=f.requests.find(r=>r.body.questions.coverage).body.questions;
+ assert.match(q.sizeRequested.instructions,/package contents such as 12-count/);
+ assert.match(q.sizeRequested.instructions,/final explicitly corrected size/);
+ assert.match(q.quantityRequested.instructions,/final explicit count correction/);
+ assert.match(q.action.criteria.update,/set final copy count/);
+});

@@ -5,6 +5,7 @@ export function sanitizeMetrics(metrics){
  const times=['extractionMs','decisionMs','totalMs'];
  if(counts.some(k=>!Number.isSafeInteger(metrics[k])||metrics[k]<0)||times.some(k=>!Number.isFinite(metrics[k])||metrics[k]<0)||!['single','batch','sequential'].includes(metrics.strategy)||metrics.totalRequests!==metrics.extractionRequests+metrics.decisionRequests)return undefined;
  const result=Object.fromEntries([...counts,'strategy',...times].map(k=>[k,metrics[k]]));
+ if(Number.isSafeInteger(metrics.inflightHits)&&metrics.inflightHits>=0)result.inflightHits=metrics.inflightHits;
  if(Number.isSafeInteger(metrics.cacheHits)&&metrics.cacheHits>=0)result.cacheHits=metrics.cacheHits;
  if(Array.isArray(metrics.extractionFailures)&&metrics.extractionFailures.length<=2&&metrics.extractionFailures.every(r=>CLARIFICATION_REASONS.includes(r)))result.extractionFailures=[...metrics.extractionFailures];
  return result;

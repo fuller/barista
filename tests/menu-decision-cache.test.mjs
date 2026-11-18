@@ -44,10 +44,22 @@ test('cancellation after async cache key prevents hit or provider dispatch',asyn
 test('detail target quantity/source context changes cannot reuse earlier validated answers',async()=>{
  const cache=createDecisionCache(),p=provider({operation:'update'}),a=adapter(cache,p),makeOrder=quantity=>applyCommands(createOrder(),[{type:'add-menu',identity,quantity}]);const text='make the first item one copy',first={text,order:makeOrder(3)};const cold=await a.interpretTurn(first),warm=await a.interpretTurn(first),changed=await a.interpretTurn({text,order:makeOrder(4)});assert.equal(cold.metrics.cacheHits,0);assert.equal(warm.metrics.cacheHits,1);assert.equal(warm.metrics.totalRequests,1);assert.equal(changed.metrics.cacheHits,0);assert.equal(changed.metrics.totalRequests,2);assert.equal(changed.commands[0].changes.quantity,1);
 });
-test('concurrent cold misses dispatch independently without in-flight coalescing',async()=>{
- const cache=createDecisionCache(),p=provider(),base=p.fetchImpl,barriers=new Map();
- p.fetchImpl=async(url,init)=>{const response=await base(url,init),q=JSON.parse(init.body).questions,kind=q.identity?'identity':q.quantity?'detail':null;if(kind){if(!barriers.has(kind)){let release;const promise=new Promise(resolve=>{release=resolve;});barriers.set(kind,{arrived:0,promise,release});}const barrier=barriers.get(kind);if(++barrier.arrived===2)barrier.release();await barrier.promise;}return response;};
- const a=adapter(cache,p),input={text:'a latte',order:createOrder()};const [left,right]=await Promise.all([a.interpretTurn(input),a.interpretTurn(input)]);assert.equal(left.metrics.totalRequests,3);assert.equal(right.metrics.totalRequests,3);assert.equal(left.metrics.cacheHits,0);assert.equal(right.metrics.cacheHits,0);assert.equal(p.calls.length,6);
+test('concurrent cold misses share pure identity work, keep routing live, and isolate cancellation',async()=>{
+ const real=createDecisionCache(),p=provider(),base=p.fetchImpl,controller=new AbortController();
+ let enterIdentity,releaseIdentity,joinIdentity,identitySignal,identityKeys=0;
+ const entered=new Promise(resolve=>{enterIdentity=resolve;}),blocked=new Promise(resolve=>{releaseIdentity=resolve;}),joined=new Promise(resolve=>{joinIdentity=resolve;});
+ const cache={get:real.get,set:real.set,keyFor:async(context,options)=>{const key=await real.keyFor(context,options);if(JSON.parse(context.body).questions.identity&&++identityKeys===2)joinIdentity();return key;}};
+ p.fetchImpl=async(url,init)=>{const response=await base(url,init);if(JSON.parse(init.body).questions.identity){identitySignal=init.signal;enterIdentity();await blocked;}return response;};
+ const a=adapter(cache,p),input={text:'a latte',order:createOrder()};
+ const owner=a.interpretTurn(input,{signal:controller.signal}),cancelled=assert.rejects(owner,{name:'AbortError'});await entered;
+ const survivor=a.interpretTurn(input);await joined;await new Promise(resolve=>setImmediate(resolve));
+ controller.abort();await cancelled;assert.equal(identitySignal.aborted,false);releaseIdentity();
+ const result=await survivor;
+ assert.equal(result.commands[0].identity,identity);assert.equal(result.metrics.totalRequests,2);assert.equal(result.metrics.inflightHits,1);assert.equal(result.metrics.cacheHits,0);
+ assert.equal(p.calls.filter(call=>Object.hasOwn(call.questions,'coverage')).length,2);
+ assert.equal(p.calls.filter(call=>Object.hasOwn(call.questions,'identity')).length,1);
+ assert.equal(p.calls.filter(call=>Object.hasOwn(call.questions,'quantity')).length,1);
+ assert.equal(p.calls.length,4);assert.equal(real.stats().entries,2);
 });
 test('an already-aborted turn cannot dispatch even a main routing request',async()=>{
  const controller=new AbortController();controller.abort();const p=provider(),a=adapter(createDecisionCache(),p);await assert.rejects(()=>a.interpretTurn({text:'a latte',order:createOrder()},{signal:controller.signal}),{name:'AbortError'});assert.equal(p.calls.length,0);

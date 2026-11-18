@@ -9,3 +9,8 @@ test('metrics retain bounded allowlisted extraction failure history only',()=>{a
 test('optional cache hits expose safe counts only and do not alter wire request totals',()=>{
  assert.equal(sanitizeMetrics({...valid,cacheHits:3}).cacheHits,3);assert.equal(sanitizeMetrics({...valid,cacheHits:3}).totalRequests,2);for(const cacheHits of [-1,1.2,Infinity,'3'])assert.equal(sanitizeMetrics({...valid,cacheHits}).cacheHits,undefined);
 });
+
+test('in-flight metric admits only nonnegative safe integers',()=>{
+ assert.equal(sanitizeMetrics({...valid,inflightHits:2}).inflightHits,2);
+ for(const inflightHits of [-1,1.1,Infinity,'2',Number.MAX_SAFE_INTEGER+1])assert.equal(sanitizeMetrics({...valid,inflightHits}).inflightHits,undefined);
+});

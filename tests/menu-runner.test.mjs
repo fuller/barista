@@ -72,7 +72,7 @@ test('invalid diagnostics and oversized clarification payloads do not enter repo
 });
 
 test('lean-v8 is explicit and preserves strict item grading',async()=>{
- assert.equal(parseMenuArgs(['--profile','lean-v8']).profile,'lean-v8');assert.equal(parseMenuArgs([]).profile,'lean-v9');let seen;const report=await runMenuEvaluation([sample()],{apiKey:'test',profile:'lean-v8',adapterFactory:options=>{seen=options.questionProfile;return {interpretTurn:async()=>({commands:[add(other)],clarification:null})};}});assert.equal(seen,'lean-v8');assert.equal(report.results[0].pass,false);assert.ok(report.results[0].failures.some(f=>f.code==='wrong_identity'));
+ assert.equal(parseMenuArgs(['--profile','lean-v8']).profile,'lean-v8');assert.equal(parseMenuArgs([]).profile,'lean-v10');let seen;const report=await runMenuEvaluation([sample()],{apiKey:'test',profile:'lean-v8',adapterFactory:options=>{seen=options.questionProfile;return {interpretTurn:async()=>({commands:[add(other)],clarification:null})};}});assert.equal(seen,'lean-v8');assert.equal(report.results[0].pass,false);assert.ok(report.results[0].failures.some(f=>f.code==='wrong_identity'));
 });
 test('lean-v8 is opt-in and keeps strict grading',async()=>{
  assert.equal(parseMenuArgs(['--profile','lean-v8']).profile,'lean-v8');let seen;

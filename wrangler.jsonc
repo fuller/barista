@@ -9,7 +9,7 @@
   "vars": {
     "DECISION_PROVIDER": "decider",
     "DECISION_MODEL": "perplexity/pplx-decider-v1.3:free",
-    "MENU_QUESTION_PROFILE": "lean-v9",
+    "MENU_QUESTION_PROFILE": "lean-v10",
     "DECISION_SCHEDULING": "guarded-overlap",
     "REQUIRE_TURN_RATE_LIMIT": "true"
   },

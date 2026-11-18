@@ -1,6 +1,6 @@
 import {validateOrder,applyCommands} from '../domain/order.mjs';
 import {createRegistry} from '../adapters/registry.mjs';
-import {DEFAULT_MODEL} from '../adapters/config.mjs';
+import {DEFAULT_MODEL,DEFAULT_MENU_PROFILE} from '../adapters/config.mjs';
 import {interpretInput} from '../application/turns.mjs';
 import {sanitizeMetrics,sanitizeDiagnostics} from './metrics.mjs';
 import {catalogResponse} from './catalog-api.mjs';
@@ -12,7 +12,7 @@ import menuDirectory from '../catalog/data/starbucks-menu-directory.json' with {
 registerCatalogSnapshot(previousSnapshot);
 const decisionCache=createDecisionCache();
 const registry=createRegistry({decider:createMenuDeciderAdapter});
-const menuQuestionProfiles=new Set(['lean-v8','lean-v9']);
+const menuQuestionProfiles=new Set(['lean-v8','lean-v9','lean-v10']);
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const admissionConfigured=env=>env.REQUIRE_TURN_RATE_LIMIT!=='true'||typeof env.TURN_RATE_LIMITER?.limit==='function';
 async function admitTurn(request,env){
@@ -50,7 +50,7 @@ export async function handleApi(request,env={}){
  const provider=env.DECISION_PROVIDER||'decider';const model=env.DECISION_MODEL||DEFAULT_MODEL;
  const scheduling=env.DECISION_SCHEDULING??'guarded-overlap';
  const schedulingValid=['sequential','guarded-overlap'].includes(scheduling);
- const requestedProfile=env.MENU_QUESTION_PROFILE===undefined?'lean-v9':env.MENU_QUESTION_PROFILE;
+ const requestedProfile=env.MENU_QUESTION_PROFILE===undefined?DEFAULT_MENU_PROFILE:env.MENU_QUESTION_PROFILE;
  const questionProfile=menuQuestionProfiles.has(requestedProfile)?requestedProfile:null;
  if(path==='/api/menu-directory'){
   if(request.method!=='GET')return json({error:'Method not allowed'},405);

@@ -3,6 +3,7 @@ import type {Command,DecisionMetrics,Drink,IngredientPath,Order,PendingClarifica
 import {createOrder,applyCommands} from '../domain/order.mjs';
 import {quoteOrder,formatMoney} from '../domain/pricing.mjs';
 import {createTurnGate} from '../application/turns.mjs';
+import {buildTurnRequest} from '../application/turn-request.mjs';
 import {createVoiceInput,createVoiceOutput} from '../adapters/voice';
 import type {VoiceInput} from '../adapters/voice';
 import {createLocalTurnTiming} from './local-turn-timing';
@@ -48,7 +49,7 @@ export default function App(){
   cancel(spoken);setError('');setText('');setMessages(m=>[...m,{role:'user',text:value}]);const snapshot=latest.current,id=crypto.randomUUID(),controller=new AbortController();active.current={id,revision:snapshot.revision,controller};gate.current.begin(id,snapshot.revision);setBusy(true);if(spoken){timing.current.bind(id,snapshot.revision);timing.current.mark('submit',id);}
   try{
    timing.current.mark('fetchStart',id);
-   const response=await fetch('/api/turn',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({turnId:id,baseRevision:snapshot.revision,text:value,order:snapshot,pending:pendingRef.current?.revision===snapshot.revision?pendingRef.current:null})});
+   const response=await fetch('/api/turn',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify(buildTurnRequest({turnId:id,baseRevision:snapshot.revision,text:value,order:snapshot,pending:pendingRef.current?.revision===snapshot.revision?pendingRef.current:null}))});
    timing.current.mark('fetchHeaders',id);
    const data=await response.json() as TurnResponse&{error?:string};timing.current.mark('responseParsed',id);if(!response.ok||data.error)throw new Error(data.error||'Request failed. Please try again.');
    if(active.current?.id!==id||latest.current.revision!==snapshot.revision)return;

@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import directory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import {createMenuDeciderAdapter} from '../adapters/menu-decider.mjs';
-import {DEFAULT_MODEL} from '../adapters/config.mjs';
+import {DEFAULT_MODEL,DEFAULT_MENU_PROFILE} from '../adapters/config.mjs';
 import {createOrder,applyCommands} from '../domain/order.mjs';
 import {quoteOrder} from '../domain/pricing.mjs';
 import {CLARIFICATION_STAGES,CLARIFICATION_REASONS} from '../adapters/clarification.mjs';
@@ -73,9 +73,9 @@ function safeDiagnostics(value){if(!value||typeof value!=='object')return undefi
 const safeClarification=value=>typeof value==='string'&&value.length>0&&value.length<=1000&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value)?value:null;
 function safeError(error){return {code:error?.evalBudget?'request_budget_exhausted':['AbortError','TimeoutError'].includes(error?.name)?'aborted':/^Invalid decision|^Invalid extraction/.test(error?.message??'')?'invalid_provider_response':error instanceof TypeError||/Decision service unavailable|fetch failed/i.test(error?.message??'')?'transport_error':'adapter_error'};}
 function redact(value,secret){if(typeof value==='string')return secret?value.replaceAll(secret,'[redacted]'):value;if(Array.isArray(value))return value.map(item=>redact(item,secret));if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,redact(item,secret)]));return value;}
-export async function runMenuEvaluation(input,{apiKey,model=DEFAULT_MODEL,profile='lean-v9',repeats=1,maxRequests=160,concurrency=3,fetchImpl=fetch,adapterFactory,corpusSHA,clock=()=>performance.now()}={}){
+export async function runMenuEvaluation(input,{apiKey,model=DEFAULT_MODEL,profile=DEFAULT_MENU_PROFILE,repeats=1,maxRequests=160,concurrency=3,fetchImpl=fetch,adapterFactory,corpusSHA,clock=()=>performance.now()}={}){
  const validation=validateMenuCases(input),cases=validation.cases;
- if(!['lean-v8','lean-v9'].includes(profile)||!Number.isInteger(repeats)||repeats<1||repeats>20||!Number.isInteger(maxRequests)||maxRequests<0||maxRequests>5000||!Number.isInteger(concurrency)||concurrency<1||concurrency>3||typeof model!=='string'||!/^[\w./:-]{1,160}$/.test(model))throw new Error('Invalid menu evaluation bounds');
+ if(!['lean-v8','lean-v9','lean-v10'].includes(profile)||!Number.isInteger(repeats)||repeats<1||repeats>20||!Number.isInteger(maxRequests)||maxRequests<0||maxRequests>5000||!Number.isInteger(concurrency)||concurrency<1||concurrency>3||typeof model!=='string'||!/^[\w./:-]{1,160}$/.test(model))throw new Error('Invalid menu evaluation bounds');
  const startedAt=new Date().toISOString(),tasks=Array.from({length:repeats},(_,repeat)=>cases.map(c=>({c,repeat}))).flat(),results=Array(tasks.length);let next=0,dispatches=0;
  async function execute({c,repeat}){
   let before=createOrder();if(c.seedCommands.length)before=applyCommands(before,c.seedCommands);const original=structuredClone(before),requests=[],started=clock();let result={commands:[],clarification:null},after=before,status='completed',error;
