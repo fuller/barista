@@ -48,6 +48,18 @@ The final combined 61-case run passed 60, with one false clarification and no wr
 - [Final 61-case raw regression](evaluation-results/2026-11-17/menu-v10-regression.json), including suite-assembly provenance.
 - [Matched benchmark summaries and per-case outcomes](evaluation-results/2026-11-17/optimization-summary.json).
 
+## Progressive voice preparation
+
+The browser displays current interim recognition text and can start one interpretation after 650 ms of stable text. The preview is hypothetical: it has no effect on committed quantities, totals, history or confirmation. A final transcript adopts preparation only when trim-normalized text and cart revision match exactly; otherwise the final request follows the ordinary path. Changed or withdrawn interim results invalidate preparation without starting another speculative request in that session.
+
+592 unit tests and 42 deterministic browser tests passed for this implementation. Coverage includes completed and pending adoption, corrected finals, failed preparation, withdrawn hypotheses, manual edits, recognition errors, overlong finals and timing isolation. No model questions or confidence gates changed; the recorded menu-model regressions above remain evidence for their recorded source versions.
+
+A separate [real-provider preparation smoke](evaluation-results/2026-11-17/progressive-voice.json) used synthetic speech events with the real local API and a fresh process cache. It made one HTTP turn and two provider calls. Provider response parsing completed before the synthetic final event; final-to-command application was 0.4 ms and final-to-next-animation-frame was 14.3 ms.
+
+The test deliberately waited until the preview was ready before emitting final speech. It proves request reuse and overlap, not typical microphone latency, endpointing speed or physical paint. If final speech arrives before preparation completes, the browser waits for the same pending request. Changed text can discard completed provider work and require one additional final HTTP turn. Exact matching protects corrections but reduces reuse when the recognizer changes capitalization or punctuation.
+
+Timing from a discarded preparation remains isolated from the final request. Adopted pending requests retain their original physical fetch timestamps; completed preparation can correctly show fetch/response milestones before final speech. See the [opt-in reproduction commands](../experiments/live-voice/README.md).
+
 ## Retained v9 evidence
 
 Both matched development runs passed all 27 cases in every condition. Cold v8 used 83 calls and 152,112 input tokens; cold v9 used 80 calls and 148,862 input tokens: 3.6% fewer calls and 2.1% fewer input tokens. The consumed 12-case suite passed for both profiles with unchanged cold calls/tokens. Both profiles passed the 12 targeted cases; calls fell 41 to 37.

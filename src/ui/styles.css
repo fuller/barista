@@ -259,3 +259,10 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 28px
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   button:not(:disabled):active { transform: none !important; }
 }
+
+.voice-preview { margin: 0 0 12px; padding: 12px; border: 1px dashed var(--line, #cbd6ce); border-radius: 12px; background: #f3f6f2; overflow-wrap: anywhere; }
+.voice-preview-title { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
+.voice-transcript { margin: 6px 0; font-size: 14px; line-height: 1.5; }
+.voice-preview-items { max-height: 220px; overflow-y: auto; display: grid; gap: 8px; margin-top: 10px; }
+.voice-preview-items h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.voice-preview-items p, .voice-preview-help { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }

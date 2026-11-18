@@ -25,6 +25,8 @@ The deploy command builds and publishes to the Worker's `workers.dev` URL. Previ
 
 ## Public endpoint limits
 
+Speculative voice preparation uses the same API and rate-limit quota as final submissions. Matching final text reuses its HTTP turn; a correction or failed preparation can require one additional final HTTP turn (at most two per microphone session).
+
 The `TURN_RATE_LIMITER` native binding permits approximately 10 turn requests per 60 seconds per IP at each Cloudflare location. `REQUIRE_TURN_RATE_LIMIT=true` makes live turns fail closed when this binding or trusted Cloudflare IP metadata is unavailable. Keep that setting enabled for this deployment.
 
 Cloudflare's limiter is approximate and local to each location, not a globally exact quota. Shared-IP users share a limit; distributed clients and traffic across locations can exceed it. It is abuse friction, not a spending cap or authentication system. Set a hard key budget or credit limit with the provider where supported, and monitor usage. Provider limits remain necessary even with this limiter.

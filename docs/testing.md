@@ -10,7 +10,7 @@ npm run test:e2e
 npm run eval:menu
 ```
 
-Unit tests cover domain validation, provider protocol handling, cancellation, source data and evaluation harnesses. Browser tests use a deterministic server fixture, not real inference. The pinned browser runtime may download Chromium. Mocked tests establish application behavior, not model accuracy.
+Unit tests cover domain validation, provider protocol handling, cancellation, source data, speculative voice preparation and evaluation harnesses. Progressive voice browser regressions exercise completed/in-flight adoption, corrections, failed preparation, withdrawn hypotheses, manual edits, recognition errors, and transcript limits. Browser tests use a deterministic server fixture, not real inference. The pinned browser runtime may download Chromium. Mocked tests establish application behavior, not model accuracy.
 
 The four active model corpora are documented in [evaluation](evaluation.md). Default validation does not call a provider. Live runs are explicit, consume request budgets and can incur charges. Never count errors or skipped cases as passes.
 

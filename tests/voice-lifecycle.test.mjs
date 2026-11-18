@@ -44,3 +44,37 @@ test('optional native timing events are ordered and stale sessions are ignored',
  input.start();const r=instances[0];r.onaudiostart();r.onspeechend();r.onresult({results:[{isFinal:true,0:{transcript:'a latte'}}]});input.stop();r.onaudiostart();r.onspeechend();
  assert.deepEqual(events,['recognitionStart','audioStart','speechEnd','finalTranscript']);
 });
+test('interim emits full ordered current results without final submission',()=>{
+ const instances=[],partials=[],finals=[],events=[];class Recognition{constructor(){instances.push(this);}start(){}abort(){}}
+ globalThis.window={SpeechRecognition:Recognition};
+ const input=createVoiceInput({onTranscript:t=>finals.push(t),onInterimTranscript:t=>partials.push(t),onTiming:e=>events.push(e),onState(){},onError(){}});
+ input.start();const r=instances[0];assert.equal(r.interimResults,true);r.onspeechstart();
+ r.onresult({resultIndex:1,results:[{isFinal:true,0:{transcript:'one latte'}},{isFinal:false,0:{transcript:'with oat'}}]});
+ assert.deepEqual(partials,['one latte with oat']);assert.deepEqual(finals,[]);
+ r.onresult({results:[{isFinal:true,0:{transcript:'one latte'}},{isFinal:true,0:{transcript:'with oat milk'}}]});
+ assert.deepEqual(finals,['one latte with oat milk']);assert.deepEqual(events,['recognitionStart','speechStart','interimTranscript','finalTranscript']);
+});
+test('recognition failure invalidates callbacks even when abort emits end synchronously',()=>{
+ const instances=[],partials=[],finals=[],events=[],errors=[],states=[];class Recognition{constructor(){instances.push(this);}start(){}abort(){this.onend?.();}}
+ globalThis.window={SpeechRecognition:Recognition};
+ const input=createVoiceInput({onTranscript:t=>finals.push(t),onInterimTranscript:t=>partials.push(t),onTiming:e=>events.push(e),onState:s=>states.push(s),onError:e=>errors.push(e)});
+ input.start();const r=instances[0];r.onerror({error:'network'});r.onresult({results:[{isFinal:false,0:{transcript:'late partial'}}]});r.onresult({results:[{isFinal:true,0:{transcript:'late final'}}]});r.onspeechstart?.();r.onspeechend?.();r.onerror({error:'network'});r.onend();
+ assert.deepEqual(partials,[]);assert.deepEqual(finals,[]);assert.equal(errors.length,1);assert.equal(states.at(-1),false);assert.deepEqual(events,['recognitionStart']);
+});
+test('cancel, replacement and dispose ignore late interim results',()=>{
+ const instances=[],partials=[];class Recognition{constructor(){instances.push(this);}start(){}abort(){}}
+ globalThis.window={SpeechRecognition:Recognition};const input=createVoiceInput({onTranscript(){},onInterimTranscript:t=>partials.push(t),onState(){},onError(){}});
+ const result={results:[{isFinal:false,0:{transcript:'late'}}]};input.start();const first=instances[0];input.start();first.onresult(result);const second=instances[1];input.stop();second.onresult(result);input.start();const third=instances[2];input.dispose();third.onresult(result);assert.deepEqual(partials,[]);
+});
+test('failure feedback survives a throwing abort and ended sessions ignore late finals',()=>{
+ const f=setup();f.input.start();const r=f.instances[0];r.abort=()=>{throw new Error('already stopped');};
+ r.onerror({error:'network'});r.onresult(f.result('late'));assert.equal(f.errors.length,1);assert.equal(f.states.at(-1),false);assert.deepEqual(f.transcripts,[]);
+ const g=setup();g.input.start();const ended=g.instances[0];ended.onend();ended.onresult(g.result('late after no speech'));assert.equal(g.errors.length,1);assert.deepEqual(g.transcripts,[]);
+});
+for(const emptyResults of [[],[{isFinal:false,0:{transcript:'   '}}]])test('withdrawn recognition hypothesis emits empty interim without blocking later final '+emptyResults.length,()=>{
+ const instances=[],partials=[],finals=[],events=[];class Recognition{constructor(){instances.push(this);}start(){}abort(){}}
+ globalThis.window={SpeechRecognition:Recognition};const input=createVoiceInput({onTranscript:t=>finals.push(t),onInterimTranscript:t=>partials.push(t),onTiming:e=>events.push(e),onState(){},onError(){}});
+ input.start();const r=instances[0];r.onresult({results:[{isFinal:false,0:{transcript:'a latte'}}]});r.onresult({results:emptyResults});
+ assert.deepEqual(partials,['a latte','']);assert.deepEqual(finals,[]);assert.equal(events.includes('finalTranscript'),false);
+ r.onresult({results:[{isFinal:true,0:{transcript:'a tea'}}]});assert.deepEqual(finals,['a tea']);
+});
