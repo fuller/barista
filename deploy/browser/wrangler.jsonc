@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "barista-browser-pricing",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "version_metadata": {"binding": "VERSION"},
+  "preview_urls": false,
+  "containers": [{
+    "class_name": "BrowserHost",
+    "scheduling_policy": "durable_object",
+    "ssh": {"enabled": false},
+    "images": {"base": {"dockerfile": "Dockerfile", "build_context": "../.."}},
+    "observability": {"logs": {"enabled": false}}
+  }],
+  "durable_objects": {"bindings": [{"name": "BROWSER", "class_name": "BrowserHost"}]},
+  "exports": {"BrowserHost": {"type": "durable-object", "storage": "sqlite"}},
+  "observability": {"enabled": false}
+}

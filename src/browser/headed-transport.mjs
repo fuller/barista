@@ -9,19 +9,37 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
  const idleTimer=setInterval(()=>{void expire().catch(()=>{});},Math.min(idleTtlMs,30000));idleTimer.unref?.();
  const create=async key=>{
   if(sessions.size>=maxSessions)throw Error('unavailable');
-  const state={context:null,page:null,ready:false,busy:true,lastUsed:now()};sessions.set(key,state);
+  const state={context:null,page:null,ready:false,busy:true,lastUsed:now(),setupPending:true,documentStatus:null,guestStatus:null,setupFailure:null};sessions.set(key,state);
   try{
    state.context=await browser.newContext();if(sessions.get(key)!==state){await state.context.close();throw Error('unavailable');}state.page=await state.context.newPage();
-   state.page.on('response',response=>{if(response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200)state.ready=true;});
+   state.page.on('response',response=>{
+    const guest=response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest';
+    const status=response.status();
+    if(guest&&status===200){state.ready=true;state.setupFailure=null;}
+    // Keep numeric statuses only; never inspect provider bodies or challenge text.
+    if(state.setupPending&&Number.isInteger(status)&&status>=100&&status<=599){
+     if(guest)state.guestStatus=status;
+     else if(state.documentStatus===null&&response.request?.().isNavigationRequest()&&response.frame()===state.page.mainFrame())state.documentStatus=status;
+    }
+   });
    state.page.on('close',()=>{state.ready=false;});
    await state.page.bringToFront();
    try{await setup(state.page);if(!state.ready&&state.page.waitForResponse)await state.page.waitForResponse(response=>response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200,{timeout:2000});}catch{/* Ordinary UI failed; leave visible setup tab for operator. */}
+   state.setupPending=false;
+   if(!state.ready){const statuses=[state.documentStatus,state.guestStatus];state.setupFailure=statuses.includes(403)?'access_denied':statuses.includes(429)?'rate_limited':'setup_incomplete';}
    return state;
   }catch{if(state.context)await destroy(key,state);else sessions.delete(key);throw Error('unavailable');}
   finally{state.busy=false;}
  };
  return {
-  status:()=>({ready:[...sessions.values()].some(s=>s.ready&&!s.page?.isClosed()),sessions:sessions.size,awaitingSetup:[...sessions.values()].filter(s=>!s.ready).length,sessionCapacity:maxSessions,busy:[...sessions.values()].some(s=>s.busy),cooldownMs:Math.max(0,cooldownUntil-now()),setup:'Each caller gets a fresh visible guest tab. Automatic ordinary UI setup was attempted. If awaiting setup, select a cafe, add a drink, and review the cart. Do not sign in.'}),
+  status:()=>{
+   const setupFailures={access_denied:0,rate_limited:0,setup_incomplete:0},setupHttpStatuses={document:{},guest:{}};
+   for(const state of sessions.values()){
+    if(!state.ready&&state.setupFailure)setupFailures[state.setupFailure]++;
+    for(const [kind,status]of [['document',state.documentStatus],['guest',state.guestStatus]])if(status!==null)setupHttpStatuses[kind][status]=(setupHttpStatuses[kind][status]??0)+1;
+   }
+   return {ready:[...sessions.values()].some(s=>s.ready&&!s.page?.isClosed()),sessions:sessions.size,awaitingSetup:[...sessions.values()].filter(s=>!s.ready).length,sessionCapacity:maxSessions,busy:[...sessions.values()].some(s=>s.busy),cooldownMs:Math.max(0,cooldownUntil-now()),setupFailures,setupHttpStatuses,setup:'Each caller gets a fresh visible guest tab. Automatic ordinary UI setup was attempted. If awaiting setup, select a cafe, add a drink, and review the cart. Do not sign in.'};
+  },
   async quote(sessionKey,body){
    if(now()<cooldownUntil)throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED'});
    await expire();let state=sessions.get(sessionKey);

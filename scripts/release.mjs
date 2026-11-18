@@ -3,7 +3,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
-export const releaseRoots=['.github','src','scripts','tests','evals','docs','experiments'];
+export const releaseRoots=['.github','src','scripts','tests','evals','docs','experiments','deploy'];
 export const releaseFiles=['.env.example','.gitignore','README.md','LICENSE','THIRD_PARTY_NOTICES.md','.node-version','CONTRIBUTING.md','SECURITY.md','package.json','package-lock.json','wrangler.jsonc','tsconfig.json','index.html','e2e.config.ts','e2e.live-voice.config.ts'];
 const excluded=name=>['.git','.wrangler','node_modules','dist','work','.openai','.gstack','.e2e','.superpowers'].includes(name)||name.startsWith('.dev.vars')||name.startsWith('._')||name==='.env'||name.startsWith('.env.')&&name!=='.env.example'||name.endsWith('.log');
 export async function collectReleaseFiles(root){
