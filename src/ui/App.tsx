@@ -1,98 +1,36 @@
-import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import type {Command,DecisionMetrics,Drink,IngredientPath,Order,PendingClarification,Size,Temperature,TurnResponse} from '../contracts';
-import {createOrder,applyCommands} from '../domain/order.mjs';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import type {Drink,IngredientPath} from '../contracts';
 import {formatMoney} from '../domain/pricing.mjs';
-import {createTurnGate} from '../application/turns.mjs';
-import {requestTurn} from '../application/turn-client.mjs';
-import {buildTurnRequest} from '../application/turn-request.mjs';
-import {createVoicePreparation} from '../application/voice-preparation.mjs';
-import {buildVoicePreview} from '../application/voice-preview.mjs';
 import {VoicePreview} from './VoicePreview';
-import {createVoiceInput,createVoiceOutput} from '../adapters/voice';
-import type {VoiceInput} from '../adapters/voice';
-import {createLocalTurnTiming} from './local-turn-timing';
-import type {LocalTurnTiming} from './local-turn-timing';
 import {MenuView} from './MenuView';
 import {OrderPanel} from './OrderPanel';
 import {useLiveQuote} from './quote-query';
 import {pricingAvailable} from './quote-cache.mjs';
-import type {CommittedChange} from './OrderPanel';
-import {diffOrder} from './order-diff.mjs';
+import {useOrdering} from './use-ordering';
 import {useCatalog,useMenuDirectory} from './catalog-query';
 import {defaultCatalogService} from '../catalog/service.mjs';
-type VoiceRequest={turnId:string;text:string;revision:number;order:Order;pending:PendingClarification|null;signal:AbortSignal};
-type PreparedTurn={turnId:string;text:string;revision:number;controller:AbortController;promise:Promise<TurnResponse>};
-type Message={role:'assistant'|'user';text:string};
 const examples=['A grande iced vanilla latte','Make that oat milk','Add another shot'];
 function Icon({kind}:{kind:'mic'|'arrow'}){return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">{kind==='mic'?<><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 10v2a6 6 0 0012 0v-2M12 18v4m-4 0h8"/></>:<path d="M5 12h14m-6-6 6 6-6 6"/>}</svg>}
 export default function App(){
  const catalog=useCatalog(),menuDirectory=useMenuDirectory();
- const [order,setOrder]=useState<Order>(()=>createOrder(defaultCatalogService.version)),latest=useRef(order);
- const [change,setChange]=useState<CommittedChange|null>(null);
  const [cartOpen,setCartOpen]=useState(false),[mobile,setMobile]=useState(()=>window.matchMedia('(max-width:720px)').matches);
  const messagesPane=useRef<HTMLDivElement|null>(null);
- const [messages,setMessages]=useState<Message[]>([{role:'assistant',text:'Pick a favorite, or tell me what sounds good.'}]);
- const [pending,setPending]=useState<PendingClarification|null>(null),pendingRef=useRef(pending);
- const [text,setText]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[listening,setListening]=useState(false),[voiceSupported,setVoiceSupported]=useState(false);
- const [replies,setReplies]=useState(true),repliesRef=useRef(replies);repliesRef.current=replies;
+ const [text,setText]=useState('');
  const [configReady,setConfigReady]=useState(false);
  const [connectionAttempt,setConnectionAttempt]=useState(0),[connectionError,setConnectionError]=useState('');
  const [config,setConfig]=useState({liveAvailable:false,model:'',provider:'',pricingAvailable:false});
+ const workflow=useOrdering({ready:configReady,available:config.liveAvailable,error:connectionError});
+ const {order,change,pending,messages,error,busy,listening,voiceSupported,replies,metrics,interim,preparing,preview,localTiming,commit,cancel,cancelQuestion,startVoice,finishVoice,setReplies,setError}=workflow;
  const liveReady=configReady&&config.liveAvailable;
- const [metrics,setMetrics]=useState<DecisionMetrics|null>(null);
- const [interim,setInterim]=useState(''),[preparing,setPreparing]=useState(false),[preview,setPreview]=useState<ReturnType<typeof buildVoicePreview>>(null);
- const preparation=useRef<ReturnType<typeof createVoicePreparation>|null>(null);
- const gate=useRef(createTurnGate());
- const timing=useRef(createLocalTurnTiming()),voiceRevision=useRef<number|null>(null),pendingFrame=useRef<{id:string;revision:number}|null>(null);
- const preparationTimings=useRef(new Map<string,ReturnType<ReturnType<typeof createLocalTurnTiming>['fork']>>());
- const [localTiming,setLocalTiming]=useState<LocalTurnTiming|null>(null);
- const active=useRef<{id:string;revision:number;controller:AbortController}|null>(null),voice=useRef<VoiceInput|null>(null),output=useRef<ReturnType<typeof createVoiceOutput>|null>(null),submitRef=useRef<(value:string,spoken?:boolean)=>void>(()=>{});
- function cancel(preserveTiming=false){preparation.current?.cancel();preparationTimings.current.clear();setInterim('');setPreview(null);setPreparing(false);if(!preserveTiming){timing.current.cancel();pendingFrame.current=null;setLocalTiming(null);}voiceRevision.current=null;voice.current?.stop();output.current?.stop();gate.current.cancel();if(active.current){active.current.controller.abort();active.current=null;setBusy(false);setError('Order changed. Previous request cancelled.');}}
- function acceptOrder(next:Order){const before=latest.current;latest.current=next;setChange({before,after:next,diff:diffOrder(before,next)});setOrder(next);}
- function commit(commands:Command[],base=latest.current){try{const next=applyCommands(base,commands) as Order;cancel();acceptOrder(next);pendingRef.current=null;setPending(null);return true;}catch(e){setError(e instanceof Error?e.message:'Could not update the order.');return false;}}
  function selectProduct(identity:string,size:string|null){
   setError('');const added=commit([{type:'add-menu',identity,size}]);if(added&&mobile)setCartOpen(true);return added;
  }
- function startNewOrder(){try{const next=createOrder(catalog.data?.version??defaultCatalogService.version) as Order;cancel();acceptOrder(next);pendingRef.current=null;setPending(null);setError('');setMetrics(null);}catch(e){setError(e instanceof Error?e.message:'Could not start a new order. Your order has not changed.');}}
- async function submit(value:string,spoken=false){
-  value=value.trim();if(!value)return;if(!configReady){setError('Connecting to live ordering…');return;}if(!config.liveAvailable){setError(connectionError||'Live ordering is unavailable. Configure the server API key, then retry connection.');return;}if(value.length>600){if(spoken)cancel();setError('Keep your order to 600 characters or fewer.');return;}
-  if(spoken&&voiceRevision.current!==latest.current.revision){timing.current.cancel();return;}
-  const prepared:PreparedTurn|null=spoken?preparation.current?.take(value,latest.current.revision)??null:null;
-  const preparedTiming=prepared?preparationTimings.current.get(prepared.turnId):undefined;
-  cancel(spoken);setError('');setText('');setMessages(m=>[...m,{role:'user',text:value}]);const snapshot=latest.current,id=prepared?.turnId??crypto.randomUUID(),controller=prepared?.controller??new AbortController();active.current={id,revision:snapshot.revision,controller};gate.current.begin(id,snapshot.revision);setBusy(true);if(spoken){timing.current.bind(id,snapshot.revision);preparedTiming?.adopt(id);timing.current.mark('submit',id);}
-  try{
-   const data=(prepared?await prepared.promise:await requestTurn({turnId:id,baseRevision:snapshot.revision,text:value,order:snapshot,pending:pendingRef.current?.revision===snapshot.revision?pendingRef.current:null},{signal:controller.signal,onTiming:(event:string)=>timing.current.mark(event,id)})) as TurnResponse;
-   if(active.current?.id!==id||latest.current.revision!==snapshot.revision)return;
-   if(data.turnId!==id||data.baseRevision!==snapshot.revision)throw new Error('Response did not match this order. Please try again.');
-   if(!gate.current.accept(data.turnId,latest.current.revision))return;
-   const next=data.commands.length?applyCommands(latest.current,data.commands) as Order:latest.current;
-   timing.current.mark('commandsApplied',id);
-   if(data.commands.length){pendingFrame.current={id,revision:next.revision};acceptOrder(next);}else timing.current.cancel();
-   const nextPending=data.pending&&data.pending.revision===next.revision?data.pending:null;pendingRef.current=nextPending;setPending(nextPending);setMetrics(data.metrics??null);
-   const answer=data.clarification||(next.confirmed?'Order confirmed. Your simulated receipt is ready.':data.commands.length?'Got it. Your order is updated.':'Tell me what you’d like to order.');setMessages(m=>[...m,{role:'assistant',text:answer}]);if(spoken&&repliesRef.current)output.current?.speak(answer);
-  }catch(e){if(active.current?.id===id){timing.current.cancel();pendingFrame.current=null;}if(!controller.signal.aborted)setError(e instanceof Error?e.message:'Could not reach the order service.');}
-  finally{if(active.current?.id===id){active.current=null;setBusy(false);}}
- }
- submitRef.current=submit;
- useLayoutEffect(()=>{
-  const frame=pendingFrame.current;if(!frame||frame.revision!==order.revision)return;
-  timing.current.mark('layoutCommit',frame.id);
-  const handle=requestAnimationFrame(()=>{if(pendingFrame.current!==frame||latest.current.revision!==frame.revision)return;timing.current.mark('nextFrame',frame.id);const sample=timing.current.complete(frame.id,frame.revision);pendingFrame.current=null;if(sample)setLocalTiming(sample);});
-  return()=>cancelAnimationFrame(handle);
- },[order]);
+ function startNewOrder(){workflow.newOrder(catalog.data?.version??defaultCatalogService.version);}
+ function submit(value:string){if(workflow.submit(value))setText('');}
+ useEffect(()=>{if(busy)setText('');},[busy]);
  useEffect(()=>{
   const query=window.matchMedia('(max-width:720px)'),update=()=>setMobile(query.matches);query.addEventListener('change',update);
-  preparation.current=createVoicePreparation({
-   request:({turnId,text,revision,order,pending,signal}:VoiceRequest)=>{const trace=preparationTimings.current.get(turnId);return requestTurn({turnId,baseRevision:revision,text,order,pending},{signal,onTiming:(event:string)=>trace?.mark(event)});},
-   onPreview:(response:TurnResponse|null,candidate?:PreparedTurn)=>{setPreparing(false);setPreview(response&&candidate&&voiceRevision.current===candidate.revision&&latest.current.revision===candidate.revision?buildVoicePreview(latest.current,response):null);},
-   onEvent:(event:string,candidate?:PreparedTurn)=>{if(!candidate)return;if(event==='preparationStarted'){preparationTimings.current.set(candidate.turnId,timing.current.fork());setPreparing(true);}preparationTimings.current.get(candidate.turnId)?.mark(event);}
-  });
-  output.current=createVoiceOutput();voice.current=createVoiceInput({
-   onInterimTranscript:value=>{if(voiceRevision.current!==latest.current.revision)return;setInterim(value);preparation.current?.update(value);},
-   onTranscript:value=>submitRef.current(value,true),onState:setListening,
-   onError:message=>{preparation.current?.cancel();preparationTimings.current.clear();setInterim('');setPreview(null);setPreparing(false);timing.current.cancel();voiceRevision.current=null;setError(message);},onTiming:event=>timing.current.mark(event)
-  });setVoiceSupported(voice.current.supported);
-  return()=>{query.removeEventListener('change',update);gate.current.cancel();preparation.current?.cancel();preparationTimings.current.clear();active.current?.controller.abort();voice.current?.dispose();timing.current.cancel();pendingFrame.current=null;output.current?.stop();};
+  return()=>query.removeEventListener('change',update);
  },[]);
  useEffect(()=>{
   const controller=new AbortController();let timedOut=false;
@@ -108,7 +46,6 @@ export default function App(){
   });
   return()=>{window.clearTimeout(timer);if(!timedOut)controller.abort();};
  },[connectionAttempt]);
- function cancelQuestion(){cancel();pendingRef.current=null;setPending(null);setError('');setMessages(current=>[...current,{role:'assistant',text:'Cancelled. What would you like next?'}]);}
  useEffect(()=>{const pane=messagesPane.current;if(pane)pane.scrollTop=pane.scrollHeight;},[messages,busy]);
  // Stable subtree identity skips hundreds of cards on voice/busy renders; ref delegates to current cart/mobile state.
  const menuSelectRef=useRef(selectProduct);menuSelectRef.current=selectProduct;
@@ -125,7 +62,7 @@ export default function App(){
    <div className="catalog-note">{source&&<><p>Catalog source: {source.source} · <time dateTime={source.fetchedAt}>{new Date(source.fetchedAt).toLocaleString()}</time>{sourceStale?' · Source data is over 24 hours old.':''}</p><p>Product photos show menu items. Store availability is not verified.</p><details className="source-details"><summary>Catalog details</summary><p>Menu version {menuDirectory.data?.version}</p></details></>}{(menuDirectory.isError||catalog.isError)&&menuDirectory.data&&<p>Refresh failed. Showing the last good menu.</p>}<p>Live store pricing for 11201 · 104 Jay St.</p><button onClick={()=>{menuDirectory.refetch();catalog.refetch();}} disabled={menuDirectory.isFetching||catalog.isFetching}>{menuDirectory.isFetching||catalog.isFetching?'Refreshing…':'Refresh menu'}</button></div>
   </div><div className="right-rail">
    <OrderPanel menuDirectory={menuDirectory.data} order={order} quote={quote} pricingStatus={pricing.status} pricingLoading={pricing.loading} onRefreshPrices={pricing.refresh} change={change} mobile={mobile} open={cartOpen} onClose={()=>setCartOpen(false)} commit={commit} update={update}/>
-   <section className="conversation panel" aria-label="Order conversation"><div className="panel-top"><span className="eyebrow">JUST SAY IT</span><span className="status"><i data-connected={liveReady}/> {!configReady?'Connecting…':config.liveAvailable?'Live ordering':'Live unavailable'}</span></div><div className="messages" ref={messagesPane} role="log" aria-label="Order messages" aria-live="polite" aria-relevant="additions text">{messages.map((message,index)=><div key={index} className={'message '+message.role}><span className="speaker">{message.role==='assistant'?'barista':'You'}</span><p>{message.text}</p></div>)}{busy&&<div className="thinking" role="status"><span>Working on your order…</span> <button className="cancel-request" type="button" onClick={()=>{cancel();setError('Request cancelled. Your cart is unchanged.');}}>Cancel request</button></div>}</div><div className="composer"><VoicePreview transcript={interim} preparing={preparing} preview={preview}/><div className="live-connection" aria-label="Live ordering connection">{!configReady&&<p role="status">Connecting to live ordering…</p>}{connectionError&&<p className="error" role="alert">{connectionError}</p>}{!liveReady&&<button type="button" className="retry-connection" disabled={!configReady} onClick={()=>{cancel();setConfig(current=>({...current,liveAvailable:false}));setConfigReady(false);setError('');setConnectionAttempt(attempt=>attempt+1);}}>Retry connection</button>}</div>{pending&&<div className="clarification"><p>A quick question: {pending.question}</p><button type="button" onClick={cancelQuestion}>Cancel question</button></div>}<div className="examples">{examples.map(example=><button key={example} disabled={!liveReady} onClick={()=>submit(example)}>{example}<span>↗</span></button>)}</div><form onSubmit={e=>{e.preventDefault();submit(text);}}><label className="sr-only" htmlFor="order-input">Tell us your order</label><input id="order-input" enterKeyHint="send" maxLength={600} value={text} onChange={e=>setText(e.target.value)} placeholder="Tell us your order…" autoComplete="off"/><button type="button" className={'mic '+(listening?'listening':'')} aria-label={listening?'Stop microphone':'Start microphone'} aria-pressed={listening} disabled={!voiceSupported||!liveReady} onClick={()=>{output.current?.stop();if(listening)voice.current?.finish();else {cancel();setError('');timing.current.begin(latest.current.revision);voiceRevision.current=latest.current.revision;preparation.current?.begin({revision:latest.current.revision,order:buildTurnRequest({order:latest.current}).order,pending:pendingRef.current?.revision===latest.current.revision?pendingRef.current:null});setLocalTiming(null);voice.current?.start();}}}><Icon kind="mic"/></button><button className="send" disabled={!text.trim()||!liveReady} aria-label="Send order"><Icon kind="arrow"/></button></form>{error&&<p className="error" role="alert">{error}</p>}<div className="voice-settings"><span>{listening?'Listening…':voiceSupported?'Browser speech service.':'Voice unavailable. Type to order.'}</span><label><input type="checkbox" checked={replies} onChange={e=>{setReplies(e.target.checked);if(!e.target.checked)output.current?.stop();}}/> Spoken replies</label></div></div></section>
+   <section className="conversation panel" aria-label="Order conversation"><div className="panel-top"><span className="eyebrow">JUST SAY IT</span><span className="status"><i data-connected={liveReady}/> {!configReady?'Connecting…':config.liveAvailable?'Live ordering':'Live unavailable'}</span></div><div className="messages" ref={messagesPane} role="log" aria-label="Order messages" aria-live="polite" aria-relevant="additions text">{messages.map((message,index)=><div key={index} className={'message '+message.role}><span className="speaker">{message.role==='assistant'?'barista':'You'}</span><p>{message.text}</p></div>)}{busy&&<div className="thinking" role="status"><span>Working on your order…</span> <button className="cancel-request" type="button" onClick={()=>{cancel();setError('Request cancelled. Your cart is unchanged.');}}>Cancel request</button></div>}</div><div className="composer"><VoicePreview transcript={interim} preparing={preparing} preview={preview}/><div className="live-connection" aria-label="Live ordering connection">{!configReady&&<p role="status">Connecting to live ordering…</p>}{connectionError&&<p className="error" role="alert">{connectionError}</p>}{!liveReady&&<button type="button" className="retry-connection" disabled={!configReady} onClick={()=>{cancel();setConfig(current=>({...current,liveAvailable:false}));setConfigReady(false);setError('');setConnectionAttempt(attempt=>attempt+1);}}>Retry connection</button>}</div>{pending&&<div className="clarification"><p>A quick question: {pending.question}</p><button type="button" onClick={cancelQuestion}>Cancel question</button></div>}<div className="examples">{examples.map(example=><button key={example} disabled={!liveReady} onClick={()=>submit(example)}>{example}<span>↗</span></button>)}</div><form onSubmit={e=>{e.preventDefault();submit(text);}}><label className="sr-only" htmlFor="order-input">Tell us your order</label><input id="order-input" enterKeyHint="send" maxLength={600} value={text} onChange={e=>setText(e.target.value)} placeholder="Tell us your order…" autoComplete="off"/><button type="button" className={'mic '+(listening?'listening':'')} aria-label={listening?'Stop microphone':'Start microphone'} aria-pressed={listening} disabled={!voiceSupported||!liveReady} onClick={()=>listening?finishVoice():startVoice()}><Icon kind="mic"/></button><button className="send" disabled={!text.trim()||!liveReady} aria-label="Send order"><Icon kind="arrow"/></button></form>{error&&<p className="error" role="alert">{error}</p>}<div className="voice-settings"><span>{listening?'Listening…':voiceSupported?'Browser speech service.':'Voice unavailable. Type to order.'}</span><label><input type="checkbox" checked={replies} onChange={e=>setReplies(e.target.checked)}/> Spoken replies</label></div></div></section>
    <div className="cart-version"><p>Your order keeps its original menu version.</p><details><summary>Order catalog details</summary><p>{order.catalogVersion||'legacy-sample-v1'}</p></details><button onClick={startNewOrder}>Start new order</button></div>
    {localTiming&&<details className="diagnostics" aria-label="Local voice timing"><summary>Local voice timing</summary><p>Monotonic milliseconds from microphone click. Next frame is an animation callback, not physical paint.</p><pre>{JSON.stringify(localTiming)}</pre></details>}
    {metrics&&<details className="diagnostics"><summary>Turn diagnostics</summary><p>{metrics.totalRequests} requests · {metrics.extractionRequests} extraction · {metrics.decisionRequests} decision · {metrics.strategy}</p><p>{Math.round(metrics.totalMs)} ms total · {metrics.clauseCount} clauses</p></details>}

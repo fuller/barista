@@ -1,6 +1,4 @@
 import {clarification} from '../adapters/clarification.mjs';
-/** A transport-independent single-use revision gate. */
-export function createTurnGate(){let active=null;return {begin(turnId,revision){active={turnId,revision}},cancel(){active=null},accept(turnId,revision){if(active?.turnId!==turnId||active.revision!==revision)return false;active=null;return true}};}
 /** Pending requests are replayed only against the unchanged revision and target IDs. */
 export async function interpretInput(input,adapter,context={}){
  const {order,pending,text}=input;

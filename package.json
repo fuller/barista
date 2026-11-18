@@ -23,9 +23,11 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",
+    "@xstate/react": "6.1.0",
     "playwright-core": "1.65.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "xstate": "5.33.4"
   },
   "devDependencies": {
     "@e2e-dev/web": "0.16.0",

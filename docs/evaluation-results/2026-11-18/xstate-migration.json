@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-18",
+  "baselineCommit": "4881ae6",
+  "runtime": "Node.js 24.22.1",
+  "versions": {
+    "xstate": "5.33.4",
+    "@xstate/react": "6.1.0"
+  },
+  "unit": {
+    "passed": 746,
+    "failed": 0
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "menuCorpusValidation": {
+    "cases": 27,
+    "inferenceCalls": 0
+  },
+  "bundleComparison": {
+    "method": "Production minified esbuild JavaScript, gzipSync; baseline App and preparation implementation compared with migrated client",
+    "beforeBytes": 1338389,
+    "afterBytes": 1389395,
+    "beforeGzipBytes": 170541,
+    "afterGzipBytes": 186513,
+    "gzipDeltaBytes": 15972
+  },
+  "invariants": [
+    "Interim results never commit a cart",
+    "One speculative request per microphone session",
+    "Exact text and revision required to adopt prepared work",
+    "Adoption transfers the original promise and abort controller",
+    "Failure after adoption does not automatically retry",
+    "Superseded requests cannot commit or publish stale timing",
+    "Server confidence and complete-order validation remain unchanged"
+  ],
+  "limitations": [
+    "Deterministic browser fixtures validate application behavior, not live model accuracy or physical speech recognition",
+    "No hosted Stately model or formal verification performed",
+    "Migration adds no provider calls; no new model latency claim"
+  ],
+  "browser": {
+    "totalCases": 42,
+    "fullRun": {
+      "passed": 41,
+      "failed": 1
+    },
+    "finalFocusedRerun": {
+      "passed": 1,
+      "failed": 0
+    },
+    "remainingFailures": 0,
+    "note": "Full run exposed an obsolete sample-price assertion in retry.e2e.ts. Corrected it to expect unavailable pricing when its mock config disables quotes; focused rerun passed. Other 41 cases were unchanged."
+  }
+}

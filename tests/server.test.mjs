@@ -3,7 +3,6 @@ import {buildMenuIdentityGroups} from '../src/adapters/menu-decider.mjs';
 import directory from '../src/catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import {handleApi} from '../src/server/api.mjs';
 import {createOrder,applyCommands} from '../src/domain/order.mjs';
-import {createTurnGate} from '../src/application/turns.mjs';
 const req=(body,headers={})=>new Request('https://barista.example/api/turn',{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)});
 const body=text=>({turnId:'turn-1',baseRevision:0,text,order:createOrder()});
 const env={OPENROUTER_API_KEY:'fake-server-key'};
@@ -25,7 +24,6 @@ for(const alteration of [{text:'x'.repeat(601)},{baseRevision:2},{mode:'unknown'
 test('oversized body rejected',async()=>{assert.equal((await handleApi(req({...body('latte'),extra:'x'.repeat(70000)}),{})).status,413);});
 test('stale pending context rejects before inference',async()=>{const order=applyCommands(createOrder(),[{type:'add',productId:'latte'}]);const r=await handleApi(req({...body('hot'),order,baseRevision:1,pending:{originalText:'latte',question:'hot or iced?',revision:0,answers:[],targetIds:[]}}),env);assert.equal(r.status,409);});
 test('cancel clears pending without provider dispatch',async()=>{const input={...body('cancel'),pending:{originalText:'half sweet',question:'How many pumps?',revision:0,answers:[],targetIds:[]}};const r=await handleApi(req(input),env);const d=await r.json();assert.equal(d.pending,null);assert.deepEqual(d.commands,[]);});
-test('gate rejects stale duplicate and cancelled responses',()=>{const g=createTurnGate();g.begin('a',0);assert.equal(g.accept('a',1),false);g.begin('b',1);assert.equal(g.accept('a',0),false);assert.equal(g.accept('b',1),true);assert.equal(g.accept('b',1),false);g.begin('c',1);g.cancel();assert.equal(g.accept('c',1),false);});
 test('full directory endpoint serves 313 source items and ETag cache without a key',async()=>{
  const response=await handleApi(new Request('https://barista.example/api/menu-directory'));assert.equal(response.status,200);const data=await response.json();assert.equal(data.products.length,313);assert.match(response.headers.get('Cache-Control'),/max-age=300/);const cached=await handleApi(new Request('https://barista.example/api/menu-directory',{headers:{'If-None-Match':response.headers.get('ETag')}}));assert.equal(cached.status,304);assert.equal(await cached.text(),'');
 });

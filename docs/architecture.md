@@ -1,6 +1,6 @@
 # Architecture
 
-The React client browses the validated menu directory and holds the cart in memory. Reloading loses the cart. The local server serves the client and validates API requests; only the server holds provider credentials.
+The React client browses the validated menu directory. An XState ordering actor holds the cart in memory and coordinates voice/submission; React renders its state through selectors. Reloading loses the cart. The local server serves the client and validates API requests; only the server holds provider credentials. See the [executable state-machine guide](state-machines.md).
 
 `src/catalog` validates recorded source snapshots and explicit identities. `src/domain` validates immutable order commands and revision history. `src/application` coordinates turns, cancellation and stale responses. `src/adapters` translates text through bounded OpenRouter Decisions/Extractions requests. `src/server` owns HTTP validation and safe diagnostics. `src/ui` owns browser interaction and memory caches.
 

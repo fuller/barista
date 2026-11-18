@@ -1,4 +1,16 @@
-import { expect, test } from 'e2e';
+import { beforeEach, expect, test } from 'e2e';
+import {quoteOrder} from '../src/domain/pricing.mjs';
+import type {Order} from '../src/contracts';
+
+// Supply sample prices through the live quote boundary; these are test fixtures, not store prices.
+beforeEach(async({browser})=>{
+ await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
+ await browser.route('**/api/quote',route=>{
+  const {order}=JSON.parse(route.request.postData??'{}') as {order:Order};
+  const quote=quoteOrder(order);
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:0}});
+ });
+});
 
 test('orders a drink, edits a modifier, and updates sample pricing', async ({ app, screen }) => {
   await app.open('/');

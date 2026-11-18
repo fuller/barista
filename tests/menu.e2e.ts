@@ -1,6 +1,17 @@
 import {expect,test} from 'e2e';
 import directory from '../src/catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import type {CatalogSnapshot} from '../src/catalog/contracts';
+import type {Browser} from '@e2e-dev/web';
+import {quoteOrder} from '../src/domain/pricing.mjs';
+
+// Keep modifier/undo prices deterministic while exercising the live quote path.
+async function mockModifierPrices(browser:Browser){
+ await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
+ await browser.route('**/api/quote',route=>{
+  const {order}=JSON.parse(route.request.postData??'{}'),quote=quoteOrder(order);
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:quote.subtotalCents===null?null:0}});
+ });
+}
 
 test('a pristine typed order uses the same current Flat White recipe as the menu',async({app,screen})=>{
  await app.open('/');
@@ -75,7 +86,7 @@ test('full menu filters product cards and adds an unpriced source drink',async({
  await menu.getByRole('button',{name:'Add Caffè Latte'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toBeVisible();
- await expect(order.getByText('Tax not calculated',{exact:true})).toBeVisible();
+ await expect(order.getByText('Tax Price unavailable',{exact:true})).toBeVisible();
  await expect(screen.getByText(/Catalog source: Starbucks website/)).toBeVisible();
 });
 
@@ -108,6 +119,7 @@ test('broken product photos keep a stable fallback and remain orderable',async({
 });
 
 test('reduced motion preserves rapid modifier and undo results without animations',async({app,screen,browser})=>{
+ await mockModifierPrices(browser);
  await browser.emulateMedia({reducedMotion:'reduce'});
  await browser.addInitScript(()=>{const animate=Element.prototype.animate;(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls=0;Element.prototype.animate=function(...args:Parameters<Element['animate']>){(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls++;return animate.apply(this,args);};});
  await app.open('/');
@@ -140,6 +152,7 @@ test('refresh outage retains the menu and active cart; reload uses bundled catal
 });
 
 test('committed modifiers and undo show authoritative final price',async({app,screen,browser})=>{
+ await mockModifierPrices(browser);
  await browser.addInitScript(()=>{const animate=Element.prototype.animate;(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls=0;Element.prototype.animate=function(...args:Parameters<Element['animate']>){(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls++;return animate.apply(this,args);};});
  await app.open('/');
  await screen.getByRole('textbox',{name:'Tell us your order'}).fill('a latte');
