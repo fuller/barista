@@ -14,6 +14,7 @@
     "eval:menu": "node scripts/evaluate-menu.mjs",
     "start": "node scripts/start.mjs",
     "benchmark:menu": "node scripts/benchmark-menu-latency.mjs",
+    "pricing:probe": "node scripts/probe-starbucks-pricing.mjs",
     "release:check": "node scripts/release.mjs --check",
     "release:archive": "node scripts/release.mjs",
     "deploy": "wrangler deploy",

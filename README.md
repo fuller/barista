@@ -43,4 +43,4 @@ npm run eval:menu
 
 Unit/browser fixtures are deterministic; `eval:menu` validates golds without inference. Live evaluations require explicit `--live`. The build creates `dist/`.
 
-See [architecture](docs/architecture.md), [testing](docs/testing.md), [evaluation](docs/evaluation.md), [data provenance](docs/data.md), and [contributing](CONTRIBUTING.md). Code licensing and upstream content are separate: see [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).
+See [architecture](docs/architecture.md), [testing](docs/testing.md), [evaluation](docs/evaluation.md), [store-pricing backend status](docs/pricing.md), [data provenance](docs/data.md), and [contributing](CONTRIBUTING.md). Code licensing and upstream content are separate: see [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).

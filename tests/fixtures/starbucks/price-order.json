@@ -1,0 +1,220 @@
+{
+  "standard": {
+    "data": {
+      "priceOrder": {
+        "__typename": "PricedOrderV2",
+        "cart": {
+          "items": [
+            {
+              "availability": "PURCHASABLE",
+              "availabilityLabel": null,
+              "calories": "210 Calories",
+              "key": "28516/iced:Grande-0",
+              "label": "Iced Sugar Cookie Latte",
+              "lineItems": [
+                {
+                  "key": "11183225@1",
+                  "label": "Grande 16 fl oz",
+                  "price": 7.75,
+                  "priceLabel": "$7.75",
+                  "quantity": 1,
+                  "sku": "11183225"
+                }
+              ],
+              "isAvailable": true,
+              "price": 7.75,
+              "priceLabel": "$7.75",
+              "quantity": 1,
+              "sku": "11183225",
+              "masterImageUrl": "https://cloudassets.starbucks.com/is/image/sbuxcorp/IcedSugarCookieAlmondmilkLatte"
+            }
+          ]
+        },
+        "expiresIn": 300,
+        "currency": "USD",
+        "isTipEnabled": true,
+        "summary": {
+          "additionalFeeDescription": [],
+          "label": "Total",
+          "price": 8.44,
+          "priceLabel": "$8.44",
+          "lineItems": [
+            {
+              "key": "subtotal",
+              "label": "Subtotal",
+              "price": 7.75,
+              "priceLabel": "$7.75"
+            },
+            {
+              "key": "tax",
+              "label": "Tax",
+              "price": 0.69,
+              "priceLabel": "$0.69"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "modified": {
+    "data": {
+      "priceOrder": {
+        "__typename": "PricedOrderV2",
+        "cart": {
+          "items": [
+            {
+              "availability": "PURCHASABLE",
+              "availabilityLabel": null,
+              "calories": null,
+              "key": "28516/iced:Grande::82(3)(a)-0",
+              "label": "Iced Sugar Cookie Latte",
+              "lineItems": [
+                {
+                  "key": "11183225@1",
+                  "label": "Grande 16 fl oz",
+                  "price": 7.75,
+                  "priceLabel": "$7.75",
+                  "quantity": 1,
+                  "sku": "11183225"
+                },
+                {
+                  "key": "55@3",
+                  "label": "3 Shots",
+                  "price": 0.5,
+                  "priceLabel": "$0.50",
+                  "quantity": 3,
+                  "sku": "55"
+                }
+              ],
+              "isAvailable": true,
+              "price": 8.25,
+              "priceLabel": "$8.25",
+              "quantity": 1,
+              "sku": "11183225",
+              "masterImageUrl": "https://cloudassets.starbucks.com/is/image/sbuxcorp/IcedSugarCookieAlmondmilkLatte"
+            }
+          ]
+        },
+        "expiresIn": 300,
+        "currency": "USD",
+        "isTipEnabled": true,
+        "summary": {
+          "additionalFeeDescription": [],
+          "label": "Total",
+          "price": 8.98,
+          "priceLabel": "$8.98",
+          "lineItems": [
+            {
+              "key": "subtotal",
+              "label": "Subtotal",
+              "price": 8.25,
+              "priceLabel": "$8.25"
+            },
+            {
+              "key": "tax",
+              "label": "Tax",
+              "price": 0.73,
+              "priceLabel": "$0.73"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "double": {
+    "data": {
+      "priceOrder": {
+        "__typename": "PricedOrderV2",
+        "cart": {
+          "items": [
+            {
+              "availability": "PURCHASABLE",
+              "availabilityLabel": null,
+              "calories": null,
+              "key": "28516/iced:Grande::82(3)(a)-0",
+              "label": "Iced Sugar Cookie Latte",
+              "lineItems": [
+                {
+                  "key": "11183225@1",
+                  "label": "Grande 16 fl oz",
+                  "price": 7.75,
+                  "priceLabel": "$7.75",
+                  "quantity": 1,
+                  "sku": "11183225"
+                },
+                {
+                  "key": "55@3",
+                  "label": "3 Shots",
+                  "price": 0.5,
+                  "priceLabel": "$0.50",
+                  "quantity": 3,
+                  "sku": "55"
+                }
+              ],
+              "isAvailable": true,
+              "price": 8.25,
+              "priceLabel": "$8.25",
+              "quantity": 1,
+              "sku": "11183225",
+              "masterImageUrl": "https://cloudassets.starbucks.com/is/image/sbuxcorp/IcedSugarCookieAlmondmilkLatte"
+            },
+            {
+              "availability": "PURCHASABLE",
+              "availabilityLabel": null,
+              "calories": null,
+              "key": "28516/iced:Grande::82(3)(a)-1",
+              "label": "Iced Sugar Cookie Latte",
+              "lineItems": [
+                {
+                  "key": "11183225@1",
+                  "label": "Grande 16 fl oz",
+                  "price": 7.75,
+                  "priceLabel": "$7.75",
+                  "quantity": 1,
+                  "sku": "11183225"
+                },
+                {
+                  "key": "55@3",
+                  "label": "3 Shots",
+                  "price": 0.5,
+                  "priceLabel": "$0.50",
+                  "quantity": 3,
+                  "sku": "55"
+                }
+              ],
+              "isAvailable": true,
+              "price": 8.25,
+              "priceLabel": "$8.25",
+              "quantity": 1,
+              "sku": "11183225",
+              "masterImageUrl": "https://cloudassets.starbucks.com/is/image/sbuxcorp/IcedSugarCookieAlmondmilkLatte"
+            }
+          ]
+        },
+        "expiresIn": 300,
+        "currency": "USD",
+        "isTipEnabled": true,
+        "summary": {
+          "additionalFeeDescription": [],
+          "label": "Total",
+          "price": 17.96,
+          "priceLabel": "$17.96",
+          "lineItems": [
+            {
+              "key": "subtotal",
+              "label": "Subtotal",
+              "price": 16.5,
+              "priceLabel": "$16.50"
+            },
+            {
+              "key": "tax",
+              "label": "Tax",
+              "price": 1.46,
+              "priceLabel": "$1.46"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
