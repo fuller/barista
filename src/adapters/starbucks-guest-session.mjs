@@ -65,11 +65,11 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
       try {
         if (rateLimitedUntil > now()) throw fail('RATE_LIMITED',429,rateLimitedUntil-now());
         const headers = {'Content-Type':'application/json',Accept:'application/json'};
-        if (path === QUOTE) headers['X-Requested-With']='XMLHttpRequest';
+        headers['X-Requested-With']='XMLHttpRequest';
         const cookie = cookieHeader(state,path);
         if (cookie.length > 16384) throw fail('UNAVAILABLE',503);
         if(cookie) headers.Cookie=cookie;
-        const response = await fetchImpl(ORIGIN+path,{method:'POST',headers,body,redirect:'error',signal:controller.signal});
+        const response = await fetchImpl(ORIGIN+path,{method:'POST',headers,body,redirect:'manual',signal:controller.signal});
         if (controller.signal.aborted) {void response.body?.cancel().catch(()=>{});throw fail('ABORTED',499);}
         if (!response.ok) {
           // Never retain cookies from an error response, nor read its body.

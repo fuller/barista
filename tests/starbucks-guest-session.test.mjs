@@ -7,7 +7,7 @@ test('reuses private cookies only within caller session and fixed endpoints',asy
  const calls=[]; const source=createStarbucksGuestSource({fetchImpl:async(url,init)=>{calls.push({url,...init});return url.endsWith('/guest')?ok(['sid=private; Path=/; Secure; HttpOnly']):new Response('{"result":1}');}});
  assert.deepEqual(await source.quote('alice',{}),{result:1});await source.quote('alice',{});await source.quote('bob',{});
  assert.equal(calls.length,5);assert.equal(calls[1].headers.Cookie,'sid=private');assert.equal(calls[3].headers.Cookie,undefined);
- for(const c of calls){assert.ok(c.url.startsWith('https://www.starbucks.com/apiproxy/v1/'));assert.equal(c.redirect,'error');}
+ for(const c of calls){assert.ok(c.url.startsWith('https://www.starbucks.com/apiproxy/v1/'));assert.equal(c.redirect,'manual');}
 });
 test('expires idle sessions and bounds session capacity',async()=>{
  let time=0,boots=0;const source=createStarbucksGuestSource({now:()=>time,maxSessions:1,idleTtlMs:10,fetchImpl:async u=>{if(u.endsWith('/guest'))boots++;return ok();}});
@@ -71,4 +71,16 @@ test('clear orphans pending bootstrap and prevents old quote from starting',asyn
 });
 test('missing or whitespace Retry-After uses configured backoff',async()=>{
  for(const raw of [undefined,'','   ']){const headers=raw===undefined?{}:{'Retry-After':raw};const s=createStarbucksGuestSource({backoffMs:60000,fetchImpl:async()=>new Response(null,{status:429,headers})});await assert.rejects(s.quote('a',{}),e=>code('RATE_LIMITED')(e)&&e.retryAfterMs===60000);}
+});
+test('works in Worker runtimes that support manual but reject error redirect mode',async()=>{
+ const s=createStarbucksGuestSource({fetchImpl:async(u,i)=>{if(i.redirect==='error')throw TypeError('Unsupported redirect option');return u.endsWith('/guest')?ok(['sid=x; Path=/']):new Response('{"priced":true}');}});
+ assert.deepEqual(await s.quote('a',{}),{priced:true});
+});
+test('redirect response is never followed and its cookies never survive cooldown',async()=>{
+ let calls=0,time=0;const cookies=[];const s=createStarbucksGuestSource({now:()=>time,backoffMs:10,fetchImpl:async(u,i)=>{calls++;cookies.push(i.headers.Cookie);if(calls===1)return new Response(null,{status:302,headers:{Location:'https://evil.example/steal','set-cookie':'redirect=secret; Path=/'}});assert.ok(u.startsWith('https://www.starbucks.com/'));return ok(['sid=x; Path=/']);}});
+ await assert.rejects(s.quote('a',{}),code('UNAVAILABLE'));await assert.rejects(s.quote('a',{}),code('UNAVAILABLE'));assert.equal(calls,1);time=11;await s.quote('a',{});assert.equal(calls,3);assert.equal(cookies[1],undefined);assert.equal(cookies[2],'sid=x');
+});
+test('bootstrap sends the same verified API request header as quote',async()=>{
+ const s=createStarbucksGuestSource({fetchImpl:async(u,i)=>{assert.equal(i.headers['X-Requested-With'],'XMLHttpRequest');return ok(['sid=x; Path=/']);}});
+ await s.quote('a',{});
 });

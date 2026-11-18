@@ -14,10 +14,12 @@ test('wire body preserves model/payload/state order and string state',async()=>{
  await transport.post('decisions',{questions:{identity:choice},state:'already JSON'});assert.equal(calls[1].body,'{"model":"model","questions":{"identity":{"type":"choice","instructions":"Choose","criteria":{"yes":"Yes","unclear":"Unclear"}}},"state":"already JSON"}');assert.equal(metrics.totalRequests,2);assert.equal(metrics.decisionRequests,2);
 });
 test('pure concurrent packets share physical request while owner cancellation leaves joiner',async()=>{
- const cache=createDecisionCache(),pending=deferred(),entered=deferred();let upstream,calls=0;
+ const cache=createDecisionCache(),pending=deferred(),entered=deferred(),joined=deferred();let upstream,calls=0,lookups=0;
+ // Cache lookup and subscriber registration run synchronously before the waiter resumes.
+ const get=cache.get.bind(cache);cache.get=key=>{const value=get(key);if(++lookups===2)joined.resolve();return value;};
  const fetchImpl=async(_url,{signal})=>{calls++;upstream=signal;entered.resolve();await pending.promise;return {ok:true,json:async()=>answer()};};
  const owner=fixture({cache,fetchImpl}),joiner=fixture({cache,fetchImpl}),controller=new AbortController();const first=owner.transport.post('decisions',packet('identity','shared'),controller.signal);const rejected=assert.rejects(first,{name:'AbortError'});await entered.promise;
- const second=joiner.transport.post('decisions',packet('identity','shared'));await new Promise(resolve=>setTimeout(resolve,10));controller.abort();await rejected;assert.equal(upstream.aborted,false);pending.resolve();assert.deepEqual(await second,answer());assert.equal(calls,1);assert.equal(owner.admissions.length,0);assert.equal(joiner.admissions.length,1);assert.equal(owner.metrics.totalRequests,1);assert.equal(joiner.metrics.totalRequests,0);assert.equal(joiner.metrics.inflightHits,1);assert.equal(joiner.metrics.cacheHits,0);assert.equal(cache.stats().entries,0);
+ const second=joiner.transport.post('decisions',packet('identity','shared'));await joined.promise;controller.abort();await rejected;assert.equal(upstream.aborted,false);pending.resolve();assert.deepEqual(await second,answer());assert.equal(calls,1);assert.equal(owner.admissions.length,0);assert.equal(joiner.admissions.length,1);assert.equal(owner.metrics.totalRequests,1);assert.equal(joiner.metrics.totalRequests,0);assert.equal(joiner.metrics.inflightHits,1);assert.equal(joiner.metrics.cacheHits,0);assert.equal(cache.stats().entries,0);
 });
 test('key context isolates credential model profile menu thresholds endpoint and body',async()=>{
  const seen=[],cache={keyFor:async context=>{seen.push(context);return undefined;},get:()=>undefined};
@@ -42,13 +44,13 @@ test('provider error and invalid JSON retain sanitized errors',async()=>{
  const invalid=fixture({fetchImpl:async()=>({ok:true,json:async()=>{throw new Error('secret');}})});await assert.rejects(invalid.transport.post('decisions',packet()),{message:'Invalid decision response'});
 });
 test('real digest keys prevent sharing across credentials and decision contexts',async()=>{
- const cache=createDecisionCache(),pending=deferred();let calls=0;
- const fetchImpl=async()=>{calls++;await pending.promise;return {ok:true,json:async()=>answer()};};
+ const cache=createDecisionCache(),pending=deferred(),allEntered=deferred();let calls=0;
+ const fetchImpl=async()=>{if(++calls===8)allEntered.resolve();await pending.promise;return {ok:true,json:async()=>answer()};};
  const contexts=[{}, {apiKey:'different-account'}, {model:'different-model'}, {questionProfile:'lean-v8'}, {menuVersion:'v2'}, {threshold:.9}, {margin:.2}];
  const fixtures=contexts.map(context=>fixture({cache,fetchImpl,...context}));
  const runs=fixtures.map(f=>f.transport.post('decisions',packet('identity','cross-account-isolation')));
  runs.push(fixture({cache,fetchImpl}).transport.post('decisions',packet('identity','different-body')));
- await new Promise(resolve=>setTimeout(resolve,20));assert.equal(calls,8);pending.resolve();await Promise.all(runs);
+ await allEntered.promise;assert.equal(calls,8);pending.resolve();await Promise.all(runs);
  for(const f of fixtures){assert.equal(f.metrics.totalRequests,1);assert.equal(f.metrics.inflightHits,0);}
 });
 test('caller aborted while response JSON resolves cannot admit stale cache packet',async()=>{

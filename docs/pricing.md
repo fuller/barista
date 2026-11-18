@@ -1,6 +1,6 @@
 # Store pricing backend
 
-The application still displays illustrative prices or unknown prices. The new backend core is not connected to an HTTP route or the cart UI. Ordinary backend guest creation returned HTTP 429 during verification, so live pricing is not enabled. A successful browser quote does not establish server or Worker access.
+The application still displays illustrative prices or unknown prices. The new backend core is not connected to an HTTP route or the cart UI. Ordinary guest creation returned HTTP 429 from both local Node and Cloudflare remote development, so live pricing is not enabled. A successful browser quote does not establish server or Worker access. See [runtime access evidence](evaluation-results/2026-11-18/guest-pricing-access.json).
 
 The verified website flow is café selection, product selection, a guest session, then a configured-cart quote. No account login was needed. On November 18, 2026, the public website quoted a grande Iced Sugar Cookie Latte at 104 Jay St, Brooklyn, at $7.75 plus $0.69 tax. Three total shots changed the subtotal to $8.25 and the total to $8.98. These are recorded observations, not current prices for every store. The sanitized fixture is [price-order.json](../tests/fixtures/starbucks/price-order.json).
 
@@ -29,6 +29,8 @@ Deterministic tests inject transport fixtures. They establish protocol, money, c
 ## Before connecting the cart
 
 First verify ordinary guest bootstrap and quoting in the intended runtime. Do not work around access denial, copy a user's Starbucks cookies or treat browser-only access as Worker support. The current core uses process-local state; Worker isolates do not guarantee session affinity. Production wiring needs an appropriate session-owning runtime, such as a deliberately designed Durable Object, after upstream access is established.
+
+Remote runtime testing caught an actual fetch incompatibility: Cloudflare rejects `redirect: 'error'` before any upstream HTTP response. The adapter now uses supported manual handling and rejects redirect responses without following them. The ordinary public-client `X-Requested-With` header is included on bootstrap as well as quotes. With these protocol fixes, the remote Worker reaches Starbucks and receives HTTP 429. This status establishes rejection; it does not prove whether frequency or other perimeter/session requirements caused it. The website's normal guest flow includes browser-produced reputation context, which this adapter does not fabricate.
 
 Then resolve application orders to server-owned product-size and modifier SKUs. Generic menu lines contain literal instructions; an unresolved instruction must remain unpriced rather than receiving a base-only quote. Add a bounded, admitted, same-origin quote endpoint and a revision-bound asynchronous UI query. Store/configuration changes invalidate pending quotes. Prices must load independently of voice/cart commits, and failures must remain explicitly unavailable. Never label illustrative fallback prices as official store quotes.
 
