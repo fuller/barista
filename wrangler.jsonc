@@ -3,6 +3,7 @@
   "name": "barista-order-lab",
   "main": "dist/server/index.js",
   "compatibility_date": "2026-11-15",
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "workers_dev": true,
   "preview_urls": false,
   "build": { "command": "npm run build" },

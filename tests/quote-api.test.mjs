@@ -38,3 +38,18 @@ test('resolution admission bounds concurrent work before product fetching',async
  const denied=await handler(request());assert.equal(denied.status,503);assert.equal(calls,8);
  release();const responses=await Promise.all(pending);assert.ok(responses.every(response=>response.status===200));assert.equal((await handler(request())).status,200);
 });
+
+test('failure diagnostics expose only bounded stage and error enums',async()=>{
+ for(const stage of ['resolve','quote','response']){
+  const failures=[];const secret='secret token cookie cart';
+  const fail=()=>{throw Object.assign(new TypeError(secret),{code:secret,cart:secret});};
+  const handler=createQuoteApi({onFailure:event=>failures.push(event),resolveOrder:async()=>{if(stage==='resolve')fail();return {items:[{}],unpriced:[]};},service:{quote:async()=>{if(stage==='quote')fail();return stage==='response'?{...quote,items:null}:quote;}}});
+  const response=await handler(request());assert.equal(response.status,503);
+  assert.deepEqual(failures,[{event:'pricing_unavailable',stage,code:'unknown',type:'TypeError'}]);
+  assert.doesNotMatch(JSON.stringify(failures),/secret|token|cookie|cart/);assert.deepEqual(await response.json(),{error:'Live pricing unavailable'});
+ }
+});
+test('diagnostic callback failure preserves sanitized API response',async()=>{
+ const handler=createQuoteApi({onFailure:()=>{throw Error('logger');},resolveOrder:async()=>{throw Error('resolver');},service:{}});
+ assert.equal((await handler(request())).status,503);
+});

@@ -50,7 +50,7 @@ export async function resolveOrderQuote(order,{directory,catalog,resolveProduct,
   const product=directory.products.find(p=>p.identity===item.identity);
   if(!product||item.size!==null&&!product.sizes.some(s=>s.sizeCode===item.size)){unavailable(item,'product_unavailable');continue;}
   if(item.instructions.some(text=>!plainInstruction(text,item,product))){unavailable(item,'unsupported_instructions');continue;}
-  if(item.size===null){if(validSku(product.defaultSize?.sku))items.push(configured(item,product.defaultSize.sku));else unavailable(item,'size_unavailable');continue;}
+  if(item.size===null||item.size===product.defaultSize?.displayName){if(validSku(product.defaultSize?.sku))items.push(configured(item,product.defaultSize.sku));else unavailable(item,'size_unavailable');continue;}
   try{
    const raw=await resolveProduct(product.identity,{signal});
    signal?.throwIfAborted();

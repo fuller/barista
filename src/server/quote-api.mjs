@@ -19,7 +19,7 @@ async function readInput(request){
  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
  const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||Object.keys(body).join(',')!=='order')throw Error();validateOrder(body.order);return body.order;
 }
-export function createQuoteApi({resolveOrder,service,now=Date.now}={}){
+export function createQuoteApi({resolveOrder,service,now=Date.now,onFailure=event=>console.warn(event)}={}){
  let resolving=0;
  return async request=>{
   if(request.method!=='POST')return json({error:'Method not allowed'},405);
@@ -34,17 +34,24 @@ export function createQuoteApi({resolveOrder,service,now=Date.now}={}){
   const withCookie=response=>{if(!valid)response.headers.set('Set-Cookie',`barista_quote=${session}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=900${url.protocol==='https:'?'; Secure':''}`);return response;};
   if(resolving>=8)return withCookie(json({error:'Pricing is busy'},503));
   resolving++;
+  let stage='resolve';
   try{
    const {items,unpriced}=await resolveOrder(order,{signal:request.signal});
    request.signal.throwIfAborted();
+   stage='quote';
    const price=items.length?await service.quote(session,{storeNumber:PRICING_STORE.storeNumber,items},{signal:request.signal}):{currency:'USD',estimated:false,source:'starbucks',storeNumber:PRICING_STORE.storeNumber,expiresAt:now()+60000,items:[],subtotalCents:0,taxCents:0,totalCents:0,taxLabel:'Tax',provenance:'No verified prices for this configuration'};
+   stage='response';
    const lines=[...order.items,...(order.menuItems??[])];
    const unavailable=new Set(unpriced.map(item=>item.itemId));
    const result={...price,revision:order.revision,unavailable:unpriced,items:lines.map(item=>price.items.find(line=>line.itemId===item.id)??{itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})};
    if(unavailable.size){result.pricedSubtotalCents=price.subtotalCents;result.unpricedItemCount=lines.filter(item=>unavailable.has(item.id)).reduce((n,item)=>n+item.quantity,0);result.subtotalCents=null;result.taxCents=null;result.totalCents=null;result.taxLabel='Tax unavailable';}
    const response=json(result);
    return withCookie(response);
-  }catch(error){const response=json({error:'Live pricing unavailable'},error.code==='rate_limited'?429:503);if(error.code==='rate_limited')response.headers.set('Retry-After',String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000))));return withCookie(response);}finally{resolving--;}
+  }catch(error){
+   const code=['rate_limited','busy','invalid_request','unavailable'].includes(error?.code)?error.code:'unknown';
+   const type=['Error','TypeError','RangeError','AbortError','StarbucksQuoteError'].includes(error?.name)?error.name:'unknown';
+   try{onFailure({event:'pricing_unavailable',stage,code,type});}catch{}
+   const response=json({error:'Live pricing unavailable'},error.code==='rate_limited'?429:503);if(error.code==='rate_limited')response.headers.set('Retry-After',String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000))));return withCookie(response);}finally{resolving--;}
  };
 }
 export function handleQuoteApi(request,env){
