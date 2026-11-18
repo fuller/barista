@@ -1,6 +1,22 @@
 # Store pricing backend
 
-The application still displays illustrative prices or unknown prices. The new backend core is not connected to an HTTP route or the cart UI. Ordinary guest creation returned HTTP 429 from both local Node and Cloudflare remote development, so live pricing is not enabled. A successful browser quote does not establish server or Worker access. See [runtime access evidence](evaluation-results/2026-11-18/guest-pricing-access.json).
+The cart requests real quotes through `POST /api/quote` when a browser pricing service is configured. It never substitutes illustrative prices. Direct guest creation returned HTTP 429 from both local Node and Cloudflare remote development, so the configured transport uses an ordinary headful Chrome guest session instead. See [runtime access evidence](evaluation-results/2026-11-18/guest-pricing-access.json).
+
+## Run browser pricing
+
+Install Google Chrome and project dependencies on a host with a display. Set `BARISTA_BROWSER_TOKEN` to a random secret of at least 32 characters in `.env`, and set `STARBUCKS_BROWSER_URL=http://127.0.0.1:4174` for a local app. The browser process and app server must share the token. Start `npm run pricing:browser` and `npm run dev` in separate terminals. `npm run pricing:browser -- --check` prints safe readiness counts; zero exit status means at least one guest context is ready. No context exists until the first quote.
+
+Each caller receives a separate fresh browser context. The service attempts ordinary website actions to select 104 Jay St, Brooklyn 11201, add a sample drink to the guest website cart, and review that cart to initialize the guest session. This does not submit or pay for an order. A successful guest response is required for readiness. UI changes or access denial leave prices unavailable. The visible service browser can finish normal guest setup; never sign into a personal account there. Use **Refresh prices** after setup. There are no challenge workarounds, imported cookies, direct guest bootstrap calls, or automatic retries after failures.
+
+The service supports four contexts, rejects work while a context is busy, closes idle contexts after 15 minutes, and respects upstream rate-limit cooldowns. Credentials remain inside Chrome. Its authenticated HTTP boundary accepts only rebuilt quote configurations and returns a whitelist of price fields; order identifiers and authentication data do not leave the service.
+
+For Cloudflare deployment, run the browser service on a separate host with Chrome and a display, expose it through an authenticated HTTPS origin, and configure server-only `STARBUCKS_BROWSER_URL` and `BARISTA_BROWSER_TOKEN` secrets on the Worker. Localhost refers to the Worker itself and cannot reach your computer. The browser service defaults to loopback; configure `BARISTA_BROWSER_HOST` explicitly behind your HTTPS proxy. HTTPS is required except for local loopback development. Never expose Chrome debugging ports. This repository does not provision a browser host or public tunnel.
+
+## Coverage and cart behavior
+
+The server resolves source identities and size SKUs from the trusted menu directory/product details. Exact base configurations and a conservative plain-order grammar are supported; unresolved free-text modifiers, multi-item prose, or unsupported source shapes remain unpriced rather than receiving an incorrect base price. Every menu item remains orderable. Pricing currently accepts up to 50 lines and 100 units; larger carts remain orderable with unavailable prices. Modifier SKUs can be quoted by the lower-level protocol once their exact mapping is known; the generic free-text cart does not yet compile them to source options.
+
+The browser quote is cached by private caller, store, fulfillment, SKU, quantity, and modifier configuration, only until its returned expiry (at most five minutes). The UI keys requests by the full cart state, rejects stale revisions, hides expired prices, and offers an explicit refresh after failures. Voice/cart commits do not wait for prices. Partial prices never produce a misleading cart total or tax amount.
 
 The verified website flow is café selection, product selection, a guest session, then a configured-cart quote. No account login was needed. On November 18, 2026, the public website quoted a grande Iced Sugar Cookie Latte at 104 Jay St, Brooklyn, at $7.75 plus $0.69 tax. Three total shots changed the subtotal to $8.25 and the total to $8.98. These are recorded observations, not current prices for every store. The sanitized fixture is [price-order.json](../tests/fixtures/starbucks/price-order.json).
 
@@ -26,12 +42,12 @@ This makes one ordinary backend guest-creation attempt and, only if that succeed
 
 Deterministic tests inject transport fixtures. They establish protocol, money, cancellation and session behavior, not upstream reachability. Default tests never call Starbucks.
 
-## Before connecting the cart
+## Integration boundaries
 
-First verify ordinary guest bootstrap and quoting in the intended runtime. Do not work around access denial, copy a user's Starbucks cookies or treat browser-only access as Worker support. The current core uses process-local state; Worker isolates do not guarantee session affinity. Production wiring needs an appropriate session-owning runtime, such as a deliberately designed Durable Object, after upstream access is established.
+Do not work around access denial, copy a user's Starbucks cookies or treat browser-only access as direct Worker support. The standalone browser service owns guest contexts; Worker quote caches are process-local optimizations, not session owners. An opaque HttpOnly same-site cookie correlates the caller to that service context.
 
 Remote runtime testing caught an actual fetch incompatibility: Cloudflare rejects `redirect: 'error'` before any upstream HTTP response. The adapter now uses supported manual handling and rejects redirect responses without following them. The ordinary public-client `X-Requested-With` header is included on bootstrap as well as quotes. With these protocol fixes, the remote Worker reaches Starbucks and receives HTTP 429. This status establishes rejection; it does not prove whether frequency or other perimeter/session requirements caused it. The website's normal guest flow includes browser-produced reputation context, which this adapter does not fabricate.
 
-Then resolve application orders to server-owned product-size and modifier SKUs. Generic menu lines contain literal instructions; an unresolved instruction must remain unpriced rather than receiving a base-only quote. Add a bounded, admitted, same-origin quote endpoint and a revision-bound asynchronous UI query. Store/configuration changes invalidate pending quotes. Prices must load independently of voice/cart commits, and failures must remain explicitly unavailable. Never label illustrative fallback prices as official store quotes.
+Generic menu lines contain literal instructions; an unresolved instruction must remain unpriced rather than receiving a base-only quote. The admitted same-origin endpoint bounds concurrent work and body sizes. Store/configuration changes invalidate pending UI quotes. Never label illustrative fallback prices as official store quotes.
 
 Cookie jars and any future session store are secrets. Keep them out of client responses, logs, shared caches, repository fixtures and source archives. Session/offer-specific prices must not be shared across users.

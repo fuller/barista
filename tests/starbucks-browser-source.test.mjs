@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createStarbucksBrowserSource,browserPricingConfigured} from '../src/adapters/starbucks-browser-source.mjs';
+const token='test-browser-token-'.repeat(3);
+test('only HTTPS or loopback HTTP service origins are accepted',()=>{
+ for(const url of ['http://evil.example','https://u:p@service.example','https://service.example/arbitrary','https://service.example?token=x'])assert.throws(()=>createStarbucksBrowserSource({url,token}));
+ assert.equal(browserPricingConfigured({STARBUCKS_BROWSER_URL:'http://127.0.0.1:4174',BARISTA_BROWSER_TOKEN:token}),true);
+ assert.equal(browserPricingConfigured({STARBUCKS_BROWSER_URL:'https://service.example',BARISTA_BROWSER_TOKEN:'short'}),false);
+});
+test('fixed quote route carries private credentials only server to service',async()=>{
+ let sent;const source=createStarbucksBrowserSource({url:'http://127.0.0.1:4174',token,fetchImpl:async(url,init)=>{sent={url,...init};return Response.json({data:{priceOrder:{__typename:'PricedOrderV2'}}});}});
+ const result=await source.quote('private-session',{variables:{}});
+ assert.equal(sent.url,'http://127.0.0.1:4174/quote');assert.equal(sent.headers.Authorization,`Bearer ${token}`);assert.equal(sent.redirect,'manual');
+ assert.deepEqual(JSON.parse(sent.body),{sessionKey:'private-session',body:{variables:{}}});assert.equal(result.data.priceOrder.__typename,'PricedOrderV2');
+});
+test('remote errors and redirects stay sanitized and rate limits retain safe metadata',async()=>{
+ for(const status of [302,401,403,500]){
+  const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async()=>new Response('secret provider response',{status})});
+  await assert.rejects(source.quote('session',{}),error=>error.code==='UNAVAILABLE'&&!error.message.includes('secret'));
+ }
+ const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async()=>new Response('secret',{status:429,headers:{'Retry-After':'60'}})});
+ await assert.rejects(source.quote('session',{}),error=>error.code==='RATE_LIMITED'&&error.retryAfterMs===60000);
+});
+test('oversized, malformed and aborted quotes never escape the transport',async()=>{
+ for(const response of [()=>Response.json({payload:'x'.repeat(270000)}),()=>new Response('{',{headers:{'Content-Type':'application/json'}}),()=>new Response('html')]){
+  const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async()=>response()});await assert.rejects(source.quote('session',{}),error=>error.code==='UNAVAILABLE');
+ }
+ const controller=new AbortController();controller.abort();let called=false;
+ const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async()=>{called=true;}});await assert.rejects(source.quote('session',{}, {signal:controller.signal}));assert.equal(called,false);
+});

@@ -19,13 +19,15 @@ Open http://127.0.0.1:4173. Restart after source or configuration changes. Keep 
 
 The default model is `perplexity/pplx-decider-v1.3:free`. `MENU_QUESTION_PROFILE=lean-v10` selects the current profile; `lean-v9` and `lean-v8` provide rollback. `DECISION_SCHEDULING=guarded-overlap` is the default; `sequential` provides rollback. A different model requires independent validation.
 
+Optional real store pricing uses a separate normal Chrome guest browser service: set the shared server-only token and service URL, then run `npm run pricing:browser` alongside the app. See [pricing setup and coverage](docs/pricing.md). Quotes include store tax, expire with the provider, and never fall back to sample prices. Public deployment needs a separate HTTPS browser-service host.
+
 ## Deploy
 
 Deploy the portable Worker to Cloudflare: [deployment guide](docs/deployment.md).
 
 ## Scope
 
-The bundled directory contains 313 product/form identities. It is a recorded snapshot, not a current store inventory. Generic lines preserve source identity, size, quantity and literal request history. They do not represent a verified final recipe or cash price. Unpriced totals remain unknown. Confirmation only confirms the simulated cart.
+The bundled directory contains 313 product/form identities. It is a recorded snapshot, not a current store inventory. Generic lines preserve source identity, size, quantity and literal request history. Exact base configurations can receive live store quotes when browser pricing is configured; unresolved customization requests do not represent a verified final recipe or cash price. Unpriced totals remain unknown. Confirmation only confirms the simulated cart.
 
 Browser SpeechRecognition transcribes speech; availability depends on browser and service. Interim text appears immediately. After 650 ms of unchanged text, one speculative interpretation can produce a separate order preview. Only matching final text and an unchanged cart can reuse it and commit. Stable interim text and cart context can therefore be sent to OpenRouter before speech finishes. No audio is stored; physical microphone accuracy and latency are unmeasured.
 

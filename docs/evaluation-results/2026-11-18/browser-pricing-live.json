@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-18",
+  "scope": "Local app API and rendered cart through the standalone normal Chrome service; no checkout or payment",
+  "storeNumber": "85278-313836",
+  "storeName": "104 Jay St",
+  "product": {"identity": "28516:Iced", "sku": "11183225", "size": "Grande"},
+  "guestSetup": "Fresh isolated Chrome context; automatic ordinary cafe selection, add-to-order and cart review; successful guest response observed",
+  "api": {"status": 200, "revision": 1, "subtotalCents": 775, "taxCents": 69, "totalCents": 844, "estimated": false},
+  "renderedCart": [
+    {"units": 1, "subtotalCents": 775, "taxCents": 69, "totalCents": 844},
+    {"units": 2, "subtotalCents": 1550, "taxCents": 138, "totalCents": 1688}
+  ],
+  "limits": "Local live proof only. Public Worker requires a reachable authenticated HTTPS browser service. Unresolved free-text customizations remain unpriced.",
+  "privacy": "No session IDs, cookies, credentials, guest response bodies or order IDs recorded"
+}

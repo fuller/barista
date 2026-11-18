@@ -9,13 +9,15 @@ import {registerCatalogSnapshot} from '../catalog/service.mjs';
 import {createDecisionCache} from '../adapters/decision-cache.mjs';
 import {createMenuDeciderAdapter} from '../adapters/menu-decider.mjs';
 import menuDirectory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
+import {handleQuoteApi,initializeQuoteSession,PRICING_STORE} from './quote-api.mjs';
+import {browserPricingConfigured} from '../adapters/starbucks-browser-source.mjs';
 registerCatalogSnapshot(previousSnapshot);
 const decisionCache=createDecisionCache();
 const registry=createRegistry({decider:createMenuDeciderAdapter});
 const menuQuestionProfiles=new Set(['lean-v8','lean-v9','lean-v10']);
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const admissionConfigured=env=>env.REQUIRE_TURN_RATE_LIMIT!=='true'||typeof env.TURN_RATE_LIMITER?.limit==='function';
-async function admitTurn(request,env){
+async function admitTurn(request,env,kind='turn'){
  const limiter=env.TURN_RATE_LIMITER;
  if(!admissionConfigured(env))return json({error:'Ordering is temporarily unavailable.'},503);
  if(!limiter)return null;
@@ -24,7 +26,7 @@ async function admitTurn(request,env){
  const address=request.headers.get('CF-Connecting-IP');
  if(!address)return json({error:'Ordering is temporarily unavailable.'},503);
  try{
-  const result=await limiter.limit({key:`turn:${address}`});
+  const result=await limiter.limit({key:`${kind}:${address}`});
   if(result.success===true)return null;
   const response=json({error:'Too many ordering requests. Please wait a minute and try again.'},429);
   response.headers.set('Retry-After','60');return response;
@@ -62,7 +64,16 @@ export async function handleApi(request,env={}){
   if(request.method!=='GET')return json({error:'Method not allowed'},405);
   const result=catalogResponse(request);return new Response(result.body===null?null:JSON.stringify(result.body),{status:result.status,headers:result.headers});
  }
- if(path==='/api/config'&&request.method==='GET')return json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{zip:'11201',estimated:true,taxCalculated:false}});
+ if(path==='/api/config'&&request.method==='GET'){
+  const available=browserPricingConfigured(env),response=json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{...PRICING_STORE,estimated:false,taxCalculated:true,available}});
+  return available?initializeQuoteSession(request,response):response;
+ }
+ if(path==='/api/quote'){
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Origin not allowed'},403);
+  const denied=await admitTurn(request,env,'quote');if(denied)return denied;
+  return handleQuoteApi(request,env);
+ }
  if(path!=='/api/turn')return json({error:'Not found'},404);
  if(request.method!=='POST')return json({error:'Method not allowed'},405);
  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'Origin not allowed'},403);

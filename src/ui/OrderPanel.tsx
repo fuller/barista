@@ -1,16 +1,16 @@
 import {useEffect,useId,useRef,useState} from 'react';
-import type {Command,Drink,IngredientPath,Order,Quote} from '../contracts';
+import type {Command,Drink,IngredientPath,Order,Quote,ItemQuote} from '../contracts';
 import type {MenuDirectory,MenuDirectoryProduct} from '../catalog/menu-directory-contracts';
 import directory from '../catalog/data/starbucks-menu-directory.json';
 import {CATALOG} from '../domain/catalog.mjs';
-import {formatMoney,quoteOrder} from '../domain/pricing.mjs';
+import {formatMoney} from '../domain/pricing.mjs';
 import {Customizer,Components} from './Customizer';
 import {diffOrder} from './order-diff.mjs';
 export type CommittedChange={before:Order;after:Order;diff:ReturnType<typeof diffOrder>};
-type Props={menuDirectory?:MenuDirectory;order:Order;quote:Quote;change:CommittedChange|null;mobile:boolean;open:boolean;onClose:()=>void;commit:(commands:Command[])=>boolean;update:(item:Drink,changes:Partial<Drink>,touched?:IngredientPath[])=>void};
+type Props={menuDirectory?:MenuDirectory;order:Order;quote:Quote;pricingStatus:string;pricingLoading:boolean;onRefreshPrices:()=>void;change:CommittedChange|null;mobile:boolean;open:boolean;onClose:()=>void;commit:(commands:Command[])=>boolean;update:(item:Drink,changes:Partial<Drink>,touched?:IngredientPath[])=>void};
 const displayPrice=(amount:number|null)=>amount===null?'Price unavailable':formatMoney(amount);
 type MenuLine=NonNullable<Order['menuItems']>[number];
-function MenuOrderRow({item,product,commit}:{item:MenuLine;product?:MenuDirectoryProduct;commit:(commands:Command[])=>boolean}){
+function MenuOrderRow({item,product,commit,itemQuote}:{itemQuote?:ItemQuote;item:MenuLine;product?:MenuDirectoryProduct;commit:(commands:Command[])=>boolean}){
  const [notes,setNotes]=useState(item.instructions.join('\n'));
  const [notesError,setNotesError]=useState('');
  const notesHelpId=useId(),notesErrorId=useId();
@@ -25,7 +25,7 @@ function MenuOrderRow({item,product,commit}:{item:MenuLine;product?:MenuDirector
   else setNotesError('Requests could not be saved. Your edits are still here.');
  };
  return <article className="drink" data-item-id={item.id}>
-  <div className="drink-heading"><h2 data-change-key="name"><span data-change-key="quantity">{item.quantity>1&&item.quantity+' × '}</span><span data-change-key="identity">{item.name}</span></h2><strong data-item-price={item.id}>Price unavailable</strong></div>
+  <div className="drink-heading"><h2 data-change-key="name"><span data-change-key="quantity">{item.quantity>1&&item.quantity+' × '}</span><span data-change-key="identity">{item.name}</span></h2><strong data-item-price={item.id}>{displayPrice(itemQuote?.totalCents??null)}</strong></div>
   <p className="drink-summary"><span data-change-key="size">{item.size??'Default size'}</span> · <span data-change-key="quantity">Qty {item.quantity}</span></p>
   {item.instructions.length>0&&<p className="request-summary" data-change-key="instructions">{item.instructions.join(' · ')}</p>}
   <details className="menu-item-editor"><summary aria-label={'Edit '+item.name}>Edit item <span aria-hidden="true">+</span></summary><div className="custom-fields">
@@ -39,7 +39,7 @@ function MenuOrderRow({item,product,commit}:{item:MenuLine;product?:MenuDirector
  </article>;
 
 }
-export function OrderPanel({menuDirectory,order,quote,change,mobile,open,onClose,commit,update}:Props){
+export function OrderPanel({menuDirectory,order,quote,pricingStatus,pricingLoading,onRefreshPrices,change,mobile,open,onClose,commit,update}:Props){
  const dialog=useRef<HTMLDialogElement>(null),panel=useRef<HTMLElement>(null);
  const keyboardInput=useRef(false);
  useEffect(()=>{
@@ -59,16 +59,13 @@ export function OrderPanel({menuDirectory,order,quote,change,mobile,open,onClose
   const animate=(node:Element|null)=>node&&node.getClientRects().length>0?node.animate([{opacity:.55,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(0.23, 1, 0.32, 1)'}):undefined;
   for(const id of change.diff.added)animate(root.querySelector('[data-item-id="'+id+'"]'));
   for(const item of change.diff.updated){const card=root.querySelector('[data-item-id="'+item.id+'"]');for(const key of [...item.fields,...item.ingredients])card?.querySelectorAll('[data-change-key="'+key+'"]').forEach(animate);}
-  const previous=quoteOrder(change.before) as Quote;
-  for(const item of quote.items)if(previous.items.find(p=>p.itemId===item.itemId)?.totalCents!==item.totalCents)animate(root.querySelector('[data-item-price="'+item.itemId+'"]'));
-  if(previous.subtotalCents!==quote.subtotalCents)animate(root.querySelector('[data-subtotal]'));
   setRemoved([...change.before.items,...(change.before.menuItems??[])].filter(item=>change.diff.removed.includes(item.id)));
   const timer=setTimeout(()=>setRemoved([]),180);return()=>{clearTimeout(timer);root.getAnimations({subtree:true}).forEach(animation=>animation.cancel());};
- },[change,quote]);
+ },[change]);
  const menuItems=order.menuItems??[],hasItems=order.items.length+menuItems.length>0,count=[...order.items,...menuItems].reduce((n,item)=>n+item.quantity,0);
  const countLabel=menuItems.length?(count===1?'item':'items'):(count===1?'drink':'drinks');
  return <dialog className="order-drawer" ref={dialog} role={mobile?'dialog':'presentation'} aria-label={mobile?'Your order':undefined} onClose={onClose} onCancel={onClose}><aside ref={panel} className="cart panel" data-empty={!hasItems} aria-label="Your order" data-commit-revision={change?.after.revision}><div className="panel-top"><span className="eyebrow">YOUR ORDER</span><span className="count">{count} {countLabel}</span><button className="close-order" aria-label="Close order" onClick={onClose}>×</button></div>{!hasItems?<div className="empty"><div className="cup" aria-hidden="true">☕</div><h2>A fresh start.</h2><p>Pick a favorite from the menu,<br/>or tell us what sounds good.</p></div>:<div className="items">{order.items.map(item=>{
  const product=CATALOG.find((p:{id:string})=>p.id===item.productId),itemQuote=quote.items.find(q=>q.itemId===item.id);
  return <article className="drink" key={item.id} data-item-id={item.id}><div className="drink-heading"><h2 data-change-key="productId"><span data-change-key="quantity">{item.quantity>1&&item.quantity+' × '}</span>{product?.name||item.productId}</h2>{itemQuote&&<strong data-item-price={item.id}>{displayPrice(itemQuote.totalCents)}</strong>}</div><p className="drink-summary"><span data-change-key="size">{item.size}</span> · <span data-change-key="temperature">{item.temperature}</span> · <span data-change-key="milk">{item.milk.replaceAll('_',' ')}</span></p><Components item={item} catalogVersion={order.catalogVersion}/><details><summary>Customize <span>+</span></summary><Customizer item={item} catalogVersion={order.catalogVersion} onChange={(changes,touched)=>update(item,changes,touched)}/></details>{itemQuote&&<details className="price-details"><summary>Price details · per drink</summary>{itemQuote.lines.map((line,index)=><div className="price-line" key={index}><span>{line.label}</span><span>{formatMoney(line.amountCents)}</span></div>)}<div className="price-line"><span>{item.quantity} × {displayPrice(itemQuote.unitCents)}</span><span>{displayPrice(itemQuote.totalCents)}</span></div></details>}<div className="item-actions"><button onClick={()=>commit([{type:'duplicate',itemId:item.id}])}>Duplicate</button><button onClick={()=>commit([{type:'remove',itemId:item.id}])}>Remove</button></div></article>;
- })}{menuItems.map(item=><MenuOrderRow key={item.id} item={item} product={(menuDirectory?.products??directory.products).find(product=>product.identity===item.identity)} commit={commit}/>)}</div>}{removed.map(item=><div key={'removed:'+item.id} className="removed-drink" aria-hidden="true">Item removed</div>)}<div className="cart-bottom"><div className="subtotal"><span>Subtotal</span><strong data-subtotal>{quote.subtotalCents===null?'Price unavailable':formatMoney(quote.subtotalCents)}</strong></div><p className="tax">Tax not calculated</p>{quote.subtotalCents===null&&<p className="pricing-note">Prices unavailable for {quote.unpricedItemCount} {quote.unpricedItemCount===1?'item':'items'}. Full total cannot be calculated.{order.items.length>0&&<> Priced items subtotal: {formatMoney(quote.pricedSubtotalCents??0)}.</>}</p>}<button className="confirm" disabled={!hasItems||order.confirmed} onClick={()=>commit([{type:'confirm'}])}>{order.confirmed?'Confirmed · simulator receipt':'Confirm order'}<span aria-hidden="true">↗</span></button>{order.confirmed&&<p className="receipt" role="status">Simulated receipt only. No payment taken or café order placed.</p>}<div className="order-actions"><button disabled={!order.history.length} onClick={()=>commit([{type:'undo'}])}>Undo</button><button disabled={!hasItems} onClick={()=>commit([{type:'clear'}])}>Clear order</button></div><p className="pricing-note">Sample prices • 11201 target</p></div></aside></dialog>;
+ })}{menuItems.map(item=><MenuOrderRow key={item.id} item={item} itemQuote={quote.items.find(line=>line.itemId===item.id)} product={(menuDirectory?.products??directory.products).find(product=>product.identity===item.identity)} commit={commit}/>)}</div>}{removed.map(item=><div key={'removed:'+item.id} className="removed-drink" aria-hidden="true">Item removed</div>)}<div className="cart-bottom"><div className="subtotal"><span>Subtotal</span><strong data-subtotal>{pricingLoading?'Checking…':displayPrice(quote.subtotalCents)}</strong></div><p className="tax">Tax {displayPrice(quote.taxCents)}</p><div className="subtotal"><span>Total</span><strong>{pricingLoading?'Checking…':displayPrice(quote.totalCents)}</strong></div><p className="pricing-note" role="status">{pricingStatus}</p><button type="button" disabled={pricingLoading} onClick={onRefreshPrices}>Refresh prices</button>{quote.subtotalCents===null&&<p className="pricing-note">Prices unavailable for {quote.unpricedItemCount} {quote.unpricedItemCount===1?'item':'items'}. Full total cannot be calculated.{order.items.length>0&&<> Priced items subtotal: {formatMoney(quote.pricedSubtotalCents??0)}.</>}</p>}<button className="confirm" disabled={!hasItems||order.confirmed} onClick={()=>commit([{type:'confirm'}])}>{order.confirmed?'Confirmed · simulator receipt':'Confirm order'}<span aria-hidden="true">↗</span></button>{order.confirmed&&<p className="receipt" role="status">Simulated receipt only. No payment taken or café order placed.</p>}<div className="order-actions"><button disabled={!order.history.length} onClick={()=>commit([{type:'undo'}])}>Undo</button><button disabled={!hasItems} onClick={()=>commit([{type:'clear'}])}>Clear order</button></div><p className="pricing-note">Live store prices • 11201 • 104 Jay St</p></div></aside></dialog>;
 }
