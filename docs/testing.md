@@ -12,7 +12,7 @@ npm run eval:menu
 
 Unit tests cover domain validation, provider protocol handling, cancellation, source data, speculative voice preparation and evaluation harnesses. Progressive voice browser regressions exercise completed/in-flight adoption, corrections, failed preparation, withdrawn hypotheses, manual edits, recognition errors, and transcript limits. Browser tests use a deterministic server fixture, not real inference. The pinned browser runtime may download Chromium. Mocked tests establish application behavior, not model accuracy.
 
-The [state machines](state-machines.md) have transition tests in `tests/ordering-machine.test.mjs` and `tests/voice-preparation-machine.test.mjs`. They cover actor cleanup, request transfer, stale responses, revision correlation and native timer binding. Existing preparation characterization tests remain in place. Browser regressions exercise the React Strict Mode integration.
+The [state machines](state-machines.md) have transition tests in `tests/ordering-machine.test.mjs` and `tests/voice-preparation-machine.test.mjs`. They cover actor cleanup, request transfer, stale responses, revision correlation and native timer binding. Browser regressions exercise the React Strict Mode integration.
 
 The four active model corpora are documented in [evaluation](evaluation.md). Default validation does not call a provider. Live runs are explicit, consume request budgets and can incur charges. Never count errors or skipped cases as passes.
 

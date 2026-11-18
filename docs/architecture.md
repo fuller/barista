@@ -1,17 +1,36 @@
 # Architecture
 
-The React client browses the validated menu directory. An XState ordering actor holds the cart in memory and coordinates voice/submission; React renders its state through selectors. Reloading loses the cart. The local server serves the client and validates API requests; only the server holds provider credentials. See the [executable state-machine guide](state-machines.md).
+The React client browses a validated menu snapshot and holds the cart in memory. The Worker serves the client and validates API requests. Provider credentials stay on the server. There is no login, payment, database or fulfillment integration.
 
-`src/catalog` validates recorded source snapshots and explicit identities. `src/domain` validates immutable order commands and revision history. `src/application` coordinates turns, cancellation and stale responses. `src/adapters` translates text through bounded OpenRouter Decisions/Extractions requests. `src/server` owns HTTP validation and safe diagnostics. `src/ui` owns browser interaction and memory caches.
+## Code layout
 
-Product selection first chooses a source group, then a source identity, keeping choice lists bounded. Numeric detail resolves quantity and source size. The v9/v10 shortcut may skip that detail stage for a confident single copy in a narrowly eligible empty-cart beverage request; v9 and v8 remain explicit rollbacks. V10 serializes cart rows losslessly when smaller and resolves uncertain size/count applicability against selected products without lowering confidence gates. Probability, margin, coverage and domain validation still apply. Dependent clauses execute against private drafts; an accepted turn commits once. Clarification and failed validation leave the cart unchanged.
+| Directory | Responsibility |
+| --- | --- |
+| `src/catalog` | Source snapshots, menu validation, product identities |
+| `src/domain` | Immutable cart commands, revisions, undo, money |
+| `src/application` | Turn coordination, XState actors, quote orchestration |
+| `src/adapters` | OpenRouter interpretation, browser speech, Starbucks protocols |
+| `src/server` | HTTP validation, admission limits, safe diagnostics |
+| `src/ui` | React views, actor subscriptions, query caches |
 
-The application supplies context on every request. Current state and the latest undo snapshot travel to the server; full undo history remains in the browser. A bounded server-memory cache reuses exact validated decisions; failed turns admit nothing. Identical pure packets may share pending work with independently cancellable subscribers; keys include credential, model, profile, menu version, thresholds and exact body. The pool is bounded and isolate-local. Guarded overlap can schedule an eligible identity request alongside fresh routing; only the selected validated branch is consumed. Other clauses remain sequential.
+## Order interpretation
 
-Generic menu lines store literal customization requests, not computed recipes. Money is independent of model output. Source directory lines have no verified cash price; unknown totals remain null. Internal recipe compatibility data does not establish generic menu pricing or customization support.
+The browser sends text, the current cart and its latest undo snapshot to the server. Full undo history stays local. The model has no application session between calls.
 
-The [browser-backed pricing service](pricing.md) owns isolated normal Chrome guest contexts outside the Worker. The admitted same-origin `/api/quote` endpoint resolves trusted source size SKUs, calls the authenticated browser service, validates configured-SKU money and caches exact configurations within quote expiry. The cart uses revision-bound asynchronous queries without sample fallbacks. Unknown modifier prose stays unpriced; browser access does not establish direct server bootstrap support. A separate Chrome/display host with an authenticated HTTPS endpoint is required for public deployment.
+Product selection chooses a source group, then an identity, keeping choice lists bounded. Detail questions resolve quantity and size. The default `lean-v10` profile skips detail only for eligible confident single-item beverage requests; uncertain applicability gets a selected-product decision. Confidence, margin, coverage and domain validation apply before committing. Dependent clauses use private drafts, and an accepted turn commits once. Clarification or failed validation leaves the cart unchanged.
 
-Pending requests bind to cart revisions. Manual changes, cancellation and new turns invalidate stale responses, even when upstream cancellation cannot stop a dispatched request. Browser recognition emits interim text for a separate provisional preview, with at most one prepared HTTP turn per microphone session after 650 ms of stable text. Only exact trim-normalized final text and the same cart revision may adopt its pending/completed result. A corrected/withdrawn hypothesis, manual edit, typed turn, recognition error or new session invalidates preparation; final speech otherwise uses the ordinary turn path. Already-failed preparation falls back to an ordinary final request. A completed preview never changes real totals, undo or confirmation. Speech synthesis consumes accepted acknowledgements. Request timing is recorded in isolated branches and merged only on adoption.
+Exact validated decisions can be cached or share pending provider work within one process or Worker isolate. Keys include credentials, model, profile, menu, thresholds and exact body; subscribers cancel independently. Cart routing runs live. Guarded overlap can request an eligible identity alongside routing, consuming only the validated selected branch. Other clauses remain sequential. See [evaluation](evaluation.md) for profiles, comparison commands and limits.
 
-Menu queries use a browser memory cache and acquisition-aware HTTP ETags. Explicit source synchronization validates data before atomic replacement; UI refresh rereads the local snapshot. There is no login, payment, database or fulfillment integration.
+## Client lifecycle
+
+[XState actors](state-machines.md) own voice, speculative preparation, final submission and cancellation. React renders actor state and keeps view-only state. Manual edits, cancellation and replacement turns invalidate stale responses.
+
+Stable interim speech can prepare one interpretation without changing the cart. Only matching final text and an unchanged revision can adopt it. Speech synthesis uses accepted acknowledgements. See the state-machine guide for states, events and resource ownership.
+
+## Menu and pricing
+
+Menu queries use a memory cache and acquisition-aware HTTP ETags. Source synchronization validates snapshots before atomic replacement; UI refresh rereads the local snapshot. See [data](data.md).
+
+Generic menu lines preserve source identity, size, quantity and literal customization requests. Those requests do not establish a computed recipe or cash price. Money is independent of model output; unknown amounts remain null.
+
+The same-origin `/api/quote` endpoint resolves trusted size SKUs, calls an authenticated browser service, validates money and caches exact configurations until expiry. TanStack Query keeps quotes independent of cart commits and rejects stale revisions. The service owns isolated Chrome guest contexts outside the Worker and requires a separate host for public deployment. Unresolved modifiers remain unpriced. See [pricing](pricing.md) for setup, protocol and coverage.

@@ -1,6 +1,6 @@
 # Store pricing backend
 
-The cart requests real quotes through `POST /api/quote` when a browser pricing service is configured. It never substitutes illustrative prices. Direct guest creation returned HTTP 429 from both local Node and Cloudflare remote development, so the configured transport uses an ordinary headful Chrome guest session instead. See [runtime access evidence](evaluation-results/2026-11-18/guest-pricing-access.json).
+The cart requests real quotes through `POST /api/quote` when a browser pricing service is configured. It uses an ordinary headful Chrome guest session and never substitutes illustrative prices.
 
 ## Run browser pricing
 
@@ -18,8 +18,6 @@ The server resolves source identities and size SKUs from the trusted menu direct
 
 The browser quote is cached by private caller, store, fulfillment, SKU, quantity, and modifier configuration, only until its returned expiry (at most five minutes). The UI keys requests by the full cart state, rejects stale revisions, hides expired prices, and offers an explicit refresh after failures. Voice/cart commits do not wait for prices. Partial prices never produce a misleading cart total or tax amount.
 
-The verified website flow is café selection, product selection, a guest session, then a configured-cart quote. No account login was needed. On November 18, 2026, the public website quoted a grande Iced Sugar Cookie Latte at 104 Jay St, Brooklyn, at $7.75 plus $0.69 tax. Three total shots changed the subtotal to $8.25 and the total to $8.98. These are recorded observations, not current prices for every store. The sanitized fixture is [price-order.json](../tests/fixtures/starbucks/price-order.json).
-
 ## Components
 
 - `src/adapters/starbucks-guest-session.mjs` owns a fixed-origin guest bootstrap and quote transport. It keeps bounded cookie jars in server memory, separates caller sessions, reuses guest state, handles expiry and timeouts, and observes upstream cooldowns. A 429 blocks new requests across session keys for the backoff period. It performs no automatic retries and never imports browser cookies or synthesizes reputation/security values.
@@ -28,7 +26,7 @@ The verified website flow is café selection, product selection, a guest session
 
 The internal input is `{storeNumber, fulfillment?, items:[{itemId, sku, quantity, modifiers?:[{sku,quantity}]}]}`. A session key must be generated and owned by the trusted server caller; it is not an upstream cookie. The core is not an arbitrary URL proxy or a public raw-SKU endpoint.
 
-Standard recipes can use empty `childItems`; selected changes use their actual source option SKUs. For the recorded extra-shot example, option SKU `55`, quantity `3` means three total shots, not three extra shots. Known public-client fulfillment values are `CONSUME_IN_STORE` / `CONSUME_OUT_OF_STORE` and `IN_STORE` / `DRIVE_THRU`. Only the default take-away/in-café combination has a captured live response here.
+Standard recipes can use empty `childItems`; selected changes use their actual source option SKUs. Option SKU `55`, quantity `3` means three total shots, not three extra shots. Known public-client fulfillment values are `CONSUME_IN_STORE` / `CONSUME_OUT_OF_STORE` and `IN_STORE` / `DRIVE_THRU`. The sanitized [price-order.json](../tests/fixtures/starbucks/price-order.json) fixture covers the default take-away/in-café combination; it does not establish current prices or other fulfillment coverage.
 
 The response must echo requested modifier SKUs and counts. Configurations with missing echoes, unavailable items, unsupported fees, incomplete tax, expired quotes or mismatched money are unavailable. This deliberately limits quote coverage; it does not restrict which menu items may be added to the application's cart.
 
@@ -45,8 +43,6 @@ Deterministic tests inject transport fixtures. They establish protocol, money, c
 ## Integration boundaries
 
 Do not work around access denial, copy a user's Starbucks cookies or treat browser-only access as direct Worker support. The standalone browser service owns guest contexts; Worker quote caches are process-local optimizations, not session owners. An opaque HttpOnly same-site cookie correlates the caller to that service context.
-
-Remote runtime testing caught an actual fetch incompatibility: Cloudflare rejects `redirect: 'error'` before any upstream HTTP response. The adapter now uses supported manual handling and rejects redirect responses without following them. The ordinary public-client `X-Requested-With` header is included on bootstrap as well as quotes. With these protocol fixes, the remote Worker reaches Starbucks and receives HTTP 429. This status establishes rejection; it does not prove whether frequency or other perimeter/session requirements caused it. The website's normal guest flow includes browser-produced reputation context, which this adapter does not fabricate.
 
 Generic menu lines contain literal instructions; an unresolved instruction must remain unpriced rather than receiving a base-only quote. The admitted same-origin endpoint bounds concurrent work and body sizes. Store/configuration changes invalidate pending UI quotes. Never label illustrative fallback prices as official store quotes.
 

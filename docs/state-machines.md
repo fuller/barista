@@ -1,6 +1,6 @@
 # Voice and ordering state machines
 
-The client uses stable XState 5 and `@xstate/react`. The executable definitions are [ordering-machine.ts](../src/application/ordering-machine.ts) and [voice-preparation.machine.ts](../src/application/voice-preparation.machine.ts). The [official XState v5 skill](https://github.com/statelyai/skills/tree/main/skills/xstate-v5) guided the migration. No hosted Stately model or formal verification result is claimed.
+The client uses XState 5 and `@xstate/react`. The executable definitions are [ordering-machine.ts](../src/application/ordering-machine.ts) and [voice-preparation.machine.ts](../src/application/voice-preparation.machine.ts).
 
 ## Ownership
 
@@ -44,10 +44,8 @@ Only an exact trimmed final transcript with the same cart revision can take pend
 
 Final responses must match the submitted turn ID and base revision. Commands are validated before committing. Cancelled or superseded invocations cannot commit a cart, publish a preview/timing sample, or speak an acknowledgement.
 
-## Verification and scope
+## Lifetime and testing
 
-Transition tests cover request ownership, cleanup, request budgets, correlation and failure paths. Browser regressions exercise the real React Strict Mode integration and browser timer receiver behavior. The native clock adapter wraps timer functions rather than installing them directly as object methods.
+Actors are local in-memory state. Promises, abort controllers and native resources are not durable cart persistence. OpenRouter receives explicit context on every call; the actors do not create a model-side session.
 
-Actors are local in-memory state. Live promises, abort controllers and native resources are not durable cart persistence. OpenRouter still receives explicit context on each call; this migration adds no model-side session and no provider calls.
-
-The migration reduces lifecycle coordination in `App.tsx` from 135 to 72 lines while adding typed machine definitions and tests. The production JavaScript gzip size grows by 15,972 bytes in the recorded build comparison. See [migration evidence](evaluation-results/2026-11-18/xstate-migration.json).
+Transition tests cover cleanup, request budgets, correlation and failure paths. Browser tests exercise React Strict Mode and native timer binding. See [testing](testing.md) for commands and coverage.

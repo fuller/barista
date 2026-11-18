@@ -2,7 +2,7 @@
 
 Uses the already running real website at `http://127.0.0.1:4173`. Restart that server first to obtain a cold server-memory cache. Do not run beside another provider benchmark. The server owns its credentials; this test/config reads no key or env file and starts no application process.
 
-From the barista directory, run only after authorizing two real interpretation turns:
+From the repository root, explicitly opt into two real interpretation turns (provider charges may apply):
 
 ```sh
 E2E_TELEMETRY_DISABLED=1 npm exec -- e2e run --no-cache --config e2e.live-voice.config.ts experiments/live-voice/voice-cart.live.e2e.ts --output work/live-voice-browser
@@ -14,7 +14,7 @@ A unique JSON artifact appears under `work/live-voice-smoke/`. It contains local
 
 ## Progressive preparation
 
-With a fresh local server, run the separate single-turn preparation smoke:
+With a fresh local server, explicitly opt into the single-turn preparation smoke (provider charges may apply):
 
 ```sh
 E2E_TELEMETRY_DISABLED=1 npm exec -- e2e run --no-cache --config e2e.live-voice.config.ts experiments/live-voice/progressive.live.e2e.ts --output work/progressive-live-browser
