@@ -1,6 +1,24 @@
 import {expect,test} from 'e2e';
 import {chooseStore,fixtureStores,installStoreFixture} from './store-fixture';
 
+for(const width of [1440,390])test(`store location input accepts keyboard ZIP and city searches at ${width}px`,async({app,screen,browser})=>{
+ await browser.setViewport({width,height:900});
+ const queries:string[]=[];
+ await browser.route('**/api/stores?*',route=>{queries.push(new URL(route.request.url).searchParams.get('q')??'');return route.fulfill({json:{stores:fixtureStores}});});
+ await app.open('/');const input=screen.getByLabel('ZIP code or city');
+ await expect(input).toBeVisible();
+ const geometry=await input.boundingBox();
+ expect(geometry?.width??0).toBeGreaterThanOrEqual(160);
+  expect(geometry?.height??0).toBeGreaterThanOrEqual(44);
+ for(const query of ['10001','Brooklyn']){
+  await input.click();await browser.keyboard.press('ControlOrMeta+A');await browser.keyboard.type(query);
+  await expect(input).toHaveValue(query);await browser.keyboard.press('Enter');
+  await expect(screen.getByRole('radio').first()).toBeVisible();
+  await expect.poll(()=>queries.at(-1)).toBe(query);
+ }
+ await app.screenshot(`store-location-input-${width}`);
+});
+
 test('fresh visit requires explicit store confirmation before manual, typed or voice ordering',async({app,screen,browser})=>{
  await browser.setViewport({width:1440,height:900});await installStoreFixture(browser);await app.open('/');
  await expect(screen.getByRole('heading',{name:'Choose your store'})).toBeVisible();
