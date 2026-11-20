@@ -53,3 +53,9 @@ test('store lookup closes temporary context on failure and bounds concurrent wor
  let closed=0,release;const pending=new Promise(r=>{release=r;});const transport=await createHeadedTransport({launch:async()=>({newContext:async()=>({newPage:async()=>({goto:async()=>pending,evaluate:async()=>{throw Error('private');}}),close:async()=>closed++}),close:async()=>{}})});
  try{const first=transport.searchStores('11201');await new Promise(r=>setImmediate(r));await assert.rejects(transport.searchStores('11202'));release();await assert.rejects(first);assert.equal(closed,1);}finally{release();await transport.close();}
 });
+test('coordinate store lookup executes only fixed location URL and rejects invalid input before launch',async()=>{
+ let fetched,contexts=0,closed=0;const originalFetch=globalThis.fetch;
+ const transport=await createHeadedTransport({launch:async()=>({newContext:async()=>{contexts++;return {newPage:async()=>({goto:async()=>{},evaluate:async(fn,args)=>fn(args)}),close:async()=>closed++};},close:async()=>{}})});
+ globalThis.fetch=async(url,options)=>{fetched={url,options};return Response.json([]);};
+ try{await transport.searchStores({latitude:0,longitude:-73.986861});assert.equal(fetched.url,'/apiproxy/v1/locations?lat=0&lng=-73.9869');assert.equal(fetched.options.credentials,'same-origin');assert.equal(contexts,1);assert.equal(closed,1);await assert.rejects(transport.searchStores({latitude:0,longitude:181}));assert.equal(contexts,1);}finally{globalThis.fetch=originalFetch;await transport.close();}
+});

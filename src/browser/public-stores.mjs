@@ -1,5 +1,5 @@
 import {validateSelectedStore} from './selected-store.mjs';
-export function validateStoreQuery(query){if(typeof query!=='string'||!query.trim()||query.length>120||/[\u0000-\u001f\u007f]/.test(query))throw Error('invalid query');return query.trim();}
+export {normalizeStoreQuery as validateStoreQuery} from '../domain/store-query.mjs';
 /** Never return provider envelopes, cookies, session IDs or other fields. */
 export function sanitizePublicStores(raw){
  if(!Array.isArray(raw)||raw.length>500)throw Error('unavailable');

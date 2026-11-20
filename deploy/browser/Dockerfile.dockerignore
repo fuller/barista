@@ -3,6 +3,8 @@
 !package.json
 !package-lock.json
 !src/
+!src/domain/
+!src/domain/store-query.mjs
 !src/browser/
 !src/browser/**
 !src/adapters/

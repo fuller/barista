@@ -1,3 +1,4 @@
+import {normalizeStoreQuery} from '../domain/store-query.mjs';
 import {browserPricingConfigured,createStarbucksBrowserSource} from '../adapters/starbucks-browser-source.mjs';
 import {createStarbucksStores,createStoreSelection} from '../adapters/starbucks-stores.mjs';
 const services=new WeakMap();
@@ -15,6 +16,16 @@ export function storeServices(env){
 export async function handleStoresApi(request,env){
  const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
  if(request.method!=='GET')return json({error:'Method not allowed'},405);
- const url=new URL(request.url);if([...url.searchParams.keys()].some(k=>k!=='q')||url.searchParams.getAll('q').length!==1)return json({error:'Enter a city, address, or ZIP code'},400);
- try{return json({stores:await storeServices(env).source.search(url.searchParams.get('q'))});}catch(error){return json({error:error.status===400?'Enter a city, address, or ZIP code':'Store search unavailable'},error.status===400?400:503);}
+ const params=new URL(request.url).searchParams;let query;
+ try{
+  const keys=[...params.keys()];
+  if(keys.length===1&&keys[0]==='q')query=normalizeStoreQuery(params.get('q'));
+  else if(keys.length===2&&keys.includes('lat')&&keys.includes('lng')){
+   const latitude=params.get('lat'),longitude=params.get('lng');
+   const decimal=/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
+   if(latitude.length>32||longitude.length>32||!decimal.test(latitude)||!decimal.test(longitude))throw Error();
+   query=normalizeStoreQuery({latitude:Number(latitude),longitude:Number(longitude)});
+  }else throw Error();
+ }catch{return json({error:'Enter a city, address, or ZIP code'},400);}
+ try{return json({stores:await storeServices(env).source.search(query)});}catch(error){return json({error:error.status===400?'Enter a city, address, or ZIP code':'Store search unavailable'},error.status===400?400:503);}
 }

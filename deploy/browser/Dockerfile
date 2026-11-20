@@ -16,6 +16,7 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --chown=node:node src/browser/ ./src/browser/
 COPY --chown=node:node src/adapters/ ./src/adapters/
+COPY --chown=node:node src/domain/store-query.mjs ./src/domain/store-query.mjs
 COPY --chown=node:node scripts/browser-pricing.mjs ./scripts/browser-pricing.mjs
 COPY --chown=node:node --chmod=755 deploy/browser/start.sh ./deploy/browser/start.sh
 
@@ -24,5 +25,6 @@ ENV NODE_ENV=production \
     BARISTA_BROWSER_HOST=0.0.0.0 \
     BARISTA_BROWSER_PORT=4174
 USER node
+RUN node --input-type=module -e "await import('./src/browser/pricing-service.mjs'); await import('./src/browser/headed-transport.mjs')"
 EXPOSE 4174
 ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/app/deploy/browser/start.sh"]

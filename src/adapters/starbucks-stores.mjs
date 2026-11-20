@@ -1,3 +1,4 @@
+import {normalizeStoreQuery,storeQueryKey,storeLocationsUrl} from '../domain/store-query.mjs';
 const encoder=new TextEncoder();
 const text=(v,max=200)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
 function validateStore(s){
@@ -21,13 +22,13 @@ export function createStoreSelection({secret,now=Date.now,ttlMs=86400000}={}){
 export function createStarbucksStores({selection,fetchImpl=fetch,now=Date.now,ttlMs=300000,maxEntries=64,timeoutMs=5000,fallbackSearch}={}){
  const cache=new Map(),pending=new Map();
  return {async search(query){
-  if(typeof query!=='string'||!query.trim()||query.length>120||/[\x00-\x1f\x7f]/.test(query))throw Object.assign(Error('Enter a city, address, or ZIP code'),{status:400});
-  const q=query.trim();const cached=cache.get(q);if(cached&&cached.expiresAt>now())return structuredClone(cached.stores);if(pending.has(q))return structuredClone(await pending.get(q));if(pending.size>=8)throw Error('Store search busy');
+  let normalized;try{normalized=normalizeStoreQuery(query);}catch{throw Object.assign(Error('Enter a city, address, or ZIP code'),{status:400});}
+  const q=storeQueryKey(normalized);const cached=cache.get(q);if(cached&&cached.expiresAt>now())return structuredClone(cached.stores);if(pending.has(q))return structuredClone(await pending.get(q));if(pending.size>=8)throw Error('Store search busy');
   const promise=(async()=>{
-   const url=new URL('https://www.starbucks.com/apiproxy/v1/locations');url.searchParams.set('place',q);
+   const url=storeLocationsUrl(normalized);
    let response,raw;
    try{response=await fetchImpl(url.href,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},redirect:'error',signal:AbortSignal.timeout(timeoutMs)});}catch{if(!fallbackSearch)throw Error('Store search unavailable');}
-   if(!response?.ok){void response?.body?.cancel().catch(()=>{});if(!fallbackSearch)throw Error('Store search unavailable');raw=await fallbackSearch(q);}
+   if(!response?.ok){void response?.body?.cancel().catch(()=>{});if(!fallbackSearch)throw Error('Store search unavailable');raw=await fallbackSearch(normalized);}
    else{
    if(!response.headers.get('Content-Type')?.includes('application/json')||Number(response.headers.get('Content-Length'))>1048576)throw Error('Invalid store response');
    const reader=response.body?.getReader();if(!reader)throw Error('Invalid store response');let size=0;const chunks=[];for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>1048576){await reader.cancel();throw Error('Invalid store response');}chunks.push(value);}const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}

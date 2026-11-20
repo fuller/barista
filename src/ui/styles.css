@@ -279,3 +279,7 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 28px
 }
 
 @media(max-width:720px){.menu-intro{flex-wrap:wrap}.menu-intro .store-bar{width:100%;margin-top:0}}
+
+.location-search { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -12px 0 24px; }
+.store-picker .use-location { background: transparent; color: #173e32; min-height: 44px; }
+.location-search span { font-size: 13px; color: var(--muted); line-height: 1.5; }

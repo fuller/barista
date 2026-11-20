@@ -23,7 +23,7 @@ Conversational ordering uses OpenRouter and sends text and relevant cart context
 
 ## What to expect
 
-- Choose a store using a ZIP code or city before ordering. Changing stores keeps your cart and requests new prices.
+- Choose a store using a ZIP code, city, or **Use my location** before ordering. Location is requested only after clicking that button; permission failures leave manual search available. Changing stores keeps your cart and requests new prices.
 - The menu is a recorded snapshot, not current store inventory.
 - Customization requests remain literal text unless resolved by the recipe model. They do not establish a verified café recipe.
 - Optional store pricing requires a separate Chrome browser service. Unknown prices stay unknown; sample prices are never substituted. See [pricing setup](docs/pricing.md).

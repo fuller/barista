@@ -1,3 +1,4 @@
+import {storeLocationsUrl} from '../domain/store-query.mjs';
 import {validateStoreQuery,sanitizePublicStores} from './public-stores.mjs';
 import {setupGuestThroughUi} from './guest-ui-setup.mjs';
 export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now,idleTtlMs=900000,maxSessions=4,setup=setupGuestThroughUi}={}){
@@ -39,15 +40,15 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    try{
     context=await browser.newContext();const page=await context.newPage();
     await page.goto('https://www.starbucks.com/store-locator?source=menu',{waitUntil:'domcontentloaded',timeout:15000});
-    const raw=await page.evaluate(async({query})=>{
+    const raw=await page.evaluate(async({locationsUrl})=>{
      const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
-     try{const response=await fetch('/apiproxy/v1/locations?place='+encodeURIComponent(query),{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',redirect:'error',signal:controller.signal});
+     try{const response=await fetch(locationsUrl,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',redirect:'error',signal:controller.signal});
       if(!response.ok||!response.headers.get('Content-Type')?.includes('application/json')||Number(response.headers.get('Content-Length'))>1048576)throw Error('unavailable');
       const reader=response.body?.getReader();if(!reader)throw Error('unavailable');let size=0;const chunks=[];
       for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>1048576){await reader.cancel();throw Error('unavailable');}chunks.push(value);}
       const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return JSON.parse(new TextDecoder().decode(bytes));
      }finally{clearTimeout(timer);}
-    },{query});
+    },{query,locationsUrl:storeLocationsUrl(query).pathname+storeLocationsUrl(query).search});
     return sanitizePublicStores(raw);
    }finally{try{await context?.close();}finally{searchPending=false;}}
   },
