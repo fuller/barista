@@ -4,7 +4,7 @@ The client uses XState 5 and `@xstate/react`. The executable definitions are [or
 
 ## Ownership
 
-The ordering actor owns the committed cart, pending clarification, conversation, errors, metrics, draft transcript and preview. React subscribes through [use-ordering.ts](../src/ui/use-ordering.ts); loading and listening indicators come from machine tags. React keeps input text, connection fetching, media-query/dialog state, and DOM refs.
+The ordering actor gates input on an explicit store selection and owns the committed cart, pending clarification, conversation, errors, metrics, draft transcript and preview. React subscribes through [use-ordering.ts](../src/ui/use-ordering.ts); loading and listening indicators come from machine tags. React keeps input text, connection fetching, media-query/dialog state, and DOM refs.
 
 The root callback actor creates the native speech input/output and preparation machine. Its cleanup disposes those resources, clears timers, cancels owned work and invalidates timing. Each final submission runs in a promise actor: leaving `submitting` aborts its transport and ignores late completion. Manual edits, new microphone sessions and replacement submissions invalidate old work.
 
@@ -29,6 +29,7 @@ The order domain still validates immutable commands. Model confidence, coverage 
 
 | Events | Effect |
 | --- | --- |
+| `STORE.CHANGED` | Cancel requests, speech and clarification; retain the cart and set the selected store. |
 | `ORDER.SUBMIT`, `VOICE.FINAL` | Validate input and start or adopt a final request. |
 | `VOICE.START`, `VOICE.INTERIM`, `VOICE.FINISH`, `VOICE.ERROR` | Coordinate a native recognition session and its draft. Finishing preserves final-result eligibility. |
 | `ORDER.COMMIT`, `ORDER.RESET` | Apply valid manual changes and invalidate older work. |

@@ -1,8 +1,11 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {createQuoteApi} from '../src/server/quote-api.mjs';
+import {createQuoteApi as makeQuoteApi} from '../src/server/quote-api.mjs';
+import {createStoreSelection} from '../src/adapters/starbucks-stores.mjs';
+const selectedStore={storeId:'8527800',sourceStoreNumber:'85278-313836',name:'104 Jay St'};
+const createQuoteApi=options=>makeQuoteApi({verifyStore:async(id,token)=>{if(id!==selectedStore.storeId||token!=='fixture-token')throw Error();return selectedStore;},...options});
 import {createOrder,applyCommands} from '../src/domain/order.mjs';
 const order=applyCommands(createOrder(),[{type:'add-menu',identity:'407:Hot'}]);
-const request=(body={order},headers={})=>new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+const request=(body={order},headers={})=>new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({...body,storeId:selectedStore.storeId,selectionToken:'fixture-token'})});
 const quote={currency:'USD',estimated:false,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+300000,subtotalCents:525,taxCents:47,totalCents:572,items:[{itemId:'menu-1',quantity:1,unitCents:525,totalCents:525,lines:[{label:'Base',amountCents:525}]}],taxLabel:'Tax',provenance:'Verified Starbucks store quote'};
 test('returns revision-correlated quote through private cookie session',async()=>{
  let session;const handler=createQuoteApi({resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async(key,input)=>{session=key;assert.equal(input.storeNumber,'85278-313836');return quote;}}});
@@ -53,3 +56,8 @@ test('diagnostic callback failure preserves sanitized API response',async()=>{
  const handler=createQuoteApi({onFailure:()=>{throw Error('logger');},resolveOrder:async()=>{throw Error('resolver');},service:{}});
  assert.equal((await handler(request())).status,503);
 });
+
+test('requires authenticated store selection before resolver',async()=>{const selection=createStoreSelection({secret:'test-secret-'.repeat(4)});const handler=makeQuoteApi({verifyStore:selection.verify,resolveOrder:async()=>assert.fail('must not resolve'),service:{}});for(const body of [{order},{order,storeId:'',selectionToken:''},{order,storeId:'8527800',selectionToken:'forged'}]){const response=await handler(new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}));assert.equal(response.status,400);}});
+test('genuine signed selection drives provider store and response identity',async()=>{const selection=createStoreSelection({secret:'test-secret-'.repeat(4)});const store={...selectedStore,source:'starbucks',address:{lines:['104 Jay St'],city:'Brooklyn',region:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40.70205,longitude:-73.98686}};const token=await selection.sign(store);const handler=makeQuoteApi({verifyStore:selection.verify,resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async(key,input,options)=>{assert.deepEqual(options.selectedStore,store);assert.equal(input.storeNumber,store.sourceStoreNumber);return quote;}}});const response=await handler(new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order,storeId:store.storeId,selectionToken:token})}));assert.equal(response.status,200);assert.equal((await response.json()).storeId,store.storeId);});
+
+test('invalid selection returns actionable code without signature diagnostics',async()=>{const handler=makeQuoteApi({verifyStore:async()=>{throw Error('private cryptography details');},resolveOrder:async()=>assert.fail('must not resolve'),service:{}});const response=await handler(request());assert.equal(response.status,400);assert.deepEqual(await response.json(),{error:'Choose your store again to refresh live prices.',code:'store_selection_required'});});

@@ -1,21 +1,22 @@
+import {validateStoreQuery,sanitizePublicStores} from './public-stores.mjs';
 import {setupGuestThroughUi} from './guest-ui-setup.mjs';
 export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now,idleTtlMs=900000,maxSessions=4,setup=setupGuestThroughUi}={}){
  if(!Number.isInteger(maxSessions)||maxSessions<1||maxSessions>16||!Number.isInteger(idleTtlMs)||idleTtlMs<1)throw Error('Invalid browser session limits');
  if(!launch){const {chromium}=await import('playwright-core');launch=options=>chromium.launch(options);}
  const browser=await launch({channel:'chrome',headless:false});
- const sessions=new Map();let cooldownUntil=0;
- const destroy=async(key,state)=>{if(sessions.get(key)===state)sessions.delete(key);state.ready=false;await state.context.close();};
+ const sessions=new Map();let cooldownUntil=0,searchPending=false;
+ const destroy=async(key,state)=>{if(sessions.get(key)===state)sessions.delete(key);state.ready=false;await state.context?.close();};
  const expire=async()=>{await Promise.all([...sessions].filter(([,s])=>!s.busy&&now()-s.lastUsed>=idleTtlMs).map(([key,s])=>destroy(key,s)));};
  const idleTimer=setInterval(()=>{void expire().catch(()=>{});},Math.min(idleTtlMs,30000));idleTimer.unref?.();
- const create=async key=>{
+ const create=async (key,selectedStore)=>{
   if(sessions.size>=maxSessions)throw Error('unavailable');
-  const state={context:null,page:null,ready:false,busy:true,lastUsed:now(),setupPending:true,documentStatus:null,guestStatus:null,setupFailure:null};sessions.set(key,state);
+  const state={storeNumber:selectedStore?.sourceStoreNumber,context:null,page:null,ready:false,busy:true,lastUsed:now(),setupPending:true,documentStatus:null,guestStatus:null,setupFailure:null};sessions.set(key,state);
   try{
    state.context=await browser.newContext();if(sessions.get(key)!==state){await state.context.close();throw Error('unavailable');}state.page=await state.context.newPage();
    state.page.on('response',response=>{
     const guest=response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest';
     const status=response.status();
-    if(guest&&status===200){state.ready=true;state.setupFailure=null;}
+    if(sessions.get(key)===state&&guest&&status===200){state.ready=true;state.setupFailure=null;}
     // Keep numeric statuses only; never inspect provider bodies or challenge text.
     if(state.setupPending&&Number.isInteger(status)&&status>=100&&status<=599){
      if(guest)state.guestStatus=status;
@@ -24,14 +25,32 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    });
    state.page.on('close',()=>{state.ready=false;});
    await state.page.bringToFront();
-   try{await setup(state.page);if(!state.ready&&state.page.waitForResponse)await state.page.waitForResponse(response=>response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200,{timeout:2000});}catch{/* Ordinary UI failed; leave visible setup tab for operator. */}
+   try{await setup(state.page,{selectedStore});if(!state.ready&&state.page.waitForResponse)await state.page.waitForResponse(response=>response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200,{timeout:2000});}catch{/* Ordinary UI failed; leave visible setup tab for operator. */}
+   if(sessions.get(key)!==state)throw Error('unavailable');
    state.setupPending=false;
    if(!state.ready){const statuses=[state.documentStatus,state.guestStatus];state.setupFailure=statuses.includes(403)?'access_denied':statuses.includes(429)?'rate_limited':'setup_incomplete';}
    return state;
-  }catch{if(state.context)await destroy(key,state);else sessions.delete(key);throw Error('unavailable');}
+  }catch{if(state.context)await destroy(key,state);else if(sessions.get(key)===state)sessions.delete(key);throw Error('unavailable');}
   finally{state.busy=false;}
  };
  return {
+  async searchStores(query){
+   query=validateStoreQuery(query);if(searchPending)throw Error('unavailable');searchPending=true;let context;
+   try{
+    context=await browser.newContext();const page=await context.newPage();
+    await page.goto('https://www.starbucks.com/store-locator?source=menu',{waitUntil:'domcontentloaded',timeout:15000});
+    const raw=await page.evaluate(async({query})=>{
+     const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
+     try{const response=await fetch('/apiproxy/v1/locations?place='+encodeURIComponent(query),{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',redirect:'error',signal:controller.signal});
+      if(!response.ok||!response.headers.get('Content-Type')?.includes('application/json')||Number(response.headers.get('Content-Length'))>1048576)throw Error('unavailable');
+      const reader=response.body?.getReader();if(!reader)throw Error('unavailable');let size=0;const chunks=[];
+      for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>1048576){await reader.cancel();throw Error('unavailable');}chunks.push(value);}
+      const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return JSON.parse(new TextDecoder().decode(bytes));
+     }finally{clearTimeout(timer);}
+    },{query});
+    return sanitizePublicStores(raw);
+   }finally{try{await context?.close();}finally{searchPending=false;}}
+  },
   status:()=>{
    const setupFailures={access_denied:0,rate_limited:0,setup_incomplete:0},setupHttpStatuses={document:{},guest:{}};
    for(const state of sessions.values()){
@@ -40,11 +59,11 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    }
    return {ready:[...sessions.values()].some(s=>s.ready&&!s.page?.isClosed()),sessions:sessions.size,awaitingSetup:[...sessions.values()].filter(s=>!s.ready).length,sessionCapacity:maxSessions,busy:[...sessions.values()].some(s=>s.busy),cooldownMs:Math.max(0,cooldownUntil-now()),setupFailures,setupHttpStatuses,setup:'Each caller gets a fresh visible guest tab. Automatic ordinary UI setup was attempted. If awaiting setup, select a cafe, add a drink, and review the cart. Do not sign in.'};
   },
-  async quote(sessionKey,body){
+  async quote(sessionKey,body,{selectedStore}={}){
    if(now()<cooldownUntil)throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED'});
    await expire();let state=sessions.get(sessionKey);
-   if(state?.page?.isClosed()){await destroy(sessionKey,state);state=null;}
-   if(!state)state=await create(sessionKey);
+   if(state&&(state.storeNumber!==selectedStore?.sourceStoreNumber||state.page?.isClosed())){await destroy(sessionKey,state);if(sessions.has(sessionKey))throw Error('unavailable');state=null;}
+   if(!state)state=await create(sessionKey,selectedStore);
    if(state.busy)throw Error('unavailable');
    if(sessions.get(sessionKey)!==state)throw Error('unavailable');
    if(!state.ready){await state.page.bringToFront();throw Object.assign(Error('setup required'),{code:'SETUP_REQUIRED'});}

@@ -3,11 +3,13 @@ import {createDemoAdapter as createDeterministicFixtureAdapter} from './support/
 import {interpretInput} from '../src/application/turns.mjs';
 import {applyCommands} from '../src/domain/order.mjs';
 import {validateTurnInput} from '../src/server/api.mjs';
+import {fixtureStores} from './store-fixture-data.mjs';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 export function createLiveFixtureHandler(){
  const adapter=createDeterministicFixtureAdapter();
  return async request=>{
   const path=new URL(request.url).pathname;
+  if(path==='/api/stores'&&request.method==='GET')return json({stores:fixtureStores});
   if(path==='/api/config'&&request.method==='GET')return json({provider:'test-fixture',model:'deterministic-test-only',liveAvailable:true,pricing:{zip:'11201',estimated:true,taxCalculated:false}});
   if(path!=='/api/turn')return null;
   if(request.method!=='POST')return json({error:'Method not allowed'},405);

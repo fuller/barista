@@ -1,3 +1,4 @@
+import {chooseStore} from './store-fixture';
 import { beforeEach, expect, test } from 'e2e';
 import {quoteOrder} from '../src/domain/pricing.mjs';
 import type {Order} from '../src/contracts';
@@ -6,14 +7,14 @@ import type {Order} from '../src/contracts';
 beforeEach(async({browser})=>{
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
  await browser.route('**/api/quote',route=>{
-  const {order}=JSON.parse(route.request.postData??'{}') as {order:Order};
+  const {order,storeId}=JSON.parse(route.request.postData??'{}') as {order:Order;storeId:string};
   const quote=quoteOrder(order);
-  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:0}});
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:0}});
  });
 });
 
 test('orders a drink, edits a modifier, and updates sample pricing', async ({ app, screen }) => {
-  await app.open('/');
+  await app.open('/');await chooseStore(screen);
 
   await screen.getByRole('textbox', { name: 'Tell us your order' }).fill('a grande iced latte with oat milk');
   await screen.getByRole('button', { name: 'Send order' }).click();
@@ -31,7 +32,7 @@ test('orders a drink, edits a modifier, and updates sample pricing', async ({ ap
 });
 
 test('edits, duplicates, undoes, and preserves the cart after a contradiction', async ({ app, screen }) => {
-  await app.open('/');
+  await app.open('/');await chooseStore(screen);
   const input = screen.getByRole('textbox', { name: 'Tell us your order' });
   const send = screen.getByRole('button', { name: 'Send order' });
   const order = screen.getByRole('complementary', { name: 'Your order' });
@@ -62,7 +63,7 @@ test('edits, duplicates, undoes, and preserves the cart after a contradiction', 
 });
 
 test('keeps live ordering accessible on mobile and preserves default mocha pumps on resize', async ({ app, screen, browser }) => {
-  await app.open('/');
+  await app.open('/');await chooseStore(screen);
   await browser.setViewport({ width: 390, height: 844 });
   await expect(screen.getByRole('textbox',{name:'Tell us your order'})).toBeVisible();
   await expect(screen.getByLabel('Interpreter')).toHaveCount(0);

@@ -1,3 +1,4 @@
+import {chooseStore} from './store-fixture';
 import {expect,test} from 'e2e';
 import type {TurnRequest} from '../src/contracts';
 
@@ -16,7 +17,7 @@ test('a generic live retry leaves the next complete order fresh and recoverable'
    clarification:first?retry:null,pending:null,source:'mock-live'
   }});
  });
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  const input=screen.getByRole('textbox',{name:'Tell us your order'});
  const send=screen.getByRole('button',{name:'Send order'});
  const order=screen.getByRole('complementary',{name:'Your order'});

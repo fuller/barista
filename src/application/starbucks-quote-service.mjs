@@ -23,7 +23,7 @@ export function createStarbucksQuoteService({source=createStarbucksGuestSource()
  const cache=new Map(),pending=new Map();
  const prune=()=>{const time=now();for(const [key,entry] of cache)if(entry.quote.expiresAt<=time)cache.delete(key);};
  return {
-  async quote(sessionKey,input,{signal}={}){
+  async quote(sessionKey,input,{signal,selectedStore}={}){
    if(signal?.aborted)throw abortError();
    if(!validKey(sessionKey))throw new StarbucksQuoteError('invalid_request');
    let prepared;try{prepared=buildStarbucksQuoteRequest(input);}catch{throw new StarbucksQuoteError('invalid_request');}
@@ -34,7 +34,7 @@ export function createStarbucksQuoteService({source=createStarbucksGuestSource()
    const entry={sessionKey,promise:null},startedAt=now();
    entry.promise=Promise.resolve().then(()=>{
     if(pending.get(key)!==entry)throw new StarbucksQuoteError('unavailable');
-    return source.quote(sessionKey,prepared.body);
+    return source.quote(sessionKey,prepared.body,{selectedStore});
    }).then(envelope=>{
     if(pending.get(key)!==entry)throw new StarbucksQuoteError('unavailable');
     const quote=normalizeStarbucksQuote(envelope,prepared,{now:()=>startedAt});

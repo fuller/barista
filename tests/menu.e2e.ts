@@ -1,3 +1,4 @@
+import {chooseStore} from './store-fixture';
 import {expect,test} from 'e2e';
 import directory from '../src/catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import type {CatalogSnapshot} from '../src/catalog/contracts';
@@ -8,13 +9,13 @@ import {quoteOrder} from '../src/domain/pricing.mjs';
 async function mockModifierPrices(browser:Browser){
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
  await browser.route('**/api/quote',route=>{
-  const {order}=JSON.parse(route.request.postData??'{}'),quote=quoteOrder(order);
-  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:quote.subtotalCents===null?null:0}});
+  const {order,storeId}=JSON.parse(route.request.postData??'{}'),quote=quoteOrder(order);
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:quote.subtotalCents===null?null:0}});
  });
 }
 
 test('a pristine typed order uses the same current Flat White recipe as the menu',async({app,screen})=>{
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await expect(screen.getByRole('button',{name:'Add Flat White'})).toBeVisible();
  await screen.getByRole('textbox',{name:'Tell us your order'}).fill('Flat white');
  await screen.getByRole('button',{name:'Send order'}).click();
@@ -24,7 +25,7 @@ test('a pristine typed order uses the same current Flat White recipe as the menu
 });
 
 test('recipe refresh preserves active cart and native full-menu items',async({app,screen,browser})=>{
- const response=browser.waitForResponse('**/api/catalog');await app.open('/');
+ const response=browser.waitForResponse('**/api/catalog');await app.open('/');await chooseStore(screen);
  const original=await(await response).json<CatalogSnapshot>(),refreshed=structuredClone(original);refreshed.version+='-ui-refresh';
  await screen.getByRole('button',{name:'Add Caffè Latte'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});
@@ -47,7 +48,7 @@ test('recipe refresh preserves active cart and native full-menu items',async({ap
 });
 
 test('an invalid refreshed recipe retains the old menu and current cart',async({app,screen,browser})=>{
- const response=browser.waitForResponse('**/api/catalog');await app.open('/');
+ const response=browser.waitForResponse('**/api/catalog');await app.open('/');await chooseStore(screen);
  const original=await(await response).json<CatalogSnapshot>(),invalid=structuredClone(original);invalid.version+='-ui-invalid';invalid.products[0].sizes[0].recipe.defaults.shots='many';
  await screen.getByRole('button',{name:'Add Caffè Latte'}).click();
  await browser.route('**/api/catalog',route=>route.fulfill({json:invalid}));
@@ -63,7 +64,7 @@ test('an invalid refreshed recipe retains the old menu and current cart',async({
 
 test('first desktop fold exposes drink add actions and the persistent composer',async({app,screen,browser})=>{
  await browser.setViewport({width:1440,height:900});
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await expect(screen.getByRole('button',{name:'Add Cold Brew'})).toBeVisible();
  const geometry=await browser.evaluate(()=>({composer:document.querySelector('#order-input')!.getBoundingClientRect().bottom,cards:Array.from(document.querySelectorAll('.product-card')).slice(0,3).map(card=>card.getBoundingClientRect().bottom),height:innerHeight}));
  expect(geometry.composer).toBeLessThanOrEqual(geometry.height);
@@ -73,7 +74,7 @@ test('first desktop fold exposes drink add actions and the persistent composer',
 });
 
 test('full menu filters product cards and adds an unpriced source drink',async({app,screen})=>{
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await expect(screen.getByRole('heading',{name:'Find your next favorite.'})).toBeVisible();
  const menu=screen.getByRole('region',{name:'Full menu'});
  await expect(menu.getByRole('img',{name:'Caffè Latte · product photo'})).toBeVisible();
@@ -92,7 +93,7 @@ test('full menu filters product cards and adds an unpriced source drink',async({
 
 test('mobile cart opens as a keyboard reachable dialog and restores menu access',async({app,screen,browser})=>{
  await browser.setViewport({width:390,height:844});
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await screen.getByRole('button',{name:'Add Caffè Latte'}).click();
  const drawer=screen.getByRole('dialog',{name:'Your order'});
  await expect(drawer).toBeVisible();
@@ -110,7 +111,7 @@ test('mobile cart opens as a keyboard reachable dialog and restores menu access'
 
 test('broken product photos keep a stable fallback and remain orderable',async({app,screen,browser})=>{
  await browser.route('https://cloudassets.starbucks.com/**',route=>route.fulfill({status:404,body:''}));
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  const menu=screen.getByRole('region',{name:'Full menu'});
  await menu.getByRole('searchbox',{name:'Search menu'}).fill('Caffè Latte');
  await expect(menu.getByRole('img',{name:'Caffè Latte · photo unavailable'})).toBeVisible();
@@ -122,7 +123,7 @@ test('reduced motion preserves rapid modifier and undo results without animation
  await mockModifierPrices(browser);
  await browser.emulateMedia({reducedMotion:'reduce'});
  await browser.addInitScript(()=>{const animate=Element.prototype.animate;(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls=0;Element.prototype.animate=function(...args:Parameters<Element['animate']>){(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls++;return animate.apply(this,args);};});
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await screen.getByRole('textbox',{name:'Tell us your order'}).fill('a latte');
  await screen.getByRole('button',{name:'Send order'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});
@@ -137,7 +138,7 @@ test('reduced motion preserves rapid modifier and undo results without animation
 });
 
 test('refresh outage retains the menu and active cart; reload uses bundled catalog',async({app,screen,browser})=>{
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await screen.getByRole('button',{name:'Add Caffè Latte'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toBeVisible();
@@ -147,14 +148,14 @@ test('refresh outage retains the menu and active cart; reload uses bundled catal
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toBeVisible();
  await expect(screen.getByRole('button',{name:'Add Caffè Mocha'})).toBeVisible();
  await browser.unroute('**/api/menu-directory');
- await browser.reload();
+ await browser.reload();await chooseStore(screen);
  await expect(screen.getByRole('button',{name:'Add Caffè Latte'})).toBeVisible();
 });
 
 test('committed modifiers and undo show authoritative final price',async({app,screen,browser})=>{
  await mockModifierPrices(browser);
  await browser.addInitScript(()=>{const animate=Element.prototype.animate;(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls=0;Element.prototype.animate=function(...args:Parameters<Element['animate']>){(window as unknown as {baristaAnimationCalls:number}).baristaAnimationCalls++;return animate.apply(this,args);};});
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await screen.getByRole('textbox',{name:'Tell us your order'}).fill('a latte');
  await screen.getByRole('button',{name:'Send order'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});

@@ -1,3 +1,4 @@
+import {chooseStore} from './store-fixture';
 import {expect,test} from 'e2e';
 test('synthetic final speech survives finish and records only committed local milestones',async({app,screen,browser})=>{
  let requests=0;
@@ -5,7 +6,7 @@ test('synthetic final speech survives finish and records only committed local mi
  await browser.route('https://cloudassets.starbucks.com/**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg"/>'}));
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true}}));
  await browser.route('**/api/turn',async route=>{requests++;const body=JSON.parse(route.request.postData??'{}');expect(body.text).toBe('one americano');await route.fulfill({json:{turnId:body.turnId,baseRevision:body.baseRevision,commands:[{type:'add',productId:'americano'}],clarification:null,pending:null}});});
- await app.open('/');await screen.getByRole('button',{name:'Start microphone'}).click();
+ await app.open('/');await chooseStore(screen);await screen.getByRole('button',{name:'Start microphone'}).click();
  await browser.evaluate(()=>{const r=(window as unknown as {testRecognition:{onresult:(e:unknown)=>void}}).testRecognition;r.onresult({results:[{isFinal:false,0:{transcript:'one'}}]});});expect(requests).toBe(0);
  await screen.getByRole('button',{name:'Stop microphone'}).click();
  await browser.evaluate(()=>{const r=(window as unknown as {testRecognition:{stops:number;aborts:number;onresult:(e:unknown)=>void}}).testRecognition;if(r.stops!==1||r.aborts!==0)throw new Error('Finish must stop without abort');r.onresult({results:[{isFinal:true,0:{transcript:'one americano'}}]});r.onresult({results:[{isFinal:true,0:{transcript:'duplicate'}}]});});
@@ -20,7 +21,7 @@ test('cancelled synthetic voice response cannot commit cart or publish timing',a
  await browser.route('https://cloudassets.starbucks.com/**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg"/>'}));
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true}}));
  await browser.route('**/api/turn',async route=>{requests++;const body=JSON.parse(route.request.postData??'{}');await ready;try{await route.fulfill({json:{turnId:body.turnId,baseRevision:body.baseRevision,commands:[{type:'add',productId:'cold-brew'}],clarification:null,pending:null}});}catch{/* Cancelled request is expected. */}});
- await app.open('/');await screen.getByRole('searchbox',{name:'Search menu'}).fill('Caffè Latte');await screen.getByRole('button',{name:'Start microphone'}).click();
+ await app.open('/');await chooseStore(screen);await screen.getByRole('searchbox',{name:'Search menu'}).fill('Caffè Latte');await screen.getByRole('button',{name:'Start microphone'}).click();
  await browser.evaluate(()=>{const r=(window as unknown as {testRecognition:{onresult:(event:unknown)=>void}}).testRecognition;r.onresult({results:[{isFinal:true,0:{transcript:'a cold brew'}}]});});
  await expect(screen.getByRole('status').getByText('Working on your order…',{exact:true})).toBeVisible();
  await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();release();
@@ -32,7 +33,7 @@ test('new microphone cancels an older HTTP turn before binding speech to the car
  await browser.addInitScript(()=>{class Recognition{lang='';continuous=false;interimResults=false;onresult:((event:unknown)=>void)|null=null;onend=null;onerror=null;start(){(window as unknown as {testRecognition:Recognition}).testRecognition=this;}stop(){}abort(){}};(window as unknown as {SpeechRecognition:typeof Recognition}).SpeechRecognition=Recognition;});
  await browser.route('https://cloudassets.starbucks.com/**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg"/>'}));await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true}}));
  await browser.route('**/api/turn',async route=>{requests++;const body=JSON.parse(route.request.postData??'{}');if(body.text==='old latte')await oldReady;try{await route.fulfill({json:{turnId:body.turnId,baseRevision:body.baseRevision,commands:[{type:'add',productId:body.text==='old latte'?'latte':'americano'}],clarification:null,pending:null}});}catch{/* Old request was aborted. */}});
- await app.open('/');await screen.getByRole('textbox',{name:'Tell us your order'}).fill('old latte');await screen.getByRole('button',{name:'Send order'}).click();await expect(screen.getByRole('status').getByText('Working on your order…',{exact:true})).toBeVisible();
+ await app.open('/');await chooseStore(screen);await screen.getByRole('textbox',{name:'Tell us your order'}).fill('old latte');await screen.getByRole('button',{name:'Send order'}).click();await expect(screen.getByRole('status').getByText('Working on your order…',{exact:true})).toBeVisible();
  await screen.getByRole('button',{name:'Start microphone'}).click();release();
  await browser.evaluate(()=>{(window as unknown as {testRecognition:{onresult:(event:unknown)=>void}}).testRecognition.onresult({results:[{isFinal:true,0:{transcript:'one americano'}}]});});
  const cart=screen.getByRole('complementary',{name:'Your order'});await expect(cart.getByRole('heading',{name:'Caffè Americano',exact:true})).toBeVisible();await expect(cart.getByRole('heading',{name:'Caffè Latte',exact:true})).toHaveCount(0);await expect(screen.getByLabel('Local voice timing')).toBeVisible();expect(requests).toBe(2);

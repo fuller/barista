@@ -1,6 +1,6 @@
 import {timingSafeEqual} from 'node:crypto';
 import {Buffer} from 'node:buffer';
-const routes=new Map([['/health','GET'],['/status','GET'],['/quote','POST'],['/clear','POST']]);
+const routes=new Map([['/health','GET'],['/status','GET'],['/quote','POST'],['/clear','POST'],['/stores','POST']]);
 export function admit(request,token){
  if(typeof token!=='string'||token.length<32||token.length>512)return 503;
  const expected=Buffer.from(`Bearer ${token}`),actual=Buffer.from(request.headers.get('authorization')??'');

@@ -14,6 +14,7 @@ export function useOrdering(connection:{ready:boolean;available:boolean;error:st
   actor.send({type:'CONNECTION.CHANGED',...connection});
  },[actor,connection.ready,connection.available,connection.error]);
  const actions=useMemo(()=>({
+  changeStore(storeId:string|null){actor.send({type:'STORE.CHANGED',storeId});},
   commit(commands:Command[]){const before=actor.getSnapshot().context.order;actor.send({type:'ORDER.COMMIT',commands});return actor.getSnapshot().context.order!==before;},
   submit(text:string){actor.send({type:'ORDER.SUBMIT',text});return actor.getSnapshot().hasTag('busy');},
   startVoice(){actor.send({type:'VOICE.START'});},

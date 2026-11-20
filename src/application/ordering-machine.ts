@@ -21,8 +21,9 @@ type Result={data:TurnResponse;next:Order;submission:Submission};
 type Preview=ReturnType<typeof buildVoicePreview>;
 export type OrderingInput={order:Order;request?:typeof requestTurn;createVoiceInput?:typeof createVoiceInput;createVoiceOutput?:typeof createVoiceOutput;timing?:Timing;makeId?:()=>string;preparationOptions?:Pick<Parameters<typeof createVoicePreparation>[0],'setTimer'|'clearTimer'|'delayMs'>};
 type Runtime={voice:ReturnType<typeof createVoiceInput>|null;output:ReturnType<typeof createVoiceOutput>|null;preparation:Preparation|null;traces:Map<string,ReturnType<Timing['fork']>>};
-export type OrderingContext={order:Order;change:{before:Order;after:Order;diff:ReturnType<typeof diffOrder>}|null;pending:PendingClarification|null;messages:{role:'assistant'|'user';text:string}[];error:string;metrics:DecisionMetrics|null;interim:string;preview:Preview;voiceSupported:boolean;replies:boolean;localTiming:LocalTurnTiming|null;pendingFrame:{id:string;revision:number}|null;connection:{ready:boolean;available:boolean;error:string};voiceRevision:number|null;submission:Submission|null;input:OrderingInput;timing:Timing;runtime:Runtime};
+export type OrderingContext={storeId:string|null;order:Order;change:{before:Order;after:Order;diff:ReturnType<typeof diffOrder>}|null;pending:PendingClarification|null;messages:{role:'assistant'|'user';text:string}[];error:string;metrics:DecisionMetrics|null;interim:string;preview:Preview;voiceSupported:boolean;replies:boolean;localTiming:LocalTurnTiming|null;pendingFrame:{id:string;revision:number}|null;connection:{ready:boolean;available:boolean;error:string};voiceRevision:number|null;submission:Submission|null;input:OrderingInput;timing:Timing;runtime:Runtime};
 export type OrderingEvent=
+ |{type:'STORE.CHANGED';storeId:string|null}
  |{type:'CONNECTION.CHANGED';ready:boolean;available:boolean;error:string}
  |{type:'ORDER.SUBMIT';text:string}|{type:'VOICE.FINAL';text:string}
  |{type:'VOICE.START'}|{type:'VOICE.FINISH'}|{type:'VOICE.INTERIM';text:string}
@@ -33,7 +34,7 @@ export type OrderingEvent=
  |{type:'REPLIES.CHANGED';enabled:boolean}|{type:'ERROR.CHANGED';message:string}
  |{type:'UI.LAYOUT_COMMITTED';turnId:string;revision:number}|{type:'UI.FRAME_PAINTED';turnId:string;revision:number};
 const errorText=(error:unknown,fallback='Could not reach the order service.')=>error instanceof Error?error.message:fallback;
-function preflight(context:OrderingContext,text:string){if(!text.trim())return '';if(!context.connection.ready)return 'Connecting to live ordering…';if(!context.connection.available)return context.connection.error||'Live ordering is unavailable. Configure the server API key, then retry connection.';if(text.trim().length>600)return 'Keep your order to 600 characters or fewer.';return '';}
+function preflight(context:OrderingContext,text:string){if(!text.trim())return '';if(!context.storeId)return 'Choose a store before ordering.';if(!context.connection.ready)return 'Connecting to live ordering…';if(!context.connection.available)return context.connection.error||'Live ordering is unavailable. Configure the server API key, then retry connection.';if(text.trim().length>600)return 'Keep your order to 600 characters or fewer.';return '';}
 function clearResources(context:OrderingContext,preserveTiming=false){const r=context.runtime;r.preparation?.cancel();r.traces.clear();r.voice?.stop();r.output?.stop();context.submission?.controller.abort();if(!preserveTiming)context.timing.cancel();}
 function acceptOrder(context:OrderingContext,next:Order){return {order:next,change:{before:context.order,after:next,diff:diffOrder(context.order,next)}};}
 const cleared={interim:'',preview:null,voiceRevision:null,pendingFrame:null,localTiming:null,submission:null};
@@ -72,9 +73,9 @@ export const orderingMachine=setup({
  },
  guards:{
   validSubmit:({context,event})=>(event.type==='ORDER.SUBMIT'||event.type==='VOICE.FINAL')&&Boolean(event.text.trim())&&!preflight(context,event.text)&&(event.type!=='VOICE.FINAL'||context.voiceRevision===context.order.revision),
-  validCommit:({context,event})=>{if(event.type!=='ORDER.COMMIT')return false;try{applyCommands(context.order,event.commands);return true;}catch{return false;}},
+  validCommit:({context,event})=>{if(event.type!=='ORDER.COMMIT'||(!context.storeId&&event.commands.some(command=>['add','add-menu','duplicate','confirm'].includes(command.type))))return false;try{applyCommands(context.order,event.commands);return true;}catch{return false;}},
   validReset:({event})=>{if(event.type!=='ORDER.RESET')return false;try{createOrder(event.catalogVersion);return true;}catch{return false;}},
-  voiceAllowed:({context})=>context.connection.ready&&context.connection.available&&context.voiceSupported,
+  voiceAllowed:({context})=>Boolean(context.storeId)&&context.connection.ready&&context.connection.available&&context.voiceSupported,
   frameMatches:({context,event})=>(event.type==='UI.LAYOUT_COMMITTED'||event.type==='UI.FRAME_PAINTED')&&context.pendingFrame?.id===event.turnId&&context.pendingFrame.revision===event.revision&&context.order.revision===event.revision,
  },
  actions:{
@@ -92,7 +93,7 @@ export const orderingMachine=setup({
   }),
   rejectSubmit:assign(({context,event})=>event.type==='ORDER.SUBMIT'||event.type==='VOICE.FINAL'?{error:preflight(context,event.text)}:{}),
   commit:assign(({context,event})=>{if(event.type!=='ORDER.COMMIT')return {};const next=applyCommands(context.order,event.commands) as Order;clearResources(context);return {...cleared,...acceptOrder(context,next),pending:null,error:''};}),
-  invalidCommit:assign(({context,event})=>{try{if(event.type==='ORDER.COMMIT')applyCommands(context.order,event.commands);else if(event.type==='ORDER.RESET')createOrder(event.catalogVersion);}catch(error){return {error:errorText(error,'Could not update the order.')};}return {};}),
+  invalidCommit:assign(({context,event})=>{if(!context.storeId&&event.type==='ORDER.COMMIT')return {error:'Choose a store before ordering.'};try{if(event.type==='ORDER.COMMIT')applyCommands(context.order,event.commands);else if(event.type==='ORDER.RESET')createOrder(event.catalogVersion);}catch(error){return {error:errorText(error,'Could not update the order.')};}return {};}),
   reset:assign(({context,event})=>{if(event.type!=='ORDER.RESET')return {};const next=createOrder(event.catalogVersion) as Order;clearResources(context);return {...cleared,...acceptOrder(context,next),pending:null,error:'',metrics:null};}),
   startVoice:assign(({context})=>{clearResources(context);context.timing.begin(context.order.revision);context.runtime.preparation?.begin({revision:context.order.revision,order:buildTurnRequest({order:context.order}).order,pending:context.pending?.revision===context.order.revision?context.pending:null});context.runtime.voice?.start();return {...cleared,error:'',voiceRevision:context.order.revision};}),
   interim:assign(({context,event})=>{if(event.type!=='VOICE.INTERIM'||context.voiceRevision!==context.order.revision)return {};context.runtime.preparation?.update(event.text);return {interim:event.text};}),
@@ -100,9 +101,10 @@ export const orderingMachine=setup({
  },
 }).createMachine({
  id:'ordering',initial:'idle',
- context:({input})=>({order:input.order,change:null,pending:null,messages:[{role:'assistant',text:'Pick a favorite, or tell me what sounds good.'}],error:'',metrics:null,interim:'',preview:null,voiceSupported:false,replies:true,localTiming:null,pendingFrame:null,connection:{ready:false,available:false,error:''},voiceRevision:null,submission:null,input,timing:input.timing??createLocalTurnTiming(),runtime:{voice:null,output:null,preparation:null,traces:new Map()}}),
+ context:({input})=>({storeId:null,order:input.order,change:null,pending:null,messages:[{role:'assistant',text:'Pick a favorite, or tell me what sounds good.'}],error:'',metrics:null,interim:'',preview:null,voiceSupported:false,replies:true,localTiming:null,pendingFrame:null,connection:{ready:false,available:false,error:''},voiceRevision:null,submission:null,input,timing:input.timing??createLocalTurnTiming(),runtime:{voice:null,output:null,preparation:null,traces:new Map()}}),
  invoke:{id:'resources',src:'resources',input:({context})=>({context})},
  on:{
+  'STORE.CHANGED':{target:'.idle',actions:['clear',assign(({event})=>({storeId:event.storeId,pending:null,error:'',metrics:null}))]},
   'VOICE.READY':{actions:assign(({event})=>({voiceSupported:event.supported}))},
   'CONNECTION.CHANGED':{actions:assign(({context,event})=>({connection:{ready:event.ready,available:event.available,error:event.error},error:context.error==='Connecting to live ordering…'&&event.ready?'':context.error}))},
   'ERROR.CHANGED':{actions:assign(({event})=>({error:event.message}))},

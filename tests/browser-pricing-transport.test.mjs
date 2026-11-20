@@ -26,3 +26,30 @@ test('closed tab never reuses ready guest state',async()=>{
  const f=fake();const transport=await createHeadedTransport({launch:f.launch,setup:async()=>{}});
  try{await assert.rejects(transport.quote('a',{}),{code:'SETUP_REQUIRED'});f.contexts[0].ready();f.contexts[0].closed=true;await assert.rejects(transport.quote('a',{}),{code:'SETUP_REQUIRED'});assert.equal(f.contexts.length,2);assert.equal(f.contexts[1].calls,0);}finally{await transport.close();}
 });
+
+test('changing stores closes old context and rejects stale setup completion',async()=>{
+ const f=fake();let release;const pending=new Promise(resolve=>{release=resolve;});let count=0;
+ const a={storeId:'a',source:'starbucks',sourceStoreNumber:'1-1',name:'A',address:{lines:['1 Main'],city:'Brooklyn',region:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40,longitude:-73}};
+ const b={...a,storeId:'b',sourceStoreNumber:'2-2',name:'B'};
+ const transport=await createHeadedTransport({launch:f.launch,setup:async(page,{selectedStore})=>{count++;if(selectedStore.storeId==='a')await pending;f.contexts.find(c=>!c.closed)?.ready();}});
+ try{const old=transport.quote('a',{}, {selectedStore:a});await new Promise(r=>setImmediate(r));assert.deepEqual(await transport.quote('a',{}, {selectedStore:b}),{ok:true});release();await assert.rejects(old);assert.equal(f.contexts[0].closed,true);assert.equal(f.contexts[0].calls,0);assert.equal(count,2);assert.equal(transport.status().sessions,1);}finally{release();await transport.close();}
+});
+test('changing stores rejects an old in-flight price response',async()=>{
+ const f=fake();let release;const response=new Promise(resolve=>{release=resolve;});
+ const a={sourceStoreNumber:'1-1'},b={sourceStoreNumber:'2-2'};
+ const transport=await createHeadedTransport({launch:f.launch,setup:async()=>f.contexts.at(-1).ready()});
+ try{await transport.quote('caller',{}, {selectedStore:a});
+ const original=f.contexts[0].result;f.contexts[0].result=response;
+ const old=transport.quote('caller',{}, {selectedStore:a});await new Promise(r=>setImmediate(r));
+ assert.deepEqual(await transport.quote('caller',{}, {selectedStore:b}),{ok:true});release(original);await assert.rejects(old);assert.equal(f.contexts[0].closed,true);
+ }finally{release?.({status:200,envelope:{ok:true}});await transport.close();}
+});
+test('store lookup uses temporary context, no guest setup, sanitizes and closes it',async()=>{
+ let closed=0,setup=0,visited,evaluated;const raw=[{store:{id:'abc',storeNumber:'85278-313836',name:'Cafe',address:{lines:['1 Main'],city:'Brooklyn',countrySubdivisionCode:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40,longitude:-73},secret:'cookie'}}];
+ const transport=await createHeadedTransport({setup:async()=>setup++,launch:async()=>({newContext:async()=>({newPage:async()=>({goto:async url=>{visited=url;},evaluate:async(fn,args)=>{evaluated=args;return raw;}}),close:async()=>closed++}),close:async()=>{}})});
+ try{const result=await transport.searchStores('11201');assert.equal(closed,1);assert.equal(setup,0);assert.equal(transport.status().sessions,0);assert.match(visited,/starbucks.com\/store-locator/);assert.equal(evaluated.query,'11201');assert.doesNotMatch(JSON.stringify(result),/secret|cookie/);}finally{await transport.close();}
+});
+test('store lookup closes temporary context on failure and bounds concurrent work',async()=>{
+ let closed=0,release;const pending=new Promise(r=>{release=r;});const transport=await createHeadedTransport({launch:async()=>({newContext:async()=>({newPage:async()=>({goto:async()=>pending,evaluate:async()=>{throw Error('private');}}),close:async()=>closed++}),close:async()=>{}})});
+ try{const first=transport.searchStores('11201');await new Promise(r=>setImmediate(r));await assert.rejects(transport.searchStores('11202'));release();await assert.rejects(first);assert.equal(closed,1);}finally{release();await transport.close();}
+});

@@ -21,5 +21,12 @@ export function createStarbucksBrowserSource({url,token,fetchImpl=fetch,timeoutM
    signal?.throwIfAborted();return JSON.parse(new TextDecoder().decode(bytes));
   }catch(error){if(error instanceof StarbucksGuestError)throw error;throw unavailable();}
  }
- return {quote:(sessionKey,body,{signal}={})=>send('/quote',{sessionKey,body},signal),clear(sessionKey){void send('/clear',{sessionKey}).catch(()=>{});}};
+ return {
+  async searchStores(query,{signal}={}){
+   if(typeof query!=='string'||!query.trim()||query.length>120||/[\x00-\x1f\x7f]/.test(query))throw unavailable();
+   return send('/stores',{query:query.trim()},signal);
+  },
+  quote:(sessionKey,body,{signal,selectedStore}={})=>{const {selectionToken,...store}=selectedStore??{};return send('/quote',{sessionKey,body,selectedStore:store},signal);},
+  clear(sessionKey){void send('/clear',{sessionKey}).catch(()=>{});}
+ };
 }

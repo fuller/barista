@@ -4,6 +4,11 @@ import {admit,createGateway,createContainerProxy} from '../deploy/browser/gatewa
 const token='test-browser-service-token-'.repeat(3);
 const storage=version=>{const values=new Map(version?[['deploymentVersion',version]]:[]);return {get:async key=>values.get(key),put:async(key,value)=>{values.set(key,value);}};};
 const request=(path='/quote',options={})=>new Request('https://browser.example'+path,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:'{}',...options});
+test('store search is admitted only through the authenticated fixed POST route',()=>{
+ assert.equal(admit(request('/stores'),token),null);
+ assert.equal(admit(request('/stores',{headers:{}}),token),401);
+ assert.equal(admit(new Request('https://browser.example/stores',{headers:{Authorization:`Bearer ${token}`}}),token),404);
+});
 test('gateway rejects unauthorized and unsupported traffic before accessing containers',async()=>{
  let accessed=0;const gateway=createGateway(),env={BARISTA_BROWSER_TOKEN:token,BROWSER:{getByName(){accessed++;throw Error();}}};
  for(const [req,status] of [[request('/quote',{headers:{}}),401],[request('/quote',{headers:{Authorization:'Bearer wrong'}}),401],[request('/debug'),404],[request('/quote?url=https://evil.example'),404],[request('/quote',{headers:{Authorization:`Bearer ${token}`,'Content-Length':'65537'}}),413]])assert.equal((await gateway.fetch(req,env)).status,status);

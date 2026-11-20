@@ -1,6 +1,6 @@
 # Barista
 
-A text and browser-voice ordering simulator using a recorded Starbucks public menu. Browse products, build a cart, and add customization requests. No payment or café submission. Not affiliated with Starbucks.
+A text and browser-voice ordering simulator using a recorded Starbucks public menu. Choose a café, browse products, build a cart, and add customization requests. No payment or café submission. Not affiliated with Starbucks.
 
 [Try the live app](https://barista-order-lab.andrew-fuller.workers.dev).
 
@@ -23,6 +23,7 @@ Conversational ordering uses OpenRouter and sends text and relevant cart context
 
 ## What to expect
 
+- Choose a store using a ZIP code or city before ordering. Changing stores keeps your cart and requests new prices.
 - The menu is a recorded snapshot, not current store inventory.
 - Customization requests remain literal text unless resolved by the recipe model. They do not establish a verified café recipe.
 - Optional store pricing requires a separate Chrome browser service. Unknown prices stay unknown; sample prices are never substituted. See [pricing setup](docs/pricing.md).

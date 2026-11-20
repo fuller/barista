@@ -1,7 +1,8 @@
+import {chooseStore} from './store-fixture';
 import {expect,test} from 'e2e';
 
 test('empty search recovers the full menu and rapid adds remain available',async({app,screen})=>{
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  const menu=screen.getByRole('region',{name:'Full menu'}),search=menu.getByRole('searchbox',{name:'Search menu'});
  await menu.getByRole('navigation',{name:'Menu categories'}).getByRole('button',{name:'Food',exact:true}).click();
  await search.fill('no-such-drink-123');
@@ -17,7 +18,7 @@ test('empty search recovers the full menu and rapid adds remain available',async
 });
 
 test('cart keeps rejected request drafts and exposes editing only when requested',async({app,screen})=>{
- await app.open('/');await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();
+ await app.open('/');await chooseStore(screen);await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();
  const cart=screen.getByRole('complementary',{name:'Your order'}),notes=cart.getByLabel('Caffè Latte instructions',{exact:true});
  await expect(notes).not.toBeVisible();
  await cart.getByLabel('Edit Caffè Latte',{exact:true}).click();
@@ -34,7 +35,7 @@ test('cart keeps rejected request drafts and exposes editing only when requested
 
 test('keyboard cart additions apply immediately without programmatic motion',async({app,screen,browser})=>{
  await browser.addInitScript(()=>{const animate=Element.prototype.animate;(window as unknown as {motionCalls:number}).motionCalls=0;Element.prototype.animate=function(...args:Parameters<Element['animate']>){(window as unknown as {motionCalls:number}).motionCalls++;return animate.apply(this,args);};});
- await app.open('/');
+ await app.open('/');await chooseStore(screen);
  await browser.evaluate(()=>document.querySelector<HTMLButtonElement>('button[aria-label="Add Caffè Latte"]')!.focus());
  await browser.keyboard.press('Enter');
  await expect(screen.getByRole('complementary',{name:'Your order'}).getByRole('heading',{name:'Caffè Latte',exact:true})).toBeVisible();
@@ -42,7 +43,7 @@ test('keyboard cart additions apply immediately without programmatic motion',asy
 });
 
 test('mobile order composer and search remain legible without page overflow',async({app,screen,browser})=>{
- await browser.setViewport({width:390,height:844});await app.open('/');
+ await browser.setViewport({width:390,height:844});await app.open('/');await chooseStore(screen);
  await expect(screen.getByRole('textbox',{name:'Tell us your order'})).toBeVisible();
  const geometry=await browser.evaluate(()=>({width:innerWidth,content:document.documentElement.scrollWidth,fields:['#order-input','input[type=search]','.menu-path-filter select'].map(selector=>parseFloat(getComputedStyle(document.querySelector(selector)!).fontSize)),targets:['button[aria-label="Send order"]','button[aria-label="Start microphone"]'].map(selector=>{const r=document.querySelector(selector)!.getBoundingClientRect();return {width:r.width,height:r.height};})}));
  expect(geometry.content).toBeLessThanOrEqual(geometry.width);
@@ -52,7 +53,7 @@ test('mobile order composer and search remain legible without page overflow',asy
 
 
 test('short mobile viewport can scroll the whole cart to confirmation and undo',async({app,screen,browser})=>{
- await browser.setViewport({width:390,height:300});await app.open('/');
+ await browser.setViewport({width:390,height:300});await app.open('/');await chooseStore(screen);
  await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();
  const cart=screen.getByRole('dialog',{name:'Your order'});
  await expect(cart).toBeVisible();

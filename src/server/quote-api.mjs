@@ -5,7 +5,7 @@ import {resolveOrderQuote} from '../application/resolve-order-quote.mjs';
 import directory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import {currentCatalogSnapshot,getCatalogService} from '../catalog/service.mjs';
 import {createStarbucksWebsiteSource} from '../adapters/starbucks-website.mjs';
-export const PRICING_STORE={zip:'11201',storeNumber:'85278-313836',storeName:'104 Jay St'};
+import {storeServices} from './stores-api.mjs';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const handlers=new WeakMap();
 export function initializeQuoteSession(request,response){
@@ -17,16 +17,17 @@ async function readInput(request){
  const reader=request.body?.getReader();if(!reader)throw Error();let size=0;const chunks=[];
  for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536){await reader.cancel();throw Object.assign(Error(),{status:413});}chunks.push(value);}
  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
- const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||Object.keys(body).join(',')!=='order')throw Error();validateOrder(body.order);return body.order;
+ const body=JSON.parse(new TextDecoder().decode(bytes));if(!body||Object.keys(body).sort().join(',')!=='order,selectionToken,storeId')throw Error();validateOrder(body.order);return body;
 }
-export function createQuoteApi({resolveOrder,service,now=Date.now,onFailure=event=>console.warn(event)}={}){
+export function createQuoteApi({resolveOrder,service,verifyStore=async()=>{throw Error();},now=Date.now,onFailure=event=>console.warn(event)}={}){
  let resolving=0;
  return async request=>{
   if(request.method!=='POST')return json({error:'Method not allowed'},405);
   const url=new URL(request.url),origin=request.headers.get('Origin');
   if(origin&&origin!==url.origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Origin not allowed'},403);
   if(!request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'Use application/json'},415);
-  let order;try{order=await readInput(request);}catch(error){return json({error:'Invalid price request'},error.status??400);}
+  let input,order,selectedStore;try{input=await readInput(request);order=input.order;}catch(error){return json({error:'Invalid price request'},error.status??400);}
+  try{selectedStore=await verifyStore(input.storeId,input.selectionToken);}catch{return json({error:'Choose your store again to refresh live prices.',code:'store_selection_required'},400);}
   const cookies=(request.headers.get('Cookie')??'').split(';').map(c=>c.trim()).filter(c=>c.startsWith('barista_quote='));
   const supplied=cookies.length===1?cookies[0].slice('barista_quote='.length):'';
   const valid=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(supplied);
@@ -39,11 +40,11 @@ export function createQuoteApi({resolveOrder,service,now=Date.now,onFailure=even
    const {items,unpriced}=await resolveOrder(order,{signal:request.signal});
    request.signal.throwIfAborted();
    stage='quote';
-   const price=items.length?await service.quote(session,{storeNumber:PRICING_STORE.storeNumber,items},{signal:request.signal}):{currency:'USD',estimated:false,source:'starbucks',storeNumber:PRICING_STORE.storeNumber,expiresAt:now()+60000,items:[],subtotalCents:0,taxCents:0,totalCents:0,taxLabel:'Tax',provenance:'No verified prices for this configuration'};
+   const price=items.length?await service.quote(session,{storeNumber:selectedStore.sourceStoreNumber,items},{signal:request.signal,selectedStore}):{currency:'USD',estimated:false,source:'starbucks',storeNumber:selectedStore.sourceStoreNumber,expiresAt:now()+60000,items:[],subtotalCents:0,taxCents:0,totalCents:0,taxLabel:'Tax',provenance:'No verified prices for this configuration'};
    stage='response';
    const lines=[...order.items,...(order.menuItems??[])];
    const unavailable=new Set(unpriced.map(item=>item.itemId));
-   const result={...price,revision:order.revision,unavailable:unpriced,items:lines.map(item=>price.items.find(line=>line.itemId===item.id)??{itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})};
+   const result={...price,storeId:selectedStore.storeId,revision:order.revision,unavailable:unpriced,items:lines.map(item=>price.items.find(line=>line.itemId===item.id)??{itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})};
    if(unavailable.size){result.pricedSubtotalCents=price.subtotalCents;result.unpricedItemCount=lines.filter(item=>unavailable.has(item.id)).reduce((n,item)=>n+item.quantity,0);result.subtotalCents=null;result.taxCents=null;result.totalCents=null;result.taxLabel='Tax unavailable';}
    const response=json(result);
    return withCookie(response);
@@ -68,7 +69,7 @@ export function handleQuoteApi(request,env){
    details.set(identity,{promise,expiresAt:Date.now()+3600000});while(details.size>128)details.delete(details.keys().next().value);return promise;
   };
   const service=createStarbucksQuoteService({source:createStarbucksBrowserSource({url:env.STARBUCKS_BROWSER_URL,token:env.BARISTA_BROWSER_TOKEN})});
-  handler=createQuoteApi({service,resolveOrder:(order,{signal}={})=>resolveOrderQuote(order,{directory,catalog:getCatalogService(order.catalogVersion).getSnapshot?.()??currentCatalogSnapshot,resolveProduct,signal})});handlers.set(env,handler);
+  handler=createQuoteApi({service,verifyStore:(storeId,token)=>storeServices(env).selection.verify(storeId,token),resolveOrder:(order,{signal}={})=>resolveOrderQuote(order,{directory,catalog:getCatalogService(order.catalogVersion).getSnapshot?.()??currentCatalogSnapshot,resolveProduct,signal})});handlers.set(env,handler);
  }
  return handler(request);
 }
