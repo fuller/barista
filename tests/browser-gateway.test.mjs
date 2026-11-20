@@ -32,8 +32,15 @@ test('unavailable browser startup is bounded and a later request can recover',as
  let healthy=false,probes=0;
  const container={running:true,async setInactivityTimeout(){},getTcpPort(){return {async fetch(req){if(typeof req==='string'){probes++;if(!healthy)throw Error('private startup failure');return Response.json({ready:false});}return Response.json({ok:true});}};}};
  const proxy=createContainerProxy({container,storage:storage('v1')},{BARISTA_BROWSER_TOKEN:token,VERSION:{id:'v1'}},{wait:async()=>{}});
- await assert.rejects(proxy.fetch(request()),/Browser startup unavailable/);assert.equal(probes,15);
+ await assert.rejects(proxy.fetch(request()),/Browser startup unavailable/);assert.equal(probes,45);
  healthy=true;assert.equal((await proxy.fetch(request())).status,200);
+});
+test('first search waits for a sleeping browser container beyond the early startup window',async()=>{
+ let probes=0;const pauses=[];
+ const container={running:true,async setInactivityTimeout(){},getTcpPort(){return {async fetch(req){if(typeof req==='string'){probes++;if(probes<20)throw Error('starting');return Response.json({ready:false});}return Response.json([]);}};}};
+ const proxy=createContainerProxy({container,storage:storage('v1')},{BARISTA_BROWSER_TOKEN:token,VERSION:{id:'v1'}},{wait:async ms=>{pauses.push(ms);}});
+ assert.equal((await proxy.fetch(request('/stores'))).status,200);assert.equal(probes,20);
+ assert.equal(pauses.length,19);assert.ok(pauses.every(ms=>ms>=0&&ms<=1000));
 });
 
 test('deployment rotation destroys once before starting the new image and secret',async()=>{

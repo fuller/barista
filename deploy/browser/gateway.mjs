@@ -27,9 +27,10 @@ export function createContainerProxy(ctx,env,{wait=ms=>new Promise(resolve=>setT
   if(previousVersion!==version)await ctx.storage.put('deploymentVersion',version);
   await container.setInactivityTimeout(15*60*1000);
   const port=container.getTcpPort(4174);
-  for(let attempt=0;attempt<15;attempt++){
+  for(let attempt=0;attempt<45;attempt++){
+   const probeStarted=Date.now();
    try{const response=await port.fetch('http://container/health',{headers:{Authorization:`Bearer ${env.BARISTA_BROWSER_TOKEN}`},signal:AbortSignal.timeout(1000)});await response.body?.cancel();if(response.ok)return port;}catch{}
-   await wait(200);
+   await wait(Math.max(0,1000-(Date.now()-probeStarted)));
   }
   throw Error('Browser startup unavailable');
  }
