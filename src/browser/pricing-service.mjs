@@ -1,4 +1,5 @@
 import {validateStoreQuery,sanitizePublicStores} from './public-stores.mjs';
+import {createPublicStoreProxy} from './store-proxy.mjs';
 import {validateSelectedStore} from './selected-store.mjs';
 import {timingSafeEqual} from 'node:crypto';
 import {buildStarbucksQuoteRequest,normalizeStarbucksQuote} from '../adapters/starbucks-quote-protocol.mjs';
@@ -24,7 +25,7 @@ export function sanitizeEnvelope(envelope,body){
  const source=envelope.data.priceOrder;
  return {data:{priceOrder:{__typename:source.__typename,currency:source.currency,expiresIn:source.expiresIn,cart:{items:source.cart.items.map(i=>({key:i.key,sku:i.sku,quantity:i.quantity,price:i.price,isAvailable:i.isAvailable,availability:i.availability,lineItems:i.lineItems.map(l=>({key:l.key,sku:l.sku,quantity:l.quantity,label:l.label,price:l.price}))}))},summary:{price:source.summary.price,lineItems:source.summary.lineItems.map(l=>({key:l.key,price:l.price})),additionalFeeDescription:[]}}}};
 }
-export function createBrowserPricingHandler({token,transport}){
+export function createBrowserPricingHandler({token,transport,stores=createPublicStoreProxy()}){
  if(typeof token!=='string'||token.length<32)throw Error('BARISTA_BROWSER_TOKEN must contain at least 32 characters');
  const expected=Buffer.from(`Bearer ${token}`);
  return async request=>{
@@ -34,7 +35,7 @@ export function createBrowserPricingHandler({token,transport}){
   if(['/status','/health'].includes(url.pathname)&&request.method==='GET')return Response.json(transport.status());
   if(url.pathname==='/stores'&&request.method==='POST'){
    let query;try{const text=await request.text();if(text.length>1024)throw Error();const input=JSON.parse(text);if(!input||Object.keys(input).join(',')!=='query')throw Error();query=validateStoreQuery(input.query);}catch{return Response.json({error:'invalid_request'},{status:400});}
-   try{return Response.json(sanitizePublicStores(await transport.searchStores(query)),{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});}
+   try{return Response.json(sanitizePublicStores(await stores.search(query)),{headers:{'Cache-Control':'no-store'}});}catch(error){const limited=error?.code==='RATE_LIMITED';return Response.json({error:limited?'rate_limited':'unavailable'},{status:limited?429:503,headers:{'Cache-Control':'no-store',...(limited?{'Retry-After':String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000)))}:{})}});}
   }
   if(url.pathname==='/prepare'&&request.method==='POST'){
    let input,selectedStore;

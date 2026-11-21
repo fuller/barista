@@ -44,21 +44,6 @@ test('changing stores rejects an old in-flight price response',async()=>{
  assert.deepEqual(await transport.quote('caller',{}, {selectedStore:b}),{ok:true});release(original);await assert.rejects(old);assert.equal(f.contexts[0].closed,true);
  }finally{release?.({status:200,envelope:{ok:true}});await transport.close();}
 });
-test('store lookup uses temporary context, no guest setup, sanitizes and closes it',async()=>{
- let closed=0,setup=0,visited,evaluated;const raw=[{store:{id:'abc',storeNumber:'85278-313836',name:'Cafe',address:{lines:['1 Main'],city:'Brooklyn',countrySubdivisionCode:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40,longitude:-73},secret:'cookie'}}];
- const transport=await createHeadedTransport({setup:async()=>setup++,launch:async()=>({newContext:async()=>({newPage:async()=>({goto:async url=>{visited=url;},evaluate:async(fn,args)=>{evaluated=args;return raw;}}),close:async()=>closed++}),close:async()=>{}})});
- try{const result=await transport.searchStores('11201');assert.equal(closed,1);assert.equal(setup,0);assert.equal(transport.status().sessions,0);assert.match(visited,/starbucks.com\/store-locator/);assert.equal(evaluated.query,'11201');assert.doesNotMatch(JSON.stringify(result),/secret|cookie/);}finally{await transport.close();}
-});
-test('store lookup closes temporary context on failure and bounds concurrent work',async()=>{
- let closed=0,release;const pending=new Promise(r=>{release=r;});const transport=await createHeadedTransport({launch:async()=>({newContext:async()=>({newPage:async()=>({goto:async()=>pending,evaluate:async()=>{throw Error('private');}}),close:async()=>closed++}),close:async()=>{}})});
- try{const first=transport.searchStores('11201');await new Promise(r=>setImmediate(r));await assert.rejects(transport.searchStores('11202'));release();await assert.rejects(first);assert.equal(closed,1);}finally{release();await transport.close();}
-});
-test('coordinate store lookup executes only fixed location URL and rejects invalid input before launch',async()=>{
- let fetched,contexts=0,closed=0;const originalFetch=globalThis.fetch;
- const transport=await createHeadedTransport({launch:async()=>({newContext:async()=>{contexts++;return {newPage:async()=>({goto:async()=>{},evaluate:async(fn,args)=>fn(args)}),close:async()=>closed++};},close:async()=>{}})});
- globalThis.fetch=async(url,options)=>{fetched={url,options};return Response.json([]);};
- try{await transport.searchStores({latitude:0,longitude:-73.986861});assert.equal(fetched.url,'/apiproxy/v1/locations?lat=0&lng=-73.9869');assert.equal(fetched.options.credentials,'same-origin');assert.equal(contexts,1);assert.equal(closed,1);await assert.rejects(transport.searchStores({latitude:0,longitude:181}));assert.equal(contexts,1);}finally{globalThis.fetch=originalFetch;await transport.close();}
-});
 test('prepare and first quote share one guest initialization without a price request during prepare',async()=>{
  const f=fake();let release,setups=0;const gate=new Promise(resolve=>{release=resolve;});
  const selectedStore={sourceStoreNumber:'1-1'};

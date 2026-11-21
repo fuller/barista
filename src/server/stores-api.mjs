@@ -8,8 +8,8 @@ export function storeServices(env){
   // Search works without optional pricing. Live quotes require the shared token.
   const secret=browserPricingConfigured(env)?env.BARISTA_BROWSER_TOKEN:crypto.randomUUID()+crypto.randomUUID();
   const selection=createStoreSelection({secret});
-  const browser=browserPricingConfigured(env)?createStarbucksBrowserSource({url:env.STARBUCKS_BROWSER_URL,token:env.BARISTA_BROWSER_TOKEN}):null;
-  service={selection,source:createStarbucksStores({selection,...(browser?{fallbackSearch:query=>browser.searchStores(query)}:{})})};services.set(env,service);
+  const proxy=browserPricingConfigured(env)?createStarbucksBrowserSource({url:env.STARBUCKS_BROWSER_URL,token:env.BARISTA_BROWSER_TOKEN}):null;
+  service={selection,source:createStarbucksStores({selection,...(proxy?{loadStores:query=>proxy.searchStores(query)}:{})})};services.set(env,service);
  }
  return service;
 }
@@ -27,5 +27,8 @@ export async function handleStoresApi(request,env){
    query=normalizeStoreQuery({latitude:Number(latitude),longitude:Number(longitude)});
   }else throw Error();
  }catch{return json({error:'Enter a city, address, or ZIP code'},400);}
- try{return json({stores:await storeServices(env).source.search(query)});}catch(error){return json({error:error.status===400?'Enter a city, address, or ZIP code':'Store search unavailable'},error.status===400?400:503);}
+ try{return json({stores:await storeServices(env).source.search(query)});}catch(error){
+  if(error?.code==='RATE_LIMITED'||error?.status===429){const response=json({error:'Store search is temporarily rate limited'},429);const delay=Number.isFinite(error.retryAfterMs)?Math.min(3600000,Math.max(1000,error.retryAfterMs)):60000;response.headers.set('Retry-After',String(Math.ceil(delay/1000)));return response;}
+  return json({error:error.status===400?'Enter a city, address, or ZIP code':'Store search unavailable'},error.status===400?400:503);
+ }
 }
