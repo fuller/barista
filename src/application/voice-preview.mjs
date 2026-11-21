@@ -1,6 +1,6 @@
 import {applyCommands} from '../domain/order.mjs';
 import {getCatalogService} from '../catalog/service.mjs';
-/** Project only a complete valid plan. Never return pricing or mutate the real cart. */
+
 export function buildVoicePreview(order,response){
  if(!response||response.clarification||response.pending||!Array.isArray(response.commands)||!response.commands.length)return null;
  try{

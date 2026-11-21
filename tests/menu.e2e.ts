@@ -5,7 +5,6 @@ import type {CatalogSnapshot} from '../src/catalog/contracts';
 import type {Browser} from '@e2e-dev/web';
 import {quoteOrder} from '../src/domain/pricing.mjs';
 
-// Keep modifier/undo prices deterministic while exercising the live quote path.
 async function mockModifierPrices(browser:Browser){
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
  await browser.route('**/api/quote',route=>{
@@ -43,7 +42,8 @@ test('recipe refresh preserves active cart and native full-menu items',async({ap
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toHaveCount(0);
  await screen.getByRole('button',{name:'Add Flat White'}).click();
  await expect(order.getByRole('heading',{name:'Flat White',exact:true})).toBeVisible();
- await expect(order.getByText('Price unavailable',{exact:true}).first()).toBeVisible();
+ await expect(order.getByText('Demo estimate',{exact:true})).toBeVisible();
+ await expect(order.getByText(/^\$\d+\.\d{2}$/).first()).toBeVisible();
  await expect(screen.getByText(refreshed.version,{exact:true})).toBeVisible();
 });
 
@@ -100,7 +100,7 @@ test('full menu filters product cards and adds an unpriced source drink',async({
  await menu.getByRole('button',{name:'Add Caffè Latte'}).click();
  const order=screen.getByRole('complementary',{name:'Your order'});
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toBeVisible();
- await expect(order.getByText('Tax Price unavailable',{exact:true})).toBeVisible();
+ await expect(order.getByText('Tax not included',{exact:true})).toBeVisible();
  await expect(screen.getByText(/Catalog source: Starbucks website/)).toBeVisible();
 });
 

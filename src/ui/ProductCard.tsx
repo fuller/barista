@@ -4,7 +4,7 @@ import {PRICE_BOOK,formatMoney} from '../domain/pricing.mjs';
 import type {Size,Temperature} from '../contracts';
 export function ProductPhoto({src,name,subject='base drink'}:{src:string|null;name:string;subject?:string}){
  const [failed,setFailed]=useState(false);
- let safe=false;try{const url=new URL(src||'');safe=url.protocol==='https:'&&url.hostname==='cloudassets.starbucks.com'&&!url.username&&!url.password;}catch{/* Fall back to the local cup. */}
+ let safe=false;try{const url=new URL(src||'');safe=url.protocol==='https:'&&url.hostname==='cloudassets.starbucks.com'&&!url.username&&!url.password;}catch{                                 }
  return <div className="product-photo">{safe&&!failed?<img src={src!} alt={name+' · '+subject+' photo'} width={480} height={480} loading="lazy" decoding="async" onError={()=>setFailed(true)}/>:<svg role="img" aria-label={name+' · photo unavailable'} width="480" height="480" viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#e2e9d9"/><path d="M31 33h34v32c0 7-6 12-12 12H43c-7 0-12-5-12-12V33Zm34 7h5c15 0 15 20 0 20h-5M41 21v6m12-6v6" fill="none" stroke="#6c8065" strokeWidth="3" strokeLinecap="round"/></svg>}</div>;
 }
 export function ProductCard({product,forms,onSelect}:{product:SupportedProduct;forms:CatalogProduct[];onSelect:(id:string,size:Size,temperature:Temperature)=>void}){

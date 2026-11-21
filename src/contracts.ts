@@ -31,12 +31,10 @@ export interface ItemQuote { itemId:string; quantity:number; unitCents:number|nu
 export interface Quote { currency:string; subtotalCents:number|null; taxCents:number|null; totalCents:number|null; pricedSubtotalCents?:number; unpricedItemCount?:number; items:ItemQuote[]; estimated:boolean; taxLabel:string; provenance:string; }
 export interface AdapterTurnInput extends TurnInput { clarificationContext?:{ supersededField:'pumps'; originalText:string; question:string; answers:string[] }; }
 export interface DecisionAdapter { interpretTurn(input:AdapterTurnInput,context?:{signal?:AbortSignal}):Promise<Interpretation>; }
-// Adapter interpretation is wrapped by the HTTP boundary in a correlated response.
+
 export interface PendingClarification {
   originalText: string; question: string; revision: number;
   answers: string[]; targetIds: string[];
 }
 export interface TurnRequest extends TurnInput { turnId: string; baseRevision: number; mode?: 'live'; }
 export interface TurnResponse { turnId:string; baseRevision:number; commands:Command[]; clarification:string|null; pending:PendingClarification|null; source:string; diagnostics?:ClarificationDiagnostics; metrics?:DecisionMetrics; }
-// ItemQuote.lines are PER UNIT. Sum(lines.amountCents) == unitCents;
-// totalCents == unitCents * quantity. Tax remains null until a verified policy is supplied.

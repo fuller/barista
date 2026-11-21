@@ -5,8 +5,7 @@ import {validateCatalogSnapshot} from '../catalog/validate-snapshot.mjs';
 const same=(a,b)=>a===b||Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>same(v,b[i]))||a!==null&&b!==null&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)&&Object.keys(a).length===Object.keys(b).length&&Object.keys(a).every(k=>Object.hasOwn(b,k)&&same(a[k],b[k]));
 const validSku=value=>typeof value==='string'&&/^\d{1,16}$/.test(value);
 const normalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[®™]/g,'').replace(/\s+/g,' ').trim();
-// Closed grammar: every word must describe this exact unchanged base product.
-// No free-text modifier inference. Multi-item utterances deliberately remain unavailable.
+
 function plainInstruction(text,item,product){
  let value=normalize(text).replace(/[.!?]+$/,'').trim();
  value=value.replace(/^(?:can i (?:get|have)|could i (?:get|have)|i would like|i'd like|i want|add|order) /,'');
@@ -20,7 +19,7 @@ function plainInstruction(text,item,product){
  if(size){const selected=item.size??product.defaultSize?.displayName;if(!selected||normalize(selected)!==size)return false;value=value.slice(size.length+1);}
  else if(item.size!==null&&normalize(item.size)!==normalize(product.defaultSize?.displayName??''))return false;
  const names=new Set([normalize(product.name)]);
- // Explicit product identity aliases only; no stripping arbitrary name tokens.
+
  if(product.identity==='407:Hot'){names.add('latte');names.add('hot latte');names.add('hot caffe latte');}
  if(product.identity==='407:Iced'){names.add('iced latte');}
  if(item.quantity>1){for(const name of [...names])names.add(name+'s');}
@@ -28,7 +27,6 @@ function plainInstruction(text,item,product){
 }
 function configured(item,sku){return {itemId:item.id,sku,quantity:item.quantity,modifiers:[]};}
 
-/** Resolve trusted base SKU configurations. Unsupported edits fail closed per line. */
 export async function resolveOrderQuote(order,{directory,catalog,resolveProduct,signal}={}){
  signal?.throwIfAborted();
  validateOrder(order);validateMenuDirectory(directory);validateCatalogSnapshot(catalog);

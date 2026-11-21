@@ -3,7 +3,6 @@ import { beforeEach, expect, test } from 'e2e';
 import {quoteOrder} from '../src/domain/pricing.mjs';
 import type {Order} from '../src/contracts';
 
-// Supply sample prices through the live quote boundary; these are test fixtures, not store prices.
 beforeEach(async({browser})=>{
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
  await browser.route('**/api/quote',route=>{
@@ -79,4 +78,3 @@ test('keeps live ordering accessible on mobile and preserves default mocha pumps
   await expect(screen.getByLabel('mocha pump')).toHaveValue('5');
   await expect(order.getByText('$6.25', { exact: true }).first()).toBeVisible();
 });
-

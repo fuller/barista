@@ -15,7 +15,7 @@ export function parseLatencyArgs(args){
  if(options.split==='holdout'){if(!args.includes('--max-requests'))options.maxRequests=150;if(!args.includes('--scheduling'))options.scheduling='guarded-overlap';}
  if(!['lean-v8','lean-v9','lean-v10'].includes(options.profile)||!['lean-v8','lean-v9','lean-v10'].includes(options.controlProfile)||!['dev','holdout'].includes(options.split)||options.split==='holdout'&&options.maxRequests>150||!['sequential','guarded-overlap'].includes(options.scheduling)||!['sequential','guarded-overlap'].includes(options.controlScheduling)||!Number.isInteger(options.maxRequests)||options.maxRequests<1||options.maxRequests>250||!Number.isInteger(options.concurrency)||options.concurrency<1||options.concurrency>3||options.model!==undefined&&!/^[\w./:-]{1,160}$/.test(options.model))throw new Error('Invalid latency benchmark bounds');return options;
 }
-/** Existing strict runner owns cart grading and sanitizes provider observations. No gold reaches adapters. */
+
 export async function runLatencyBenchmark(cases,{apiKey,model=DEFAULT_MODEL,maxRequests=250,concurrency=3,controlScheduling='sequential',scheduling='sequential',profile=DEFAULT_MENU_PROFILE,controlProfile=profile,createCache,adapterFactory=createMenuDeciderAdapter,fetchImpl=fetch,corpusSHA}={}){
  parseLatencyArgs(['--max-requests',String(maxRequests),'--concurrency',String(concurrency),'--scheduling',scheduling,'--profile',profile,'--control-profile',controlProfile,'--control-scheduling',controlScheduling]);
  if(typeof createCache!=='function')throw new Error('Cache factory required');

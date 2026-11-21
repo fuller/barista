@@ -1,5 +1,4 @@
-/** Compare authoritative order states; transport metadata never produces a visual change. */
-/** @returns {{added:string[],removed:string[],updated:Array<{id:string,fields:string[],ingredients:string[]}>}} */
+
 export function diffOrder(before,after){
  const groups=['syrups','sauces','sweeteners','inclusions','toppings'];
  const ignored=new Set(['id','explicit','syrup','pumps','decaf','whip',...groups]);

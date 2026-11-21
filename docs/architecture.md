@@ -10,6 +10,7 @@ The React client browses a validated menu snapshot and holds the cart in memory.
 | `src/domain` | Immutable cart commands, revisions, undo, money |
 | `src/application` | Turn coordination, XState actors, quote orchestration |
 | `src/adapters` | OpenRouter interpretation, browser speech, Starbucks protocols |
+| `src/services` | Private HTTP pricing boundary and public store proxy |
 | `src/server` | HTTP validation, admission limits, safe diagnostics |
 | `src/ui` | React views, actor subscriptions, query caches |
 
@@ -31,8 +32,12 @@ Stable interim speech can prepare one interpretation without changing the cart. 
 
 Menu queries use a memory cache and acquisition-aware HTTP ETags. Source synchronization validates snapshots before atomic replacement; UI refresh rereads the local snapshot. See [data](data.md).
 
-Generic menu lines preserve source identity, size, quantity and literal customization requests. Those requests do not establish a computed recipe or cash price. Money is independent of model output; unknown amounts remain null.
+Generic menu lines preserve source identity, size, quantity and literal customization requests. Those requests do not establish a computed recipe. Money is independent of model output. A versioned local price book provides clearly labeled demo estimates; estimated tax and final totals remain null.
 
 Ordering starts with a ZIP/city or nearby search through `/api/stores` and explicit café confirmation. This is a cached HTTP-only lookup with bounded query validation and shared pending requests; it creates no guest session and has no browser fallback. **Use my location** requests browser geolocation only after a click. Coordinates are rounded to four decimal places and sent as `lat`/`lng`; permission denial, unavailable location and timeout retain manual search. Late location callbacks cannot replace a newer search. The server signs normalized store identities for 24 hours, so later Worker requests can verify selections without a shared database. Store choice gates manual additions, typed orders and voice input. Changing it preserves the cart and cancels older work.
 
-Pricing sessions start lazily on the first uncached cart quote after adding an item. Page load and store confirmation alone create no pricing cookie or guest session. An existing caller namespace can be read from config for local-cache reuse; a fresh quote response supplies the namespace for a newly created caller. The same-origin `/api/quote` endpoint verifies the selected store, resolves trusted size SKUs, calls an authenticated browser service, validates money and caches exact configurations until expiry. TanStack Query and a bounded tab-scoped quote cache keep prices independent of cart commits. Exact cart configurations reuse whole quotes through their original expiry, even after undo or line-ID changes; money, store, caller namespace and configuration are revalidated before remapping rows to the current revision. Explicit refresh bypasses both cache layers. Independent product-detail reads use at most four concurrent requests and deduplicate identities. The service owns isolated Chrome guest contexts outside the Worker and replaces a caller's context when its selected store changes. Unresolved modifiers remain unpriced. See [pricing](pricing.md) for setup, protocol and coverage.
+Demo prices render synchronously from the local price book. TanStack Query requests live quotes in the background. Only a complete validated live quote replaces the estimate; failures and partial results keep the demo subtotal visible.
+
+Pricing sessions start on the first uncached cart quote after adding an item. Page load and store confirmation create no pricing cookie or guest session. The same-origin `/api/quote` verifies the selected store, resolves trusted size SKUs and calls an authenticated HTTP service. That service owns bounded per-caller upstream cookie jars in one Node process. It uses ordinary API requests, serializes cookie updates and respects access-denial cooldowns. No Chrome runtime is involved.
+
+Verified quotes are cached independently of cart commits. Exact configurations reuse whole quotes only through their original expiry; money, store, caller namespace and configuration are revalidated before remapping rows. Demo data never enters this cache. Explicit refresh bypasses both layers. Product-detail reads deduplicate identities and use at most four concurrent requests. Unresolved modifiers remain unavailable for live quotes. See [pricing](pricing.md) for contracts, coverage and setup.

@@ -1,5 +1,5 @@
 import {clarification} from '../adapters/clarification.mjs';
-/** Pending requests are replayed only against the unchanged revision and target IDs. */
+
 export async function interpretInput(input,adapter,context={}){
  const {order,pending,text}=input;
  if(pending){

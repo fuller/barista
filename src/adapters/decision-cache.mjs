@@ -1,4 +1,3 @@
-/** Bounded process-local exact-response cache. Keys and values never leave server memory. */
 export function createDecisionCache({ttlMs=300000,maxEntries=128,maxBytes=2*1024*1024,now=()=>Date.now(),clock=now}={}){
  if(!Number.isSafeInteger(ttlMs)||ttlMs<1||ttlMs>300000||!Number.isSafeInteger(maxEntries)||maxEntries<1||maxEntries>128||!Number.isSafeInteger(maxBytes)||maxBytes<1||maxBytes>2*1024*1024||typeof clock!=='function')throw new Error('Invalid decision cache limits');
  const entries=new Map(),encoder=new TextEncoder();let bytes=0;

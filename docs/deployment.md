@@ -23,23 +23,23 @@ Paste the key into Wrangler's secret prompt. Never place it in `wrangler.jsonc`,
 
 The deploy command builds and publishes to the Worker's `workers.dev` URL. Preview URLs are disabled. After deploying, open the printed URL, check that live ordering is available, and exercise one short typed request. Provider calls incur charges under your account's terms.
 
-## Browser pricing host
+## Pricing service
 
-Real store quotes require a separate browser host. Cloudflare Containers access and a running Docker daemon are required to build and provision it. From the repository root, choose a unique Worker name in `deploy/browser/wrangler.jsonc`, then run:
+Store lookup and live quote attempts use a separate Node HTTP service deployed with Cloudflare Containers. Docker and Containers access are required. Configure `deploy/pricing/wrangler.jsonc`, then run:
 
 ```sh
-npx wrangler secret put BARISTA_BROWSER_TOKEN --config deploy/browser/wrangler.jsonc
-npx wrangler deploy --config deploy/browser/wrangler.jsonc
-npx wrangler secret put BARISTA_BROWSER_TOKEN
-npx wrangler secret put STARBUCKS_BROWSER_URL
+npx wrangler secret put PRICING_SERVICE_TOKEN --config deploy/pricing/wrangler.jsonc
+npx wrangler deploy --config deploy/pricing/wrangler.jsonc
+npx wrangler secret put PRICING_SERVICE_TOKEN
+npx wrangler secret put STARBUCKS_PRICING_URL
 npm run deploy
 ```
 
-Use one random token of at least 32 characters for both secret prompts. For `STARBUCKS_BROWSER_URL`, enter the browser Worker's printed HTTPS origin, without a path or query. If the initial secret upload asks to create the Worker, allow creation. These values remain server-side; the browser Worker passes its token into the container only at runtime. The application enables `global_fetch_strictly_public` so HTTPS fetches can reach another Worker on the same zone. Application CI deploys the application Worker; deploy browser host changes separately with its configuration.
+Use the same random token of 32–512 characters on both Workers. Set `STARBUCKS_PRICING_URL` to the service Worker's HTTPS origin without a path or query. Secrets enter the container only at runtime. The application uses `global_fetch_strictly_public` for same-zone Worker fetches. Application CI deploys the main Worker; deploy service changes separately.
 
-The gateway authenticates requests before container startup and routes to one fixed Durable Object name. This code limits normal routing to one container; the Durable Object scheduling configuration does not enforce a `max_instances` setting. Each instance uses `standard-1` (0.5 vCPU, 4 GiB memory) and stops after 15 minutes of inactivity. A new instance starts with fresh guest sessions. Worker version metadata triggers one replacement on browser host deployments or token changes; repeat requests reuse that version even while Chrome is booting. Updates can interrupt in-flight quotes. Only the pricing HTTP service is forwarded; no VNC or Chrome debugging endpoint is provided.
+The container runs Node as a non-root user. No Chrome or display service is installed. Requests authenticate before startup and route to one fixed Durable Object. The existing deployment retains the `barista-browser-pricing` Worker name, `BrowserHost` class and `BROWSER` binding to preserve resource identity; these names do not imply a browser runtime.
 
-Authenticated `GET /health` reports process status. `ready:false` and `browserStarted:false` are expected before pricing starts. Store lookup remains available through plain HTTP without starting Chrome; process health alone does not prove live prices. Authenticated status also exposes aggregate setup failure categories and numeric HTTP statuses, without page content or session credentials. The service attempts ordinary guest UI setup on demand. Website access denial, selector changes, startup delays or unsuccessful guest setup leave prices unavailable. Use **Refresh prices** after a transient startup failure. See [pricing setup](pricing.md) for session limits and coverage.
+The `standard-1` instance stops after 15 minutes of inactivity. Version changes replace it once and discard guest sessions. Authenticated `/health` reports process availability; `/status` reports safe HTTP session counters. Neither guarantees that Starbucks accepts guest creation or quotes. Store lookup uses public HTTP without guest setup. Demo estimates remain available when upstream pricing fails or the service sleeps.
 
 ## Public endpoint limits
 

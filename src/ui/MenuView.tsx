@@ -3,6 +3,8 @@ import type {CatalogSnapshot} from '../catalog/contracts';
 import type {MenuDirectory,MenuDirectoryProduct} from '../catalog/menu-directory-contracts';
 import bundledDirectory from '../catalog/data/starbucks-menu-directory.json';
 import {ProductPhoto} from './ProductCard';
+import {formatMoney} from '../domain/pricing.mjs';
+import {getDemoMenuPrice} from '../domain/demo-pricing.mjs';
 const directory=bundledDirectory as MenuDirectory;
 const searchable=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 type SelectMenuProduct=(identity:string,size:string|null)=>boolean;
@@ -12,11 +14,12 @@ function MenuItemCard({product,onSelect}:{product:MenuDirectoryProduct;onSelect:
  const [added,setAdded]=useState(false);
  const feedbackTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
  useEffect(()=>()=>{if(feedbackTimer.current!==null)clearTimeout(feedbackTimer.current);},[]);
+ const demoPrice=getDemoMenuPrice(product,size);
  const categoryPath=product.categories[0]?.path;
  const path=categoryPath?.map(part=>part.name).join(' › ')||product.productType;
  const categoryName=categoryPath?.at(-1)?.name||product.productType;
  function add(){
-  // Every click reaches the cart; feedback never locks out a second serving.
+
   const accepted=onSelect(product.identity,size);
   if(feedbackTimer.current!==null)clearTimeout(feedbackTimer.current);
   setAdded(accepted);
@@ -30,7 +33,7 @@ function MenuItemCard({product,onSelect}:{product:MenuDirectoryProduct;onSelect:
    <p className="product-description">{product.description||product.productType}</p>
    {product.sizes.length>1&&<label>Size<select aria-label={product.name+' size'} value={size??''} onChange={event=>setSize(event.target.value||null)}><option value="">Default size</option>{product.sizes.map(option=><option key={option.sizeCode} value={option.sizeCode}>{option.sizeCode}</option>)}</select></label>}
    {product.sizes.length===1&&<p className="product-kind">{product.sizes[0].sizeCode}</p>}
-   <div className="product-bottom"><span><small>Price unavailable</small></span><button aria-label={'Add '+product.name} data-added={added||undefined} onClick={add}><span aria-hidden="true">{added?'✓':'+'}</span> {added?'Added':'Add'}</button></div>
+   <div className="product-bottom"><span className="menu-demo-price">{demoPrice===null?<small>Price unavailable</small>:<><strong>{formatMoney(demoPrice)}</strong><small>Demo estimate</small></>}</span><button aria-label={'Add '+product.name} data-added={added||undefined} onClick={add}><span aria-hidden="true">{added?'✓':'+'}</span> {added?'Added':'Add'}</button></div>
    <span className="sr-only" role="status">{added?product.name+' added to your order.':''}</span>
   </div>
  </article>;
@@ -40,7 +43,7 @@ export function MenuView({catalog:_,menuDirectory=directory,onSelect}:{catalog?:
  const searchInput=useRef<HTMLInputElement>(null);
  const roots=useMemo(()=>menuDirectory.categories.filter(c=>c.parentPathKey===null),[menuDirectory]);
  const categories=useMemo(()=>menuDirectory.categories.filter(c=>root==='all'||c.rootCategory.id===root),[menuDirectory,root]);
- // Normalize catalog text once per snapshot rather than for every keystroke.
+
  const searchIndex=useMemo(()=>menuDirectory.products.map(product=>({product,text:searchable([product.name,product.description,product.productType,...product.categories.map(c=>c.path.map(p=>p.name).join(' '))].join(' '))})),[menuDirectory]);
  const query=searchable(search.trim());
  const products=useMemo(()=>searchIndex.filter(({product,text})=>(root==='all'||product.categories.some(c=>c.rootCategory.id===root))&&(category==='all'||product.categories.some(c=>c.pathKey===category||c.pathKey.startsWith(category+'/')))&&text.includes(query)).map(({product})=>product),[searchIndex,root,category,query]);

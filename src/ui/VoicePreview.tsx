@@ -1,6 +1,6 @@
 import type {buildVoicePreview} from '../application/voice-preview.mjs';
 type Props={transcript:string;preparing:boolean;preview:ReturnType<typeof buildVoicePreview>};
-/** A separate hypothetical order: no totals, actions, or confirmation controls. */
+
 export function VoicePreview({transcript,preparing,preview}:Props){
  if(!transcript)return null;
  return <aside className="voice-preview" aria-label="Voice order preview">

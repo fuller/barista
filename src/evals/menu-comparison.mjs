@@ -2,7 +2,7 @@ const fields=['corpusSHA','graderSHA','menuVersion','model'];
 const key=row=>`${row.caseId}:${row.repeat}`;
 const count=value=>Number.isSafeInteger(value)&&value>=0;
 const numeric=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0;
-/** Compare saved evidence only. Unknown provider usage never becomes zero. */
+
 export function compareMenuEvaluations(baseline,candidate){
  const reasons=[];const reject=(code,report)=>reasons.push({code,...(report?{report}:{})});
  function inspect(report,label){

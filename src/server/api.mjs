@@ -10,10 +10,9 @@ import {createDecisionCache} from '../adapters/decision-cache.mjs';
 import {createMenuDeciderAdapter} from '../adapters/menu-decider.mjs';
 import menuDirectory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import {handleQuoteApi} from './quote-api.mjs';
-import {handlePrepareApi} from './prepare-api.mjs';
 import {readExistingQuoteSession,quoteCacheScope} from './pricing-session.mjs';
 import {handleStoresApi} from './stores-api.mjs';
-import {browserPricingConfigured} from '../adapters/starbucks-browser-source.mjs';
+import {pricingServiceConfigured} from '../adapters/starbucks-pricing-source.mjs';
 registerCatalogSnapshot(previousSnapshot);
 const decisionCache=createDecisionCache();
 const registry=createRegistry({decider:createMenuDeciderAdapter});
@@ -24,8 +23,7 @@ async function admitTurn(request,env,kind='turn'){
  const limiter=env.TURN_RATE_LIMITER;
  if(!admissionConfigured(env))return json({error:'Ordering is temporarily unavailable.'},503);
  if(!limiter)return null;
- // Cloudflare overwrites this header at its edge. Never trust a user-supplied
- // address when adapting this boundary to a different hosting platform.
+
  const address=request.headers.get('CF-Connecting-IP');
  if(!address)return json({error:'Ordering is temporarily unavailable.'},503);
  try{
@@ -68,16 +66,10 @@ export async function handleApi(request,env={}){
   const result=catalogResponse(request);return new Response(result.body===null?null:JSON.stringify(result.body),{status:result.status,headers:result.headers});
  }
  if(path==='/api/config'&&request.method==='GET'){
-  const available=browserPricingConfigured(env),session=available?readExistingQuoteSession(request):null;
+  const available=pricingServiceConfigured(env),session=available?readExistingQuoteSession(request):null;
   const cacheScope=session?await quoteCacheScope(session):null;
   const response=json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{estimated:false,taxCalculated:true,available,cacheScope}});
   return response;
- }
- if(path==='/api/pricing/prepare'){
-  if(request.method!=='POST')return json({error:'Method not allowed'},405);
-  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Origin not allowed'},403);
-  const denied=await admitTurn(request,env,'prepare');if(denied)return denied;
-  return handlePrepareApi(request,env);
  }
  if(path==='/api/stores'){const denied=await admitTurn(request,env,'stores');if(denied)return denied;return handleStoresApi(request,env);}
  if(path==='/api/quote'){
@@ -97,14 +89,13 @@ export async function handleApi(request,env={}){
   if(!env.OPENROUTER_API_KEY||!registry.has(provider))return json({error:'Live decision provider is not configured. Configure a supported provider and the server-only OPENROUTER_API_KEY.'},503);
   const denied=await admitTurn(request,env);if(denied)return denied;
   const adapter=registry.resolve(provider,{apiKey:env.OPENROUTER_API_KEY,model,questionProfile,scheduling,cache:decisionCache});
-  // Legacy pending slots still receive revision/cancel checks, but the generic
-  // menu path treats a new utterance literally instead of concatenating history.
+
   const result=await interpretInput(input,{interpretTurn:(turn,context)=>adapter.interpretTurn({...turn,text:input.text,clarificationContext:undefined},context)},{signal:request.signal});
   if(result.commands.length)applyCommands(input.order,result.commands);
   return json({turnId:input.turnId,baseRevision:input.baseRevision,...result,diagnostics:sanitizeDiagnostics(result.diagnostics),metrics:sanitizeMetrics(result.metrics)});
  }catch(e){
   const status=e.status??(e.message?.startsWith('Catalog version unavailable')?409:e.name==='AbortError'||e.name==='TimeoutError'?504:400);
-  // Provider bodies and keys never cross this HTTP boundary.
+
   return json({error:status===409?e.message:status===413?'Request is too large':status===504?'The decision service took too long. Your order has not changed.':e.message?.includes('Decision service unavailable')?e.message:'Could not interpret that request. Your order has not changed; try a simpler request or edit a drink.',diagnostics:sanitizeDiagnostics(e.diagnostics),metrics:sanitizeMetrics(e.metrics)},status);
  }
 }

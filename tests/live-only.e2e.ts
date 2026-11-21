@@ -19,7 +19,7 @@ test('pending connection blocks submissions then sends once without a mode field
 });
 test('connection timeout becomes actionable and retry can recover',async({app,screen,browser})=>{
  let delayed=false,release:()=>void=()=>{};const ready=new Promise<void>(resolve=>{release=resolve;});
- await browser.route('**/api/config',async route=>{if(delayed)await ready;try{await route.fulfill({json:{liveAvailable:true,provider:'Mocked',model:'fixture'}});}catch{/* Timed-out request was aborted. */}});
+ await browser.route('**/api/config',async route=>{if(delayed)await ready;try{await route.fulfill({json:{liveAvailable:true,provider:'Mocked',model:'fixture'}});}catch{                                    }});
  await app.open('/');await chooseStore(screen);delayed=true;await browser.reload();await chooseStore(screen);try{await expect(screen.getByRole('alert')).toContainText('connection timed out',{timeout:12_000});await screen.getByRole('textbox',{name:'Tell us your order'}).fill('a latte');await expect(screen.getByRole('button',{name:'Send order'})).toBeDisabled();delayed=false;release();await screen.getByRole('button',{name:'Retry connection'}).click();await expect(screen.getByRole('button',{name:'Send order'})).toBeEnabled();await expect(screen.getByRole('alert')).toHaveCount(0);}finally{release();}
 });
 test('manual cart edit stops microphone and ignores a late transcript',async({app,screen,browser})=>{

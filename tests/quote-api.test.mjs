@@ -9,7 +9,7 @@ const order=applyCommands(createOrder(),[{type:'add-menu',identity:'407:Hot'}]);
 const request=(body={order},headers={})=>new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({...body,storeId:selectedStore.storeId,selectionToken:'fixture-token'})});
 const quote={currency:'USD',estimated:false,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+300000,subtotalCents:525,taxCents:47,totalCents:572,items:[{itemId:'menu-1',quantity:1,unitCents:525,totalCents:525,lines:[{label:'Base',amountCents:525}]}],taxLabel:'Tax',provenance:'Verified Starbucks store quote'};
 test('first item quote establishes the caller that later read-only config and quotes reuse',async()=>{
- const pricing={STARBUCKS_BROWSER_URL:'http://127.0.0.1:4174',BARISTA_BROWSER_TOKEN:'test-token-'.repeat(4)};
+ const pricing={STARBUCKS_PRICING_URL:'http://127.0.0.1:4174',PRICING_SERVICE_TOKEN:'test-token-'.repeat(4)};
  const config=cookie=>handleApi(new Request('https://barista.example/api/config',{headers:cookie?{Cookie:cookie}:{}}),pricing);
  const before=await config();assert.equal(before.headers.get('Set-Cookie'),null);assert.equal((await before.json()).pricing.cacheScope,null);
  const sessions=[];const handler=createQuoteApi({resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async key=>{sessions.push(key);return quote;}}});
@@ -46,7 +46,7 @@ test('resolution admission bounds concurrent work before product fetching',async
  let release,calls=0;const gate=new Promise(resolve=>{release=resolve;});
  const handler=createQuoteApi({resolveOrder:async()=>{calls++;await gate;return {items:[],unpriced:[{itemId:'menu-1',reason:'unsupported_instructions'}]};},service:{}});
  const pending=Array.from({length:8},()=>handler(request()));
- // Wait for all real resolver entries; no wall-clock assumption.
+
  while(calls<8)await new Promise(resolve=>setImmediate(resolve));
  const denied=await handler(request());assert.equal(denied.status,503);assert.equal(calls,8);
  release();const responses=await Promise.all(pending);assert.ok(responses.every(response=>response.status===200));assert.equal((await handler(request())).status,200);

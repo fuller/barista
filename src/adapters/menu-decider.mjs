@@ -59,7 +59,7 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                         try {
                             cache.set(key, value);
                         }
-                        catch { /* Cache failure cannot change interpretation. */ }
+                        catch {                                                   }
                     }
                 return { ...result, source: 'decider', metrics: { ...metrics, totalMs: Math.max(0, clock() - started) } };
             };
@@ -192,7 +192,7 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                         return await retry('Please repeat one item or change at a time.', 'decision', 'input_truncated');
                     if (!record(response?.answers) || Object.keys(response.answers).length !== Object.keys(questions).length || Object.keys(questions).some(k => !Object.hasOwn(response.answers, k)))
                         throw new Error('Invalid decision answer keys');
-                    // Validate all answer shapes even when speculative values are not applicable.
+
                     const values = Object.fromEntries(Object.entries(questions).map(([k, q]) => [k, read(response.answers[k], q)]));
                     if (values.coverage !== 'complete' || !values.action || values.action === 'unclear')
                         return await retry('Please say one item or change at a time.', 'decision', 'decision_low_confidence');
@@ -335,7 +335,7 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                 }
                 if (commands.length > 1 && commands.some(c => ['undo', 'clear', 'confirm'].includes(c.type)))
                     return await retry('Please confirm, clear or undo as a separate request.', 'compile', 'conflicting_instructions');
-                // A single final validation preserves one atomic revision and undo entry.
+
                 applyCommands(order, commands);
                 return await finish({ commands, clarification: null });
             }

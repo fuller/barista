@@ -1,7 +1,7 @@
 import {CATALOG,SIZES,getCatalogService,LEGACY_CATALOG_VERSION} from './catalog.mjs';
 import {INGREDIENTS,AMOUNTS,MODIFIER_DEFINITIONS,sourceSelectValues} from './modifier-definitions.mjs';
 export {INGREDIENTS,AMOUNTS,MODIFIER_DEFINITIONS} from './modifier-definitions.mjs';
-// Sample profiles deliberately declare ingredient and preparation compatibility.
+
 export function getCapabilities(productId,temperature,catalogVersion=LEGACY_CATALOG_VERSION){
  if(catalogVersion!==LEGACY_CATALOG_VERSION){const service=getCatalogService(catalogVersion),product=service.getProduct(productId,temperature);if(!product)throw new Error('Unsupported catalog product');const options=service.getSupportedOptions(product.identity),maps=options.map(o=>o.mapping),base=getCapabilities(productId==='shaken-espresso'?'latte':productId,product.temperature);return {...base,fields:base.fields.filter(f=>['size','temperature','quantity','onSide','cupSize','preparation'].includes(f)||maps.some(m=>m[0]===f)||['syrups','sauces','sweeteners','inclusions','toppings','coldFoam'].includes(f)),ingredients:Object.fromEntries(Object.keys(INGREDIENTS).map(g=>[g,[...(g==='coldFoams'?['none']:[]),...new Set(maps.filter(m=>m[0]===(g==='coldFoams'?'coldFoam':g)).map(m=>m[1]))]])),sizes:product.sizes.map(s=>s.size),temperatures:service.products.find(p=>p.id===productId).temperatures};}
 

@@ -1,4 +1,3 @@
-// Illustrative simulator recipes and availability; not verified store recipes.
 export const SIZES=['short','tall','grande','venti','trenta'];
 export const MILKS=['2%','whole','skim','oat','almond','soy','coconut','none'];
 export const SYRUPS=['none','vanilla','caramel','hazelnut','brown-sugar','classic','sugar-free-vanilla','peppermint','mocha','white-mocha','chai'];

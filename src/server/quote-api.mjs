@@ -1,5 +1,5 @@
 import {validateOrder} from '../domain/order.mjs';
-import {createStarbucksBrowserSource,browserPricingConfigured} from '../adapters/starbucks-browser-source.mjs';
+import {createStarbucksPricingSource,pricingServiceConfigured,pricingServiceConfiguration} from '../adapters/starbucks-pricing-source.mjs';
 import {createStarbucksQuoteService} from '../application/starbucks-quote-service.mjs';
 import {resolveOrderQuote} from '../application/resolve-order-quote.mjs';
 import directory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
@@ -50,7 +50,7 @@ export function createQuoteApi({resolveOrder,service,verifyStore=async()=>{throw
  };
 }
 export function handleQuoteApi(request,env){
- if(!browserPricingConfigured(env))return json({error:'Live pricing unavailable'},503);
+ if(!pricingServiceConfigured(env))return json({error:'Live pricing unavailable'},503);
  let handler=handlers.get(env);
  if(!handler){
   const source=createStarbucksWebsiteSource({formCodes:[...new Set(directory.products.map(p=>p.formCode))]});
@@ -62,7 +62,7 @@ export function handleQuoteApi(request,env){
    const promise=source.loadProduct(product).catch(error=>{details.delete(identity);throw error;});
    details.set(identity,{promise,expiresAt:Date.now()+3600000});while(details.size>128)details.delete(details.keys().next().value);return promise;
   };
-  const service=createStarbucksQuoteService({source:createStarbucksBrowserSource({url:env.STARBUCKS_BROWSER_URL,token:env.BARISTA_BROWSER_TOKEN})});
+  const service=createStarbucksQuoteService({source:createStarbucksPricingSource(pricingServiceConfiguration(env))});
   handler=createQuoteApi({service,verifyStore:(storeId,token)=>storeServices(env).selection.verify(storeId,token),resolveOrder:(order,{signal}={})=>resolveOrderQuote(order,{directory,catalog:getCatalogService(order.catalogVersion).getSnapshot?.()??currentCatalogSnapshot,resolveProduct,signal})});handlers.set(env,handler);
  }
  return handler(request);

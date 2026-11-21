@@ -2,12 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 
-/** Explicit relative paths resolve from the caller's working directory. */
 export function resolveReportOutput(root,output,filename){
  return output?path.resolve(output):path.resolve(root,'work/menu-evals',filename);
 }
 
-/** Fail before paid calls when a report cannot be saved; final writes still use wx. */
 export async function preflightReportOutput(output){
  try{await fs.lstat(output);}catch(error){if(error.code!=='ENOENT')throw error;await probeParent(output);return;}
  throw new Error('Report output already exists');

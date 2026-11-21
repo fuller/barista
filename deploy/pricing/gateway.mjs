@@ -1,6 +1,6 @@
 import {timingSafeEqual} from 'node:crypto';
 import {Buffer} from 'node:buffer';
-const routes=new Map([['/health','GET'],['/status','GET'],['/quote','POST'],['/clear','POST'],['/stores','POST'],['/prepare','POST']]);
+const routes=new Map([['/health','GET'],['/status','GET'],['/quote','POST'],['/clear','POST'],['/stores','POST']]);
 export function admit(request,token){
  if(typeof token!=='string'||token.length<32||token.length>512)return 503;
  const expected=Buffer.from(`Bearer ${token}`),actual=Buffer.from(request.headers.get('authorization')??'');
@@ -11,7 +11,7 @@ export function admit(request,token){
  return null;
 }
 export function createGateway(){return {async fetch(request,env){
- const status=admit(request,env.BARISTA_BROWSER_TOKEN);
+ const status=admit(request,env.PRICING_SERVICE_TOKEN);
  if(status)return Response.json({error:status===401?'unauthorized':'unavailable'},{status,headers:{'Cache-Control':'no-store'}});
  try{return await env.BROWSER.getByName('pricing').fetch(request);}catch{return Response.json({error:'unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});}
 }};}
@@ -20,22 +20,22 @@ export function createContainerProxy(ctx,env,{wait=ms=>new Promise(resolve=>setT
  async function ready(){
   const container=ctx.container;
   const version=env.VERSION?.id;
-  if(typeof version!=='string'||!version)throw Error('Browser deployment version unavailable');
+  if(typeof version!=='string'||!version)throw Error('Pricing service deployment version unavailable');
   const previousVersion=await ctx.storage.get('deploymentVersion');
   if(previousVersion!==version&&container.running)await container.destroy();
-  if(!container.running)container.start({image:container.images.base,instance:'standard-1',enableInternet:true,env:{BARISTA_BROWSER_TOKEN:env.BARISTA_BROWSER_TOKEN,BARISTA_BROWSER_HOST:'0.0.0.0',BARISTA_BROWSER_PORT:'4174'}});
+  if(!container.running)container.start({image:container.images.base,instance:'standard-1',enableInternet:true,env:{PRICING_SERVICE_TOKEN:env.PRICING_SERVICE_TOKEN,PRICING_SERVICE_HOST:'0.0.0.0',PRICING_SERVICE_PORT:'4174'}});
   if(previousVersion!==version)await ctx.storage.put('deploymentVersion',version);
   await container.setInactivityTimeout(15*60*1000);
   const port=container.getTcpPort(4174);
   for(let attempt=0;attempt<45;attempt++){
    const probeStarted=Date.now();
-   try{const response=await port.fetch('http://container/health',{headers:{Authorization:`Bearer ${env.BARISTA_BROWSER_TOKEN}`},signal:AbortSignal.timeout(1000)});await response.body?.cancel();if(response.ok)return port;}catch{}
+   try{const response=await port.fetch('http://container/health',{headers:{Authorization:`Bearer ${env.PRICING_SERVICE_TOKEN}`},signal:AbortSignal.timeout(1000)});await response.body?.cancel();if(response.ok)return port;}catch{}
    await wait(Math.max(0,1000-(Date.now()-probeStarted)));
   }
-  throw Error('Browser startup unavailable');
+  throw Error('Pricing service startup unavailable');
  }
  return {async fetch(request){
-  const status=admit(request,env.BARISTA_BROWSER_TOKEN);if(status)return Response.json({error:'unavailable'},{status});
+  const status=admit(request,env.PRICING_SERVICE_TOKEN);if(status)return Response.json({error:'unavailable'},{status});
   starting??=ready().finally(()=>{starting=undefined;});
   const port=await starting;
   const url=new URL(request.url);url.protocol='http:';url.host='container';

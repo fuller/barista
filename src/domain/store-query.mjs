@@ -1,4 +1,3 @@
-/** Shared bounded search input; coordinates are rounded to roughly 11 metres. */
 export function normalizeStoreQuery(query){
  if(typeof query==='string'){
   if(!query.trim()||query.length>120||/[\u0000-\u001f\u007f]/.test(query))throw Error('Invalid store query');

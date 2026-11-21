@@ -52,7 +52,6 @@ test('mobile order composer and search remain legible without page overflow',asy
  await app.screenshot('order-composer-mobile');
 });
 
-
 test('short mobile viewport can scroll the whole cart to confirmation and undo',async({app,screen,browser})=>{
  await browser.setViewport({width:390,height:300});await app.open('/');await chooseStore(screen);
  await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();

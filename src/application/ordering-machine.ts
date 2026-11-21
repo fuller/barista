@@ -83,7 +83,7 @@ export const orderingMachine=setup({
   submit:assign(({context,event})=>{
    if(event.type!=='ORDER.SUBMIT'&&event.type!=='VOICE.FINAL')return {};
    const text=event.text.trim(),spoken=event.type==='VOICE.FINAL';
-   // Transfer ownership before cancel clears the listening session.
+
    const prepared=spoken?context.runtime.preparation?.take(text,context.order.revision)??null:null;
    const trace=prepared?context.runtime.traces.get(prepared.turnId):undefined;
    clearResources(context,spoken);

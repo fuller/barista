@@ -19,12 +19,11 @@
     "release:archive": "node scripts/release.mjs",
     "deploy": "wrangler deploy",
     "deploy:dry-run": "wrangler deploy --dry-run",
-    "pricing:browser": "node scripts/browser-pricing.mjs"
+    "pricing:service": "node scripts/pricing-service.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",
     "@xstate/react": "6.1.0",
-    "playwright-core": "1.65.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xstate": "5.33.4"

@@ -17,7 +17,6 @@ function consume(promise,signal){
  });
 }
 
-/** Server-only configured-SKU quotes. No public proxy or free-text-to-SKU inference. */
 export function createStarbucksQuoteService({source=createStarbucksGuestSource(),now=Date.now,maxEntries=256,maxPending=32}={}){
  for(const limit of [maxEntries,maxPending])if(!Number.isSafeInteger(limit)||limit<1||limit>4096)throw new Error('Invalid quote service limit');
  const cache=new Map(),pending=new Map();

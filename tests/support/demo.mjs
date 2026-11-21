@@ -1,12 +1,11 @@
 import {applyCommands} from '../../src/domain/order.mjs';
 import {parseDemoTurn,splitDemoAdditions} from './coffee-language.mjs';
-/** Explicitly bounded preview interpreter. The live provider is never substituted here. */
+
 export function createDemoAdapter(){return {async interpretTurn(input,{signal}={}){
  signal?.throwIfAborted();
  const correction=input.clarificationContext;
  const validPumpCorrection=correction?.supersededField==='pumps'&&typeof correction.originalText==='string'&&input.text.startsWith(correction.originalText)&&typeof correction.question==='string'&&correction.question.length>0&&Array.isArray(correction.answers)&&correction.answers.length>0&&correction.answers.every(answer=>typeof answer==='string')&&/\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(?:syrup )?pumps?\b/i.test(correction.answers.at(-1));
- // Only the pending-slot correction supersedes relative pump wording. Keep its
- // original drink/target and other modifiers for the bounded demo parser.
+
  const parserInput=validPumpCorrection?{...input,text:`${correction.originalText.replace(/\b(?:half (?:(?:the )?flavou?r|sweet|(?:the )?pumps?)|less sweet|sweeter)\b/gi,'')} ${correction.answers.join(' ')}`} :input;
  const compound=splitDemoAdditions(parserInput.text);
  if(compound){

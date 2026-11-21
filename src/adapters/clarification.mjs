@@ -1,6 +1,6 @@
 export const CLARIFICATION_STAGES=Object.freeze(['extraction','decision','compile','catalog','conversation']);
 export const CLARIFICATION_REASONS=Object.freeze(['extract_null','extract_incomplete_coverage','extract_low_confidence','input_truncated','decision_low_confidence','field_unrepresented','unsupported_catalog_choice','ambiguous_target','ambiguous_ingredient','provider_refusal','invalid_provider_response','conflicting_instructions','request_budget_exhausted','detail_budget_exceeded']);
-/** Deliberately allowlisted diagnostics: never copy provider payloads or user text. */
+
 export function clarification(message,{mode,stage,reason,policy='baseline',field,clauseIndex,uncoveredSpans,catalogVersion,attempts}={}){
  if(!['baseline','list-v1','repair-v1','slots-v1','explicit-add-v1','applicability-v1'].includes(policy)||!['retry','slot'].includes(mode)||!CLARIFICATION_STAGES.includes(stage)||!CLARIFICATION_REASONS.includes(reason))throw new Error('Invalid clarification contract');
  const diagnostics={policy,stage,reason,mode};

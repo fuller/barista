@@ -1,8 +1,9 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
-import type {Order,Quote} from '../contracts';
+import type {Order,Quote,ItemQuote} from '../contracts';
 import type {Store} from './StorePicker';
-import {quoteKey,requestQuote,unknownQuote} from './quote-cache.mjs';
+import {quoteKey,requestQuote} from './quote-cache.mjs';
+import {quoteDemoOrder} from '../domain/demo-pricing.mjs';
 import {createLocalQuoteCache,materializeQuoteRecord} from './quote-local-cache.mjs';
 export type LiveQuote=Quote&{revision:number;source:'starbucks';storeId:string;storeNumber:string;expiresAt:number|string;cacheScope?:string;unavailable?:Array<{itemId:string;reason:string}>};
 type QuoteRecord=NonNullable<ReturnType<ReturnType<typeof createLocalQuoteCache>['set']>>;
@@ -32,9 +33,11 @@ export function useLiveQuote(order:Order,available:boolean,store:Store|null,cach
   refetchInterval:query=>query.state.status==='error'||!query.state.data?false:Math.max(1000,query.state.data.expiresAt-Date.now()),
  });
  const current=enabled?materializeQuoteRecord(order,query.data,store,effectiveScope):null;
+ const verified=current&&current.subtotalCents!==null&&current.taxCents!==null&&current.totalCents!==null&&current.items.every((item:ItemQuote)=>item.unitCents!==null&&item.totalCents!==null)?current:null;
+ const demo=useMemo(()=>quoteDemoOrder(order),[order]);
  return {
-  quote:(current??unknownQuote(order)) as Quote,loading:enabled&&query.isFetching,
+  quote:(verified??demo) as Quote,loading:enabled&&query.isFetching,
   refresh:()=>{if(enabled&&hasItems){cache.delete(order,store,effectiveScope);refreshFor.current=identity;void query.refetch();}},
-  status:!store?'Choose a store for live prices':!available?'Live pricing unavailable':query.isError?(query.error?.message==='Choose your store again to refresh live prices.'?query.error.message:'Live pricing unavailable'):query.isFetching?'Checking live prices…':current?`Live prices · ${store.name}`:'Live pricing unavailable',
+  status:verified?(query.isFetching?'Checking live prices…':`Live prices · ${store?.name}`):!store?'Demo prices · choose a store for live prices':!available||!hasItems?'Demo prices':query.isError?(query.error?.message==='Choose your store again to refresh live prices.'?'Demo prices · '+query.error.message:'Demo prices · live pricing unavailable'):query.isFetching?'Demo prices · live quote pending':'Demo prices',
  };
 }

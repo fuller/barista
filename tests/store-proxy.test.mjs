@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPublicStoreProxy} from '../src/browser/store-proxy.mjs';
+import {createPublicStoreProxy} from '../src/services/store-proxy.mjs';
 const raw=[{store:{id:'8527800',storeNumber:'85278-313836',name:'104 Jay St',address:{lines:['104 Jay St'],city:'Brooklyn',countrySubdivisionCode:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40.70205,longitude:-73.98686},private:'never-return'}}];
 test('store proxy uses fixed HTTP API, strips private fields and caches cloned results until expiry',async()=>{
  let calls=0,time=0;const proxy=createPublicStoreProxy({now:()=>time,ttlMs:100,fetchImpl:async(url,init)=>{calls++;assert.equal(url,'https://www.starbucks.com/apiproxy/v1/locations?place=11201');assert.deepEqual(init.headers,{Accept:'application/json','X-Requested-With':'XMLHttpRequest'});assert.equal(init.credentials,'omit');assert.equal(init.redirect,'manual');return Response.json(raw);}});

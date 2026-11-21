@@ -137,7 +137,6 @@ test('lean-v9 non-single beverage counts still require selected-product detail',
  for(const text of ['two Americanos','one more Americano','one of each Americano']){const f=fixture({text,questionProfile:'lean-v9',plans:[{identity:coffee.identity,singleAddQuantity:'detail',quantityRequested:'requested',quantity:'2'}]});const result=await f.adapter.interpretTurn({text,order:createOrder()});assert.equal(result.clarification,null);assert.equal(result.commands[0].quantity,2);assert.ok(f.requests.some(r=>r.body.questions.quantity));}
 });
 
-// Golden digests captured before removing retired profiles; compare complete provider URLs and bodies.
 test('retained profiles preserve established wire packets across add, size, scope and duplicate',async()=>{
  const {createHash}=await import('node:crypto');
  const order=applyCommands(createOrder(),[{type:'add-menu',identity:coffee.identity,quantity:3},{type:'add-menu',identity:pastry.identity,quantity:2}]);

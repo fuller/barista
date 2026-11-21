@@ -1,8 +1,5 @@
 import {buildTurnRequest} from './turn-request.mjs';
-/** One protocol path for both prepared speech and ordinary submissions.
- * @param {any} input
- * @param {{signal?:AbortSignal,fetchImpl?:typeof fetch,onTiming?:(event:string)=>void}} options
- */
+
 export async function requestTurn(input,{signal,fetchImpl=fetch,onTiming=()=>{}}={}){
  signal?.throwIfAborted();
  const request=buildTurnRequest(input),body=JSON.stringify(request);

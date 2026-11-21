@@ -2,7 +2,7 @@ import {readDecisionChoice} from './decision-choice.mjs';
 import {createInflightDecisions} from './inflight-decisions.mjs';
 const inflightDecisions=createInflightDecisions();
 const record=value=>value&&typeof value==='object'&&!Array.isArray(value);
-/** One turn's logical budget; shared pending producers retain independent cancellation. */
+
 export function createDecisionTransport({apiKey,model,questionProfile,cache=null,fetchImpl=fetch,threshold=.85,margin=.15,clock=()=>performance.now(),menuVersion,metrics={},admissions=[]}={}){
  let attempts=0;
  for(const key of ['totalRequests','extractionRequests','decisionRequests','extractionMs','decisionMs'])metrics[key]??=0;
@@ -29,10 +29,10 @@ export function createDecisionTransport({apiKey,model,questionProfile,cache=null
    try{cacheKey=await cache.keyFor({credential:apiKey,model,profile:questionProfile,menuVersion,threshold,margin,endpoint,body},{signal:requestSignal});}
    catch{requestSignal?.throwIfAborted();}
    requestSignal?.throwIfAborted();
-   // An unavailable or malformed cache key disables reuse without failing interpretation.
+
    if(typeof cacheKey!=='string'||!/^[a-f0-9]{64}$/.test(cacheKey))cacheKey=undefined;
    if(cacheKey){
-    let hit;try{hit=cache.get(cacheKey);}catch{/* Cache failure falls through to provider. */}
+    let hit;try{hit=cache.get(cacheKey);}catch{                                              }
     requestSignal?.throwIfAborted();
     if(hit!==undefined){metrics.cacheHits++;return hit;}
    }

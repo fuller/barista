@@ -1,4 +1,3 @@
-/** Pending-only, bounded single-flight registry. Keys never leave process memory. */
 export function createInflightDecisions({maxEntries=128,maxBytes=2097152}={}){
  if(!Number.isSafeInteger(maxEntries)||maxEntries<1||maxEntries>128||!Number.isSafeInteger(maxBytes)||maxBytes<1||maxBytes>2097152)throw new Error('Invalid in-flight decision limits');
  const entries=new Map();let totalBytes=0;

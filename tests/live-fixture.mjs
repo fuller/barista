@@ -1,4 +1,3 @@
-/** Test-server-only deterministic fixture. Never imported by production entries. */
 import {createDemoAdapter as createDeterministicFixtureAdapter} from './support/demo.mjs';
 import {interpretInput} from '../src/application/turns.mjs';
 import {applyCommands} from '../src/domain/order.mjs';

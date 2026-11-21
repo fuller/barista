@@ -14,7 +14,7 @@ const ingredientNames=Object.entries(INGREDIENTS).filter(([g])=>!['coldFoams','t
 function ingredientMentions(t){
  const found=[];let masked=t;
  for(const entry of ingredientNames){
-  // Bare caramel means syrup; explicitly named sauce selects its own namespace.
+
   const re=new RegExp(`\\b${entry.name}\\b`,'g');let m;
   while((m=re.exec(masked))){const tail=t.slice(m.index+m[0].length);if(entry.group==='sauces'&&entry.id==='caramel'&&!/^ sauce\b/.test(tail))continue;if(entry.group==='syrups'&&entry.id==='caramel'&&/^ sauce\b/.test(tail))continue;
    if(entry.group==='sauces'&&entry.id==='mocha'&&/^ drizzle\b/.test(tail))continue;
@@ -47,14 +47,13 @@ function conflictingModifiers(t){
  for(const field of ['ice','water','room'])if(conflicts(t,new RegExp(`\\b(no|light|regular|extra) ${field}\\b`,'g'),m=>amounts[m[1]]))return true;
  return conflicts(t,/\b(upside down|double blended|affogato|shaken)\b/g);
 }
-// These ASR aliases apply only at an introduced drink-noun boundary. They do
-// not rewrite modifier prose, existing targets or partial words.
+
 function normalizeDemoOrder(text){
  const t=normalize(text),count=`(?:a|an|${NUM})`;
  const prefix=new RegExp(`(^|\\band\\s+)((?:add\\s+)?${count}\\s+(?:(?:short|tall|grande|venti|trenta|trenti|hot|iced|blended)\\s+)*)american(?:a)?\\b`,'g');
  return t.replace(prefix,(_match,boundary,intro)=>boundary+intro+'americano');
 }
-/** Locate independently introduced noun additions; ingredient conjunctions stay local. */
+
 export function splitDemoAdditions(text){
  const t=normalizeDemoOrder(text),count=`(?:a|an|${NUM})`;
  const names=productNames.map(([name])=>name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
@@ -75,7 +74,7 @@ export function parseDemoTurn({text,order,activeItemId}){
  if(/^(done|confirm|confirm order|that is all|thats all|checkout|check out)$/.test(t))return done({type:'confirm'});
  if(/half sweet|less sweet|sweeter/.test(t))return ask('Which sweetener, and how many pumps, would you like?');
  if(!t||!knownVocabulary(t))return ask('That phrasing is outside the demo vocabulary. Try an example from Test menu, or use the modifier controls.');
- // Bounded demo rejects ambiguous alternatives/corrections rather than dropping a clause.
+
  if(/\b(not|or|actually|instead)\b/.test(t)||/\b(two|three|\d+) (lattes|drinks|coffees)\b/.test(t))return ask('Please request one drink or one clear change at a time.');
  if(/\b(?:no|without) (oat|almond|soy|coconut|vanilla|caramel|blonde|decaf)\b/.test(t))return ask('Please name the replacement or say exactly which ingredient to remove.');
  if(t.split(/\band\b/).slice(1).some(clause=>/\b(add|make|change|remove|duplicate)\b/.test(clause)||/\b(?:a|an|one|another) (?:tall |grande |venti )?(latte|mocha|americano|chai|cold brew|cappuccino|flat white|refresher|shaken espresso)\b(?!\s+(?:syrups?|sauces?|powder|shots?|drizzle|inclusions?|cold foam)\b)/.test(clause)))return ask('Please add or change one drink at a time in demo mode.');
@@ -110,12 +109,12 @@ export function parseDemoTurn({text,order,activeItemId}){
  for(const field of ['ice','water','room']){const m=mods.match(new RegExp(`\\b(no|light|regular|extra) ${field}\\b`));if(m)c[field]=amounts[m[1]];}
  const preparation=mods.match(/\b(upside down|double blended|affogato|shaken)\b/);if(preparation)c.preparation=preparation[1].replace(' ','-');
  const side=mods.match(/\b(milk|ice|syrups?|sauces?|sweeteners?|inclusions?|toppings?|cold foam) on (?:the )?side\b/);if(side)c.onSide=[...new Set([...current.onSide,side[1]==='cold foam'?'coldFoam':['milk','ice'].includes(side[1])?side[1]:side[1].replace(/s?$/,'s')])];
- // Remove cold foam and toppings from ingredient scanning so "vanilla foam" never adds syrup.
+
  let ingredientText=mods;
  const foam=mods.match(/\b(?:(vanilla sweet cream|salted caramel|chocolate|nondairy vanilla) )?cold foam\b/);
  if(foam){const amount=amountBefore(mods,foam.index);c.coldFoam={id:amount==='none'?'none':foam[1]?foam[1].replaceAll(' ','-'):'vanilla-sweet-cream',amount};ingredientText=ingredientText.replace(foam[0],' '.repeat(foam[0].length));}
  for(const topping of INGREDIENTS.toppings){const name=topping.id==='whipped-cream'?'(?:whipped cream|whip)':normalize(topping.label);const m=new RegExp(`\\b${name}\\b`).exec(ingredientText);if(!m)continue;touched.add('toppings:'+topping.id);const amount=amountBefore(mods,m.index);const list=c.toppings??structuredClone(current.toppings??[]);const i=list.findIndex(x=>x.id===topping.id);if(amount==='none'){if(i>=0)list.splice(i,1);}else if(i>=0)list[i]={id:topping.id,amount};else list.push({id:topping.id,amount});c.toppings=list;ingredientText=ingredientText.slice(0,m.index)+' '.repeat(m[0].length)+ingredientText.slice(m.index+m[0].length);}
- // Canonical ingredient replacement preserves the removed ingredient's quantity.
+
  const mentions=ingredientMentions(ingredientText);
  if(/\bhalf the flavor\b/.test(mods)){
   const included=['syrups','sauces'].flatMap(group=>current[group].map(ingredient=>({...ingredient,group})));
@@ -135,11 +134,11 @@ export function parseDemoTurn({text,order,activeItemId}){
  if(/\b(no|without) sauce\b/.test(mods))clearGroup('sauces');
  if(/\bunsweetened\b/.test(mods))for(const group of ['syrups','sauces','sweeteners'])clearGroup(group);
  const pumps=mods.match(new RegExp(`\\b(${NUM}) pumps?\\b`));if(pumps&&!mentions.length)c.pumps=numberValue(pumps[1]);
- // Plain legacy phrases remain wire-compatible; combinations use canonical arrays.
+
  if(!/syrup|sauce/.test(mods)&&mentions.length===1&&mentions[0].group==='syrups'&&!/\badd\b/.test(mods)&&!current.syrups?.length&&!current.sauces?.length){c.syrup=mentions[0].id;delete c.syrups;if(pumps)c.pumps=numberValue(pumps[1]);}
  if(/\b(whip|whipped cream)\b/.test(mods)&&!Object.keys(c).some(k=>!['toppings'].includes(k))){const topping=c.toppings?.find(x=>x.id==='whipped-cream');if(!topping||topping.amount==='regular'){c.whip=!!topping;delete c.toppings;}}
  if(!Object.keys(c).length&&/\b(remove|delete|cancel)\b/.test(mods))return done({type:'remove',itemId:current.id});
- // Changes carry original untouched siblings; domain alone rebases their recipe values.
+
  if(!isAdd&&item)for(const group of ['syrups','sauces','sweeteners','inclusions','toppings'])if(c[group]){const edited=new Set([...touched].filter(path=>path.startsWith(group+':')).map(path=>path.slice(group.length+1)));c[group]=c[group].flatMap(i=>edited.has(i.id)?[i]:item[group].filter(old=>old.id===i.id));for(const original of item[group])if(!edited.has(original.id)&&!c[group].some(i=>i.id===original.id))c[group].push(original);}
  if(duplicating)return done({type:'duplicate',itemId:item.id,changes:c});
  if(isAdd)return done({type:'add',productId:product.id,changes:c});

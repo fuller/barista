@@ -10,6 +10,7 @@ for(const phrase of ['one cold brew and one americano','one American and one col
  const order=screen.getByRole('complementary',{name:'Your order'});
  await expect(order.getByRole('heading',{name:'Caffè Americano',exact:true})).toBeVisible();
  await expect(order.getByRole('heading',{name:'Cold Brew',exact:true})).toBeVisible();
- await expect(order.getByText('Price unavailable',{exact:true}).first()).toBeVisible();
+ await expect(order.getByText('Demo estimate',{exact:true})).toBeVisible();
+ await expect(order.getByText('Tax not included',{exact:true})).toBeVisible();
  await expect(order.getByText('2 drinks',{exact:true})).toBeVisible();
 });

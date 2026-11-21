@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeItems,gradeTurn} from '../evals/grader.mjs';
 
-// Hand-written oracle: no recipe/default/pricing imports generate expectations.
 const latte={
  productId:'latte',size:'grande',temperature:'hot',milk:'2%',shots:2,
  caffeine:'regular',roast:'signature',shotStyle:'standard',heat:'standard',

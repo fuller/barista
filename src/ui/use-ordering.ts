@@ -5,7 +5,6 @@ import {createOrder} from '../domain/order.mjs';
 import {defaultCatalogService} from '../catalog/service.mjs';
 import {orderingMachine} from '../application/ordering-machine.ts';
 
-/** React renders actor state; request, voice and cancellation ownership live in the machine. */
 export function useOrdering(connection:{ready:boolean;available:boolean;error:string}){
  const [initialOrder]=useState(()=>createOrder(defaultCatalogService.version));
  const actor=useActorRef(orderingMachine,{input:{order:initialOrder}});

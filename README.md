@@ -26,7 +26,7 @@ Conversational ordering uses OpenRouter and sends text and relevant cart context
 - Choose a store using a ZIP code, city, or **Use my location** before ordering. Location is requested only after clicking that button; permission failures leave manual search available. Changing stores keeps your cart and requests new prices.
 - The menu is a recorded snapshot, not current store inventory.
 - Customization requests remain literal text unless resolved by the recipe model. They do not establish a verified café recipe.
-- Optional store pricing requires a separate Chrome browser service. Unknown prices stay unknown; sample prices are never substituted. See [pricing setup](docs/pricing.md).
+- Stored illustrative USD prices appear immediately. Verified store quotes are requested automatically through an optional HTTP service; unavailable live quotes retain clearly labeled demo estimates. See [pricing setup](docs/pricing.md).
 - Browser speech recognition depends on browser and service availability. Stable interim text may be interpreted before speech finishes; only final matching speech can update the cart. Audio is not stored by this application.
 - The cart lives in browser memory. Reloading clears it. Confirmation only confirms the simulated cart.
 
@@ -50,7 +50,7 @@ Tests use deterministic fixtures. `eval:menu` validates evaluation cases without
 | [State machines](docs/state-machines.md) | Voice and ordering states, events, and cancellation |
 | [Testing](docs/testing.md) | Local checks and test coverage |
 | [Evaluation](docs/evaluation.md) | Model quality, token, and latency evaluation |
-| [Pricing](docs/pricing.md) | Browser pricing service setup and coverage |
+| [Pricing](docs/pricing.md) | Demo estimates, live pricing service and coverage |
 | [Deployment](docs/deployment.md) | Cloudflare configuration and CI deployment |
 | [Data](docs/data.md) | Menu provenance and refresh |
 | [Contributing](CONTRIBUTING.md) | Contribution workflow |

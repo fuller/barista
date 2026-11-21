@@ -9,9 +9,8 @@ type Context<Input extends Snapshot,Response>={snapshot:Input|null;text:string;c
 const normalize=(text:unknown)=>typeof text==='string'?text.trim():'';
 const interim=(text:unknown)=>{const value=normalize(text);return value.length<=600?value:'';};
 
-/** The request belongs to this machine until take transfers its original promise and controller. */
 export function createVoicePreparation<Input extends Snapshot=Snapshot,Response=unknown>({request,onPreview=()=>{},onEvent=()=>{},setTimer=setTimeout,clearTimer=(timer)=>clearTimeout(timer as ReturnType<typeof setTimeout>),makeId=()=>crypto.randomUUID(),delayMs=650}:Options<Input,Response>){
- // Generation guards synchronous hooks while XState queues reentrant events. It is identity, not a lifecycle mode.
+
  let generation=0;
  const machine=setup({
   types:{context:{} as Context<Input,Response>,events:{} as Event<Input,Response>},

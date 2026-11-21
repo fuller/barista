@@ -11,7 +11,7 @@ const uri=value=>value===null||string(value,2000)&&value.startsWith('/')&&!value
 const validPath=value=>Array.isArray(value)&&value.length>0&&value.length<=20&&value.every(part=>exact(part,['id','name'])&&string(part.id,160)&&string(part.name));
 function version(content){let hash=14695981039346656037n;for(const char of JSON.stringify(content)){hash^=BigInt(char.codePointAt(0));hash=BigInt.asUintN(64,hash*1099511628211n);}return 'starbucks-menu-'+hash.toString(16).padStart(16,'0');}
 function contentOf(directory){return {schemaVersion:directory.schemaVersion,categories:directory.categories,products:directory.products};}
-/** A source listing directory, intentionally independent of Drink/recipe eligibility. */
+
 export function normalizeMenuDirectory({menu,fetchedAt,acquisition='fixture'}={}){
  if(!Array.isArray(menu?.menus)||!menu.menus.length||!string(fetchedAt,100)||!Number.isFinite(Date.parse(fetchedAt))||!['fixture','live'].includes(acquisition))invalid();
  const categories=[],products=[],listings=new Map(),categoryKeys=new Set();

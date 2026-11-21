@@ -3,7 +3,7 @@ import {createStarbucksGuestSource} from '../src/adapters/starbucks-guest-sessio
 import {buildStarbucksQuoteRequest,normalizeStarbucksQuote} from '../src/adapters/starbucks-quote-protocol.mjs';
 
 const reasons=new Set(['RATE_LIMITED','UNAVAILABLE','TIMEOUT','ABORTED','INVALID_REQUEST','INVALID_RESPONSE','SESSION_LIMIT']);
-/** One opt-in ordinary backend bootstrap and quote; never imports browser cookies. */
+
 export async function probeGuestPricing({source=createStarbucksGuestSource({maxSessions:1})}={}){
  const sessionKey=crypto.randomUUID();
  try{

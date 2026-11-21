@@ -1,4 +1,3 @@
-/** Browser boundary accepts only bounded, explicit Starbucks store metadata. */
 export function validateSelectedStore(value,storeNumber){
  const text=(v,max=200)=>typeof v==='string'&&v.trim().length>0&&v.length<=max&&!/[\u0000-\u001f\u007f]/.test(v);
  if(!value||value.source!=='starbucks'||!text(value.storeId,100)||!text(value.sourceStoreNumber,80)||!/^\d{1,10}-\d{1,10}$/.test(value.sourceStoreNumber)||value.sourceStoreNumber!==storeNumber||!text(value.name))throw Error('invalid store');

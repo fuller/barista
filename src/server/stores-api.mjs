@@ -1,14 +1,13 @@
 import {normalizeStoreQuery} from '../domain/store-query.mjs';
-import {browserPricingConfigured,createStarbucksBrowserSource} from '../adapters/starbucks-browser-source.mjs';
+import {pricingServiceConfigured,pricingServiceConfiguration,createStarbucksPricingSource} from '../adapters/starbucks-pricing-source.mjs';
 import {createStarbucksStores,createStoreSelection} from '../adapters/starbucks-stores.mjs';
 const services=new WeakMap();
 export function storeServices(env){
  let service=services.get(env);
  if(!service){
-  // Search works without optional pricing. Live quotes require the shared token.
-  const secret=browserPricingConfigured(env)?env.BARISTA_BROWSER_TOKEN:crypto.randomUUID()+crypto.randomUUID();
+  const secret=pricingServiceConfigured(env)?pricingServiceConfiguration(env).token:crypto.randomUUID()+crypto.randomUUID();
   const selection=createStoreSelection({secret});
-  const proxy=browserPricingConfigured(env)?createStarbucksBrowserSource({url:env.STARBUCKS_BROWSER_URL,token:env.BARISTA_BROWSER_TOKEN}):null;
+  const proxy=pricingServiceConfigured(env)?createStarbucksPricingSource(pricingServiceConfiguration(env)):null;
   service={selection,source:createStarbucksStores({selection,...(proxy?{loadStores:query=>proxy.searchStores(query)}:{})})};services.set(env,service);
  }
  return service;

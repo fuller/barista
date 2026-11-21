@@ -6,7 +6,6 @@ const cartLines=order=>[...order.items,...(order.menuItems??[])];
 const entryKey=(order,store,scope)=>JSON.stringify([VERSION,scope,store.storeId,store.sourceStoreNumber,quoteConfiguration(order)]);
 function defaultStorage(){try{return globalThis.sessionStorage;}catch{return undefined;}}
 
-/** Entire-cart quotes only: no item-price recomposition or derived tax. */
 export function createQuoteRecord(order,value,store,cacheScope,now=Date.now()){
  try{
   const accepted=acceptQuote(order,value,store,now);
@@ -36,14 +35,13 @@ export function materializeQuoteRecord(order,record,store,cacheScope,now=Date.no
  }catch{return null;}
 }
 
-/** Tab-scoped, bounded, best-effort storage. Missing caller scope disables persistence. */
 export function createLocalQuoteCache({storage=defaultStorage(),now=Date.now,maxEntries=32,maxBytes=524288}={}){
  const entries=new Map();
  const size=value=>new TextEncoder().encode(value).byteLength;
  try{
   const raw=storage?.getItem(QUOTE_STORAGE_KEY);
   if(raw&&raw.length<=maxBytes&&size(raw)<=maxBytes){const data=JSON.parse(raw);if(data.version===VERSION&&Array.isArray(data.entries)&&data.entries.length<=maxEntries)for(const pair of data.entries)if(Array.isArray(pair)&&pair.length===2&&typeof pair[0]==='string')entries.set(pair[0],pair[1]);}
- }catch{/* Denied storage or corrupt data cannot block ordering. */}
+ }catch{                                                           }
  function save(){
   for(const [key,entry]of entries)if(!Number.isSafeInteger(entry?.expiresAt)||entry.expiresAt<=now())entries.delete(key);
   while(entries.size>maxEntries)entries.delete(entries.keys().next().value);

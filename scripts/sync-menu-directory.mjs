@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {normalizeMenuDirectory} from '../src/catalog/menu-directory.mjs';
 import {createStarbucksWebsiteSource} from '../src/adapters/starbucks-website.mjs';
-/** Validate first, then atomically replace the last-good directory. No detail fan-out. */
+
 export async function syncMenuDirectory({source,menu,fetchedAt,acquisition='fixture',output=new URL('../src/catalog/data/starbucks-menu-directory.json',import.meta.url)}={}){
  if(source){menu=await source.loadMenu();fetchedAt=new Date().toISOString();acquisition='live';}
  const directory=normalizeMenuDirectory({menu,fetchedAt,acquisition});

@@ -1,0 +1,16 @@
+**
+!package.json
+!package-lock.json
+!src/
+!src/domain/
+!src/domain/store-query.mjs
+!src/services/
+!src/services/**
+!src/adapters/
+!src/adapters/**
+!scripts/
+!scripts/pricing-service.mjs
+!deploy/
+!deploy/pricing/
+!deploy/pricing/Dockerfile
+!deploy/pricing/Dockerfile.dockerignore

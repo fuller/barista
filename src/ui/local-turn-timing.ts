@@ -1,4 +1,3 @@
-/** Local monotonic durations only; never transcript, request body or provider data. */
 export type LocalTurnTiming={turnId:string;baseRevision:number;committedRevision:number;milestones:Record<string,number>};
 export function createLocalTurnTiming(now:()=>number=()=>performance.now()){
  let sample:{origin:number;turnId:string|null;baseRevision:number;milestones:Record<string,number>}|null=null;

@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import {createStarbucksGuestSource, StarbucksGuestError} from '../src/adapters/starbucks-guest-session.mjs';
 const ok=(cookies=['sid=test; Path=/'])=>new Response('{}',{headers:cookies.map(c=>['set-cookie',c])});
 const code=c=>e=>e instanceof StarbucksGuestError && e.code===c;
+test('HTTP transport status reports safe counts without guest credentials',async()=>{
+ let time=0;const source=createStarbucksGuestSource({now:()=>time,fetchImpl:async url=>url.endsWith('/guest')?ok(['sid=secret; Path=/; Max-Age=1']):new Response('{}')});
+ assert.equal(source.status().transport,'http');assert.equal(source.status().sessions,0);
+ await source.quote('private-caller',{});assert.equal(source.status().ready,true);assert.equal(source.status().sessions,1);
+ assert.doesNotMatch(JSON.stringify(source.status()),/secret|private-caller|sid=/);
+ time=1001;assert.equal(source.status().ready,false);
+});
+test('closing HTTP transport aborts pending sessions and prevents new requests',async()=>{
+ let started=0;const source=createStarbucksGuestSource({fetchImpl:async()=>{started++;return new Promise(()=>{});}});
+ const pending=source.quote('caller',{});await new Promise(resolve=>setImmediate(resolve));await source.close();
+ await assert.rejects(pending,code('ABORTED'));await assert.rejects(source.quote('another',{}),code('ABORTED'));
+ assert.equal(started,1);assert.equal(source.status().sessions,0);
+});
 test('expired-cookie bootstrap waits for the earlier quote to finish',async()=>{
  let time=0,boots=0,quotes=0,release;const gate=new Promise(resolve=>{release=resolve;});
  const source=createStarbucksGuestSource({now:()=>time,fetchImpl:async url=>{

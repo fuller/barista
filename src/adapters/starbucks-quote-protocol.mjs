@@ -1,4 +1,3 @@
-// Pure configured-SKU protocol. Session transport and cache ownership live elsewhere.
 const fail=()=>{throw new Error('Invalid Starbucks quote');};
 const check=v=>{if(!v)fail();};
 const integer=(v,min,max)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
@@ -44,8 +43,7 @@ export function normalizeStarbucksQuote(envelope,prepared,{now=Date.now}={}){
   for(const item of order.cart.items){
     const c=expected.get(item.key);check(c&&!seen.has(item.key)&&item.sku===c.sku&&item.quantity===1&&item.isAvailable===true&&item.availability==='PURCHASABLE');seen.add(item.key);
     const unitCents=cents(item.price);check(Array.isArray(item.lineItems)&&item.lineItems.length>0&&item.lineItems.length<=100);
-    // Every requested option must echo its absolute selected count, even at zero charge.
-    // Configurations whose upstream response omits option echoes fail closed.
+
     check(Array.isArray(c.modifiers));
     const requestedModifiers=new Map(c.modifiers.map(m=>[m.sku,m.quantity]));
     const echoedModifiers=new Set();

@@ -2,7 +2,6 @@ import {normalizeStoreQuery,storeQueryKey,storeLocationsUrl} from '../domain/sto
 import {sanitizePublicStores} from './public-stores.mjs';
 const LIMIT=1048576;
 const failure=(code='UNAVAILABLE',retryAfterMs)=>Object.assign(new Error(code==='RATE_LIMITED'?'Store search is cooling down':'Store search unavailable'),{code,status:code==='RATE_LIMITED'?429:503,...(retryAfterMs===undefined?{}:{retryAfterMs})});
-/** Public store metadata only. No browser, guest state, cookies or caller session. */
 export function createPublicStoreProxy({fetchImpl=fetch,now=Date.now,ttlMs=300000,maxEntries=64,maxPending=8,timeoutMs=10000}={}){
  for(const [value,max] of [[ttlMs,86400000],[maxEntries,4096],[maxPending,64],[timeoutMs,60000]])if(!Number.isSafeInteger(value)||value<1||value>max)throw Error('Invalid store proxy limits');
  const cache=new Map(),pending=new Map();let cooldownUntil=0;

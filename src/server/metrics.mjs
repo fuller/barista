@@ -1,4 +1,3 @@
-/** Only safe aggregate measurements may cross the HTTP boundary. */
 export function sanitizeMetrics(metrics){
  if(!metrics||typeof metrics!=='object')return undefined;
  const counts=['extractionRequests','decisionRequests','totalRequests','clauseCount'];
@@ -15,7 +14,7 @@ import {CLARIFICATION_REASONS,CLARIFICATION_STAGES} from '../adapters/clarificat
 import {hasCatalogVersion} from '../catalog/service.mjs';
 import {MODIFIER_DEFINITIONS,INGREDIENTS} from '../domain/modifiers.mjs';
 const fields=new Set([...'syrups sauces sweeteners inclusions'.split(' ').map(group=>'clear__'+group),...MODIFIER_DEFINITIONS.find(d=>d.id==='onSide').options.map(id=>'side__'+id),'supported','action','target','productId','syrup','pumps','decaf','whip','coldFoamId','coldFoamAmount',...MODIFIER_DEFINITIONS.map(d=>d.id),...Object.entries(INGREDIENTS).flatMap(([group,items])=>items.map(i=>group+'__'+i.id))]);
-/** Diagnostics contain enum reasons and numeric bounds, never provider bodies or utterances. */
+
 export function sanitizeDiagnostics(value){
  if(!value||!['baseline','list-v1','repair-v1','slots-v1','explicit-add-v1','applicability-v1'].includes(value.policy)||!CLARIFICATION_STAGES.includes(value.stage)||!CLARIFICATION_REASONS.includes(value.reason)||!['retry','slot'].includes(value.mode))return undefined;
  const result=Object.fromEntries(['policy','stage','reason','mode'].map(k=>[k,value[k]]));

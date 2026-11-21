@@ -4,11 +4,12 @@ const unavailable=()=>new StarbucksGuestError('UNAVAILABLE',503);
 const LIMIT=262144;
 function configuration(url,token){
  const parsed=new URL(url);
- if(parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/'||!(parsed.protocol==='https:'||parsed.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(parsed.hostname))||typeof token!=='string'||token.length<32||token.length>512||/[\r\n]/.test(token))throw new Error('Invalid browser pricing configuration');
+ if(parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/'||!(parsed.protocol==='https:'||parsed.protocol==='http:'&&['localhost','127.0.0.1','[::1]'].includes(parsed.hostname))||typeof token!=='string'||token.length<32||token.length>512||/[\r\n]/.test(token))throw new Error('Invalid pricing service configuration');
  return parsed.origin;
 }
-export function browserPricingConfigured(env){try{configuration(env.STARBUCKS_BROWSER_URL,env.BARISTA_BROWSER_TOKEN);return true;}catch{return false;}}
-export function createStarbucksBrowserSource({url,token,fetchImpl=fetch,timeoutMs=80000}={}){
+export function pricingServiceConfiguration(env){return {url:env.STARBUCKS_PRICING_URL,token:env.PRICING_SERVICE_TOKEN};}
+export function pricingServiceConfigured(env){try{const {url,token}=pricingServiceConfiguration(env);configuration(url,token);return true;}catch{return false;}}
+export function createStarbucksPricingSource({url,token,fetchImpl=fetch,timeoutMs=80000}={}){
  const origin=configuration(url,token);
  async function send(path,body,signal){
   signal?.throwIfAborted();
@@ -27,7 +28,6 @@ export function createStarbucksBrowserSource({url,token,fetchImpl=fetch,timeoutM
    try{query=normalizeStoreQuery(query);}catch{throw unavailable();}
    return send('/stores',{query},signal);
   },
-  prepare:(sessionKey,{signal,selectedStore}={})=>{const {selectionToken,...store}=selectedStore??{};return send('/prepare',{sessionKey,selectedStore:store},signal);},
   quote:(sessionKey,body,{signal,selectedStore}={})=>{const {selectionToken,...store}=selectedStore??{};return send('/quote',{sessionKey,body,selectedStore:store},signal);},
   clear(sessionKey){void send('/clear',{sessionKey}).catch(()=>{});}
  };

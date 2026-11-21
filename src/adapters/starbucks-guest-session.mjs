@@ -20,7 +20,7 @@ function waitFor(promise, signal) {
 export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, timeoutMs = 8000, maxSessions = 128, idleTtlMs = 900000, backoffMs = 60000} = {}) {
   for (const value of [timeoutMs,maxSessions,idleTtlMs,backoffMs]) if (!Number.isSafeInteger(value) || value <= 0) throw fail('INVALID_REQUEST',400);
   const sessions = new Map();
-  let rateLimitedUntil = 0;
+  let rateLimitedUntil = 0, closed = false;
   function cooldown(state, code, status, delay) {
     state.until = now() + delay; state.error = {code,status};
     return fail(code,status,delay);
@@ -72,7 +72,7 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
         const response = await fetchImpl(ORIGIN+path,{method:'POST',headers,body,redirect:'manual',signal:controller.signal});
         if (controller.signal.aborted) {void response.body?.cancel().catch(()=>{});throw fail('ABORTED',499);}
         if (!response.ok) {
-          // Never retain cookies from an error response, nor read its body.
+
           void response.body?.cancel().catch(()=>{});
           if(response.status===429){
             const raw=response.headers.get('retry-after');const seconds=typeof raw==='string' && raw.trim()!==''?Number(raw):NaN;
@@ -113,7 +113,18 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
     await waitFor(state.bootstrap,signal);
   }
   return {
+    status(){
+      const states=[...sessions.values()];
+      const readySessions=states.filter(state=>state.ready&&cookieHeader(state,QUOTE)).length;
+      return {transport:'http',ready:readySessions>0,sessions:sessions.size,awaitingSetup:states.length-readySessions,sessionCapacity:maxSessions,busy:states.some(state=>state.active>0),cooldownMs:Math.max(0,rateLimitedUntil-now())};
+    },
+    async close(){
+      closed=true;
+      for(const state of sessions.values()){state.controller.abort();state.cookies.clear();state.ready=false;}
+      sessions.clear();
+    },
     async quote(sessionKey,body,{signal}={}) {
+      if(closed)throw fail('ABORTED',499);
       if(typeof sessionKey!=='string'|| !/^[\x21-\x7e]{1,128}$/.test(sessionKey))throw fail('INVALID_REQUEST',400);
       let encoded;try{if(!body || typeof body!=='object'||Array.isArray(body))throw Error();encoded=JSON.stringify(body);if(new TextEncoder().encode(encoded).length>65536)throw Error();}catch{throw fail('INVALID_REQUEST',400);}
       if(signal?.aborted)throw fail('ABORTED',499);
@@ -126,7 +137,7 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
       state.active++;
       try {
         if(state.controller.signal.aborted)throw fail('ABORTED',499);
-        // Order both initialization and quote cookie updates within the caller.
+
         const pending=(state.quotes??Promise.resolve()).then(async()=>{
           if(signal?.aborted||state.controller.signal.aborted)throw fail('ABORTED',499);
           if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());

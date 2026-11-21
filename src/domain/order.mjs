@@ -93,8 +93,7 @@ function build(previous,changes={},id,touched=[],catalogVersion,validate=true){
     const before=previous?.[key]??defaults[key];
     const ids=new Set([...before,...value].map(i=>i.id));
     for(const path of requested)if(path.startsWith(key+':'))ids.add(path.slice(key.length+1));
-    // Whole arrays carry unchanged siblings. Overlay only actual edits or named intent
-    // onto refreshed defaults, preserving earlier explicit selections independently.
+
     for(const ingredientId of ids){
       const oldIngredient=before.find(i=>i.id===ingredientId),newIngredient=value.find(i=>i.id===ingredientId);
       if(!requested.has(`${key}:${ingredientId}`)&&oldIngredient?.quantity===newIngredient?.quantity&&oldIngredient?.amount===newIngredient?.amount&&Boolean(oldIngredient)===Boolean(newIngredient))continue;
@@ -105,7 +104,7 @@ function build(previous,changes={},id,touched=[],catalogVersion,validate=true){
   }
   d.explicit=[...explicit];deriveAliases(d);if(validate)checkDrink(d,catalogVersion);return d;
 }
-/** Resolve a shape change before relative arithmetic, retaining explicit ingredient intent. */
+
 export function getRelativeBaseline(current,shapeChanges={},catalogVersion=LEGACY_CATALOG_VERSION){
  const shape=Object.fromEntries(['productId','size','temperature'].filter(k=>shapeChanges[k]!==undefined).map(k=>[k,shapeChanges[k]]));
  if(!current?.id)return getDefaults(shape.productId??current?.productId,shape.size??current?.size,shape.temperature??current?.temperature,catalogVersion);

@@ -15,7 +15,7 @@ test('wire body preserves model/payload/state order and string state',async()=>{
 });
 test('pure concurrent packets share physical request while owner cancellation leaves joiner',async()=>{
  const cache=createDecisionCache(),pending=deferred(),entered=deferred(),joined=deferred();let upstream,calls=0,lookups=0;
- // Cache lookup and subscriber registration run synchronously before the waiter resumes.
+
  const get=cache.get.bind(cache);cache.get=key=>{const value=get(key);if(++lookups===2)joined.resolve();return value;};
  const fetchImpl=async(_url,{signal})=>{calls++;upstream=signal;entered.resolve();await pending.promise;return {ok:true,json:async()=>answer()};};
  const owner=fixture({cache,fetchImpl}),joiner=fixture({cache,fetchImpl}),controller=new AbortController();const first=owner.transport.post('decisions',packet('identity','shared'),controller.signal);const rejected=assert.rejects(first,{name:'AbortError'});await entered.promise;

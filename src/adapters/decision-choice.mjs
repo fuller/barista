@@ -1,5 +1,5 @@
 const record=value=>value&&typeof value==='object'&&!Array.isArray(value);
-/** Strict Decisions choice protocol, shared without changing selection thresholds. */
+
 export function readDecisionChoice(answer,question,{threshold=.85,margin=.15}={}){
  if(answer?.type==='refusal')return null;
  if(answer?.type!=='choice'||typeof answer.choice!=='string'||!Object.hasOwn(question.criteria,answer.choice)||!record(answer.probabilities))throw new Error('Invalid decision answer');

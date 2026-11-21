@@ -65,7 +65,7 @@ export default function App(){
   return()=>{window.clearTimeout(timer);if(!timedOut)controller.abort();};
  },[connectionAttempt]);
  useEffect(()=>{const pane=messagesPane.current;if(pane)pane.scrollTop=pane.scrollHeight;},[messages,busy]);
- // Stable subtree identity skips hundreds of cards on voice/busy renders; ref delegates to current cart/mobile state.
+
  const menuSelectRef=useRef(selectProduct);menuSelectRef.current=selectProduct;
  const stableMenuSelect=useCallback((identity:string,size:string|null)=>menuSelectRef.current(identity,size),[]);
  const menuView=useMemo(()=><MenuView catalog={catalog.data} menuDirectory={menuDirectory.data} onSelect={stableMenuSelect}/>,[catalog.data,menuDirectory.data,stableMenuSelect]);
@@ -73,7 +73,7 @@ export default function App(){
  function update(item:Drink,changes:Partial<Drink>,touched?:IngredientPath[]){setError('');commit([{type:'update',itemId:item.id,changes,...(touched?.length?{touched}:{})}]);}
  const count=[...order.items,...(order.menuItems??[])].reduce((n,item)=>n+item.quantity,0),source=menuDirectory.data?.provenance;
  const sourceStale=source?Date.now()-Date.parse(source.fetchedAt)>86400000:false;
- return <div className="page"><header><a className="brand" href="/" aria-label="barista home">barista<span className="brand-dot">.</span></a><span className="eyebrow">ORDER LAB</span><span className="simulation"><i/> Practice order · live prices</span></header><main>
+ return <div className="page"><header><a className="brand" href="/" aria-label="barista home">barista<span className="brand-dot">.</span></a><span className="eyebrow">ORDER LAB</span><span className="simulation"><i/> Practice order · {quote.estimated?'demo prices':'live prices'}</span></header><main>
   {choosingStore?<StorePicker onConfirm={confirmStore} onCancel={store?()=>confirmStore(store):undefined}/>:<>
   <section className="intro menu-intro"><div><p className="eyebrow green">YOUR COFFEE. YOUR WAY.</p><h1>A good day <br/>starts <em>here.</em></h1></div>{store&&<section className="store-bar" aria-label="Selected store"><div><strong>{store.name}</strong><p>{storeAddress(store)}</p></div><button onClick={changeStore}>Change store</button></section>}</section>
   <div><div className="menu-workspace"><div className="order-rail" ref={orderRail}>
@@ -84,8 +84,8 @@ export default function App(){
    {metrics&&<details className="diagnostics"><summary>Turn diagnostics</summary><p>{metrics.totalRequests} requests · {metrics.extractionRequests} extraction · {metrics.decisionRequests} decision · {metrics.strategy}</p><p>{Math.round(metrics.totalMs)} ms total · {metrics.clauseCount} clauses</p></details>}
   </div><div className="menu-column">
    {menuView}
-   <div className="catalog-note">{source&&<><p>Catalog source: {source.source} · <time dateTime={source.fetchedAt}>{new Date(source.fetchedAt).toLocaleString()}</time>{sourceStale?' · Source data is over 24 hours old.':''}</p><p>Product photos show menu items. Store availability is not verified.</p><details className="source-details"><summary>Catalog details</summary><p>Menu version {menuDirectory.data?.version}</p></details></>}{(menuDirectory.isError||catalog.isError)&&menuDirectory.data&&<p>Refresh failed. Showing the last good menu.</p>}<p>Live store pricing · {store?.name}</p><button onClick={()=>{menuDirectory.refetch();catalog.refetch();}} disabled={menuDirectory.isFetching||catalog.isFetching}>{menuDirectory.isFetching||catalog.isFetching?'Refreshing…':'Refresh menu'}</button></div>
-  </div></div><button className="mobile-order-summary" onClick={()=>setCartOpen(true)} aria-haspopup="dialog" aria-expanded={cartOpen}>View order <span>{count} {(order.menuItems?.length??0)>0?(count===1?'item':'items'):(count===1?'drink':'drinks')} · {quote.subtotalCents===null?'Price unavailable':formatMoney(quote.subtotalCents)}</span></button></div>
+   <div className="catalog-note">{source&&<><p>Catalog source: {source.source} · <time dateTime={source.fetchedAt}>{new Date(source.fetchedAt).toLocaleString()}</time>{sourceStale?' · Source data is over 24 hours old.':''}</p><p>Product photos show menu items. Store availability is not verified.</p><details className="source-details"><summary>Catalog details</summary><p>Menu version {menuDirectory.data?.version}</p></details></>}{(menuDirectory.isError||catalog.isError)&&menuDirectory.data&&<p>Refresh failed. Showing the last good menu.</p>}<p>Demo menu prices · live store quotes when available.</p><button onClick={()=>{menuDirectory.refetch();catalog.refetch();}} disabled={menuDirectory.isFetching||catalog.isFetching}>{menuDirectory.isFetching||catalog.isFetching?'Refreshing…':'Refresh menu'}</button></div>
+  </div></div><button className="mobile-order-summary" onClick={()=>setCartOpen(true)} aria-haspopup="dialog" aria-expanded={cartOpen}>View order <span>{count} {(order.menuItems?.length??0)>0?(count===1?'item':'items'):(count===1?'drink':'drinks')} · {quote.subtotalCents===null?'Price unavailable':(quote.estimated?'Est. ':'')+formatMoney(quote.subtotalCents)}</span></button></div>
   </>}
   <footer><span>Made for the way you order.</span><span>Practice order. No payment or café order.</span></footer>
  </main></div>;

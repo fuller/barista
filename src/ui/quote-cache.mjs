@@ -2,7 +2,7 @@ export const pricingAvailable=config=>config?.pricing?.available===true;
 export function expiryTime(value){return typeof value==='number'?value:Date.parse(value);}
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value;
 export function quoteConfiguration(order){const line=({id,...configuration})=>configuration;return JSON.stringify(canonical({catalogVersion:order.catalogVersion??null,items:order.items.map(line),menuItems:(order.menuItems??[]).map(line)}));}
-/** @param {string|null} [cacheScope] */
+
 export function quoteKey(order,store,cacheScope=null){return ['live-quote-v2',cacheScope,store?.storeId??null,store?.sourceStoreNumber??null,store?.selectionToken??null,quoteConfiguration(order)];}
 export function unknownQuote(order){const items=[...order.items,...(order.menuItems??[])];return {currency:'USD',items:items.map(item=>({itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})),subtotalCents:null,taxCents:null,totalCents:null,pricedSubtotalCents:0,unpricedItemCount:items.reduce((sum,item)=>sum+item.quantity,0),estimated:false,taxLabel:'Tax unavailable',provenance:'Live pricing unavailable'};}
 const money=value=>Number.isSafeInteger(value)&&value>=0;
@@ -19,5 +19,5 @@ export function acceptQuote(order,value,store,now=Date.now()){
  else if(value.subtotalCents!==null||value.taxCents!==null||value.totalCents!==null)return null;
  return {...value,items:resolved,unpricedItemCount:missing,pricedSubtotalCents:resolved.reduce((sum,line)=>sum+(line.totalCents??0),0),...(missing?{subtotalCents:null,taxCents:null,totalCents:null}:{})};
 }
-/** @param {{cacheScope?:string|null,refresh?:boolean}} [options] */
+
 export async function requestQuote(order,store,signal,options={}){const {cacheScope=null,refresh=false}=options;signal?.throwIfAborted();if(!store)throw new Error('Choose a store first.');const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json',...(refresh?{'X-Price-Refresh':'1'}:{})},body:JSON.stringify({order,storeId:store.storeId,selectionToken:store.selectionToken}),signal});if(!response.ok){let failure=null;try{failure=await response.json();}catch{}throw new Error(failure?.code==='store_selection_required'?'Choose your store again to refresh live prices.':'Live pricing unavailable');}const value=await response.json();signal?.throwIfAborted();if(cacheScope&&(typeof value?.cacheScope!=='string'||!value.cacheScope||value.cacheScope.length>256))throw new Error('Live pricing unavailable');const quote=acceptQuote(order,value,store);if(!quote)throw new Error('Live pricing unavailable');return quote;}

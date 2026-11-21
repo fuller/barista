@@ -1,7 +1,7 @@
 import directory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
 const cookieName='barista_quote';
 const valid=value=>/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
-/** Private cookie remains HttpOnly; only its one-way cache namespace reaches JS. */
+
 export function readExistingQuoteSession(request){
  const matches=(request.headers.get('Cookie')??'').split(';').map(part=>part.trim()).filter(part=>part.startsWith(cookieName+'='));
  const supplied=matches.length===1?matches[0].slice(cookieName.length+1):'';

@@ -1,0 +1,11 @@
+import type {Order,Quote} from '../contracts.ts';
+import type {Store} from './StorePicker.tsx';
+export type VerifiedQuote=Quote&{revision:number;source:'starbucks';storeId:string;storeNumber:string;expiresAt:number|string;cacheScope?:string};
+export function pricingAvailable(config:unknown):boolean;
+export function expiryTime(value:number|string):number;
+export function quoteConfiguration(order:Order):string;
+export function quoteKey(order:Order,store:Store|null,cacheScope?:string|null):Array<string|null>;
+export function unknownQuote(order:Order):Quote;
+export function quoteRefreshInterval(state:{status:string;data?:{expiresAt?:number|string}},now?:number):number|false;
+export function acceptQuote(order:Order,value:unknown,store:Store|null,now?:number):VerifiedQuote|null;
+export function requestQuote(order:Order,store:Store|null,signal?:AbortSignal,options?:{cacheScope?:string|null;refresh?:boolean}):Promise<VerifiedQuote>;

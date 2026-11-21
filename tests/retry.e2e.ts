@@ -32,7 +32,8 @@ test('a generic live retry leaves the next complete order fresh and recoverable'
  await send.click();
  await expect(order.getByRole('heading',{name:'Caffè Latte'})).toBeVisible();
  await expect(order.getByText('1 drink',{exact:true})).toBeVisible();
- await expect(order.getByText('Price unavailable',{exact:true}).first()).toBeVisible();
+ await expect(order.getByText('Demo estimate',{exact:true})).toBeVisible();
+ await expect(order.getByText('Tax not included',{exact:true})).toBeVisible();
  expect(turns.length).toBe(2);
  expect(Object.hasOwn(turns[0],'mode')).toBe(false);
  expect(turns[0].pending).toBe(null);

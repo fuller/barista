@@ -55,7 +55,6 @@ test('a rotated caller scope adopts fresh prices and persists the new namespace'
  await expect(screen.getByRole('complementary',{name:'Your order'}).getByText('$5.00',{exact:true}).first()).toBeVisible();expect(calls).toBe(1);
 });
 
-
 test('first item creates the caller scope once; page load and store selection create no pricing session',async({app,screen,browser})=>{
  let quotes=0,prepares=0,scope:string|null=null;
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,pricing:{available:true,cacheScope:scope}}}));
