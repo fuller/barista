@@ -11,7 +11,7 @@ import {createMenuDeciderAdapter} from '../adapters/menu-decider.mjs';
 import menuDirectory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
 import {handleQuoteApi} from './quote-api.mjs';
 import {handlePrepareApi} from './prepare-api.mjs';
-import {getQuoteSession,initializeQuoteSession,quoteCacheScope} from './pricing-session.mjs';
+import {readExistingQuoteSession,quoteCacheScope} from './pricing-session.mjs';
 import {handleStoresApi} from './stores-api.mjs';
 import {browserPricingConfigured} from '../adapters/starbucks-browser-source.mjs';
 registerCatalogSnapshot(previousSnapshot);
@@ -68,10 +68,10 @@ export async function handleApi(request,env={}){
   const result=catalogResponse(request);return new Response(result.body===null?null:JSON.stringify(result.body),{status:result.status,headers:result.headers});
  }
  if(path==='/api/config'&&request.method==='GET'){
-  const available=browserPricingConfigured(env),session=available?getQuoteSession(request):null;
+  const available=browserPricingConfigured(env),session=available?readExistingQuoteSession(request):null;
   const cacheScope=session?await quoteCacheScope(session):null;
   const response=json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{estimated:false,taxCalculated:true,available,cacheScope}});
-  return available?initializeQuoteSession(request,response,session):response;
+  return response;
  }
  if(path==='/api/pricing/prepare'){
   if(request.method!=='POST')return json({error:'Method not allowed'},405);

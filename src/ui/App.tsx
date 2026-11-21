@@ -64,16 +64,6 @@ export default function App(){
   });
   return()=>{window.clearTimeout(timer);if(!timedOut)controller.abort();};
  },[connectionAttempt]);
- useEffect(()=>{
-  if(!activeStore||!configReady||!config.pricingAvailable)return;
-  const controller=new AbortController();
-  void fetch('/api/pricing/prepare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({storeId:activeStore.storeId,selectionToken:activeStore.selectionToken}),signal:controller.signal}).then(async response=>{
-   if(!response.ok){await response.body?.cancel();return;}
-   const data=await response.json(),scope=data.cacheScope;
-   if(!controller.signal.aborted&&typeof scope==='string'&&scope.length>0&&scope.length<=128)setConfig(current=>current.cacheScope===scope?current:{...current,cacheScope:scope});
-  }).catch(()=>{});
-  return()=>controller.abort();
- },[activeStore,configReady,config.pricingAvailable]);
  useEffect(()=>{const pane=messagesPane.current;if(pane)pane.scrollTop=pane.scrollHeight;},[messages,busy]);
  // Stable subtree identity skips hundreds of cards on voice/busy renders; ref delegates to current cart/mobile state.
  const menuSelectRef=useRef(selectProduct);menuSelectRef.current=selectProduct;

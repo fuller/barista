@@ -107,6 +107,11 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
       throw error;
     }).finally(()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);state.controller.signal.removeEventListener('abort',abort);});
   }
+  async function ensureGuest(state,signal){
+    if(state.ready&&cookieHeader(state,QUOTE))return;
+    if(!state.bootstrap)state.bootstrap=request(state,BOOTSTRAP,JSON.stringify({market:'US'})).then(()=>{if(state.controller.signal.aborted)throw fail('ABORTED',499);state.ready=true;}).finally(()=>{state.bootstrap=null;});
+    await waitFor(state.bootstrap,signal);
+  }
   return {
     async quote(sessionKey,body,{signal}={}) {
       if(typeof sessionKey!=='string'|| !/^[\x21-\x7e]{1,128}$/.test(sessionKey))throw fail('INVALID_REQUEST',400);
@@ -120,12 +125,16 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
       if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());
       state.active++;
       try {
-        if(!state.ready || !cookieHeader(state,QUOTE)){
-          if(!state.bootstrap)state.bootstrap=request(state,BOOTSTRAP,JSON.stringify({market:'US'})).then(()=>{if(state.controller.signal.aborted)throw fail('ABORTED',499);state.ready=true;}).finally(()=>{state.bootstrap=null;});
-          await waitFor(state.bootstrap,signal);
-        }
         if(state.controller.signal.aborted)throw fail('ABORTED',499);
-        return await request(state,QUOTE,encoded,signal);
+        // Order both initialization and quote cookie updates within the caller.
+        const pending=(state.quotes??Promise.resolve()).then(async()=>{
+          if(signal?.aborted||state.controller.signal.aborted)throw fail('ABORTED',499);
+          if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());
+          await ensureGuest(state,signal);
+          return request(state,QUOTE,encoded,signal);
+        });
+        state.quotes=pending.then(()=>undefined,()=>undefined);
+        return await waitFor(pending,signal);
       } finally {state.active--;state.used=now();}
     },
     clear(sessionKey){const state=sessions.get(sessionKey);if(state){state.controller.abort();state.cookies.clear();state.ready=false;}sessions.delete(sessionKey);}

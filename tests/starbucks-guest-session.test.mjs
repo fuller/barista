@@ -3,6 +3,53 @@ import assert from 'node:assert/strict';
 import {createStarbucksGuestSource, StarbucksGuestError} from '../src/adapters/starbucks-guest-session.mjs';
 const ok=(cookies=['sid=test; Path=/'])=>new Response('{}',{headers:cookies.map(c=>['set-cookie',c])});
 const code=c=>e=>e instanceof StarbucksGuestError && e.code===c;
+test('expired-cookie bootstrap waits for the earlier quote to finish',async()=>{
+ let time=0,boots=0,quotes=0,release;const gate=new Promise(resolve=>{release=resolve;});
+ const source=createStarbucksGuestSource({now:()=>time,fetchImpl:async url=>{
+  if(url.endsWith('/guest')){boots++;return ok([`sid=${boots}; Path=/; Max-Age=1`]);}
+  quotes++;if(quotes===1)await gate;return new Response('{}');
+ }});
+ const first=source.quote('caller',{cart:1});await new Promise(resolve=>setImmediate(resolve));time=2000;
+ const second=source.quote('caller',{cart:2});
+ try{await new Promise(resolve=>setImmediate(resolve));assert.equal(boots,1);}finally{release();}
+ await Promise.all([first,second]);assert.equal(boots,2);
+});
+test('a cookie that expires in the quote queue is renewed before dispatch',async()=>{
+ let time=0,boots=0,quotes=0,release;const gate=new Promise(resolve=>{release=resolve;});const sent=[];
+ const source=createStarbucksGuestSource({now:()=>time,fetchImpl:async(url,init)=>{
+  if(url.endsWith('/guest')){boots++;return ok([`sid=${boots}; Path=/; Max-Age=1`]);}
+  quotes++;sent.push(init.headers.Cookie);if(quotes===1)await gate;return new Response('{}');
+ }});
+ const first=source.quote('caller',{cart:1}),second=source.quote('caller',{cart:2});
+ await new Promise(resolve=>setImmediate(resolve));time=2000;release();await Promise.all([first,second]);
+ assert.equal(boots,2);assert.deepEqual(sent,['sid=1','sid=2']);
+});
+test('different quotes share one bootstrap and serialize cookie updates within a caller',async()=>{
+ let release;const gate=new Promise(resolve=>{release=resolve;});let boots=0,quotes=0,active=0,peak=0;
+ const sent=[];const source=createStarbucksGuestSource({fetchImpl:async(url,init)=>{
+  if(url.endsWith('/guest')){boots++;return ok(['sid=initial; Path=/']);}
+  quotes++;active++;peak=Math.max(peak,active);sent.push(init.headers.Cookie);
+  if(quotes===1)await gate;active--;return new Response('{}',{headers:{'Set-Cookie':'sid=updated; Path=/'}});
+ }});
+ const first=source.quote('caller',{cart:1}),second=source.quote('caller',{cart:2});
+ try{await new Promise(resolve=>setImmediate(resolve));assert.equal(quotes,1);assert.equal(peak,1);}finally{release();}
+ await Promise.all([first,second]);assert.equal(boots,1);assert.deepEqual(sent,['sid=initial','sid=updated']);
+});
+test('a cancelled queued quote sends no request and does not release the following quote early',async()=>{
+ let release;const gate=new Promise(resolve=>{release=resolve;});let quotes=0;
+ const source=createStarbucksGuestSource({fetchImpl:async url=>{if(url.endsWith('/guest'))return ok();quotes++;if(quotes===1)await gate;return new Response('{}');}});
+ const first=source.quote('caller',{cart:1});await new Promise(resolve=>setImmediate(resolve));
+ const controller=new AbortController();const cancelled=source.quote('caller',{cart:2},{signal:controller.signal});const third=source.quote('caller',{cart:3});controller.abort();
+ try{await assert.rejects(cancelled,code('ABORTED'));assert.equal(quotes,1);}finally{release();}
+ await Promise.all([first,third]);assert.equal(quotes,2);
+});
+test('a queued quote observes rate limiting without a second upstream call',async()=>{
+ let release;const gate=new Promise(resolve=>{release=resolve;});let quotes=0;
+ const source=createStarbucksGuestSource({fetchImpl:async url=>{if(url.endsWith('/guest'))return ok();quotes++;await gate;return new Response(null,{status:429,headers:{'Retry-After':'60'}});}});
+ const first=source.quote('caller',{cart:1}),second=source.quote('caller',{cart:2});
+ const done=Promise.all([assert.rejects(first,code('RATE_LIMITED')),assert.rejects(second,code('RATE_LIMITED'))]);
+ await new Promise(resolve=>setImmediate(resolve));release();await done;assert.equal(quotes,1);
+});
 test('reuses private cookies only within caller session and fixed endpoints',async()=>{
  const calls=[]; const source=createStarbucksGuestSource({fetchImpl:async(url,init)=>{calls.push({url,...init});return url.endsWith('/guest')?ok(['sid=private; Path=/; Secure; HttpOnly']):new Response('{"result":1}');}});
  assert.deepEqual(await source.quote('alice',{}),{result:1});await source.quote('alice',{});await source.quote('bob',{});
@@ -67,7 +114,7 @@ test('network, invalid response and timeout failures cool down instead of repeat
 });
 test('clear orphans pending bootstrap and prevents old quote from starting',async()=>{
  let finish,calls=0;const gate=new Promise(r=>finish=r);const s=createStarbucksGuestSource({fetchImpl:async()=>{calls++;await gate;return ok(['sid=x; Path=/']);}});
- const pending=s.quote('a',{});s.clear('a');finish();await assert.rejects(pending,code('ABORTED'));assert.equal(calls,1);
+ const pending=s.quote('a',{});await new Promise(resolve=>setImmediate(resolve));s.clear('a');finish();await assert.rejects(pending,code('ABORTED'));assert.equal(calls,1);
 });
 test('missing or whitespace Retry-After uses configured backoff',async()=>{
  for(const raw of [undefined,'','   ']){const headers=raw===undefined?{}:{'Retry-After':raw};const s=createStarbucksGuestSource({backoffMs:60000,fetchImpl:async()=>new Response(null,{status:429,headers})});await assert.rejects(s.quote('a',{}),e=>code('RATE_LIMITED')(e)&&e.retryAfterMs===60000);}

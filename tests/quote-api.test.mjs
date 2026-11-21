@@ -1,12 +1,22 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createQuoteApi as makeQuoteApi} from '../src/server/quote-api.mjs';
 import {createStoreSelection} from '../src/adapters/starbucks-stores.mjs';
+import {handleApi} from '../src/server/api.mjs';
 const selectedStore={storeId:'8527800',sourceStoreNumber:'85278-313836',name:'104 Jay St'};
 const createQuoteApi=options=>makeQuoteApi({verifyStore:async(id,token)=>{if(id!==selectedStore.storeId||token!=='fixture-token')throw Error();return selectedStore;},...options});
 import {createOrder,applyCommands} from '../src/domain/order.mjs';
 const order=applyCommands(createOrder(),[{type:'add-menu',identity:'407:Hot'}]);
 const request=(body={order},headers={})=>new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({...body,storeId:selectedStore.storeId,selectionToken:'fixture-token'})});
 const quote={currency:'USD',estimated:false,source:'starbucks',storeNumber:'85278-313836',expiresAt:Date.now()+300000,subtotalCents:525,taxCents:47,totalCents:572,items:[{itemId:'menu-1',quantity:1,unitCents:525,totalCents:525,lines:[{label:'Base',amountCents:525}]}],taxLabel:'Tax',provenance:'Verified Starbucks store quote'};
+test('first item quote establishes the caller that later read-only config and quotes reuse',async()=>{
+ const pricing={STARBUCKS_BROWSER_URL:'http://127.0.0.1:4174',BARISTA_BROWSER_TOKEN:'test-token-'.repeat(4)};
+ const config=cookie=>handleApi(new Request('https://barista.example/api/config',{headers:cookie?{Cookie:cookie}:{}}),pricing);
+ const before=await config();assert.equal(before.headers.get('Set-Cookie'),null);assert.equal((await before.json()).pricing.cacheScope,null);
+ const sessions=[];const handler=createQuoteApi({resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async key=>{sessions.push(key);return quote;}}});
+ const first=await handler(request()),cookie=first.headers.get('Set-Cookie').split(';')[0],firstData=await first.json();
+ const after=await config(cookie);assert.equal(after.headers.get('Set-Cookie'),null);assert.equal((await after.json()).pricing.cacheScope,firstData.cacheScope);
+ await handler(request({order},{Cookie:cookie}));assert.equal(sessions.length,2);assert.equal(sessions[0],sessions[1]);
+});
 test('returns revision-correlated quote through private cookie session',async()=>{
  let session;const handler=createQuoteApi({resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async(key,input)=>{session=key;assert.equal(input.storeNumber,'85278-313836');return quote;}}});
  const response=await handler(request());assert.equal(response.status,200);const cookie=response.headers.get('Set-Cookie');assert.match(cookie,/HttpOnly; SameSite=Strict/);assert.match(cookie,/Secure/);assert.equal((await response.json()).revision,order.revision);assert.ok(session);

@@ -19,7 +19,7 @@ export function useLiveQuote(order:Order,available:boolean,store:Store|null,cach
   queryFn:async({signal})=>{
    const refresh=refreshFor.current===identity;if(refresh)refreshFor.current=null;
    const quote=await requestQuote(order,store,signal,{cacheScope:effectiveScope,refresh});
-   const nextScope=effectiveScope&&quote.cacheScope?quote.cacheScope:effectiveScope;
+   const nextScope=quote.cacheScope||effectiveScope;
    if(nextScope!==effectiveScope)cache.clearScope(effectiveScope);
    const record=cache.set(order,quote,store,nextScope);if(!record)throw new Error('Live pricing unavailable');
    if(nextScope!==effectiveScope)setEffectiveScope(nextScope);return record;

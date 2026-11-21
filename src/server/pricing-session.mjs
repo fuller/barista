@@ -2,11 +2,12 @@ import directory from '../catalog/data/starbucks-menu-directory.json' with {type
 const cookieName='barista_quote';
 const valid=value=>/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
 /** Private cookie remains HttpOnly; only its one-way cache namespace reaches JS. */
-export function getQuoteSession(request){
+export function readExistingQuoteSession(request){
  const matches=(request.headers.get('Cookie')??'').split(';').map(part=>part.trim()).filter(part=>part.startsWith(cookieName+'='));
  const supplied=matches.length===1?matches[0].slice(cookieName.length+1):'';
- return valid(supplied)?supplied:crypto.randomUUID();
+ return valid(supplied)?supplied:null;
 }
+export function getQuoteSession(request){return readExistingQuoteSession(request)??crypto.randomUUID();}
 export function initializeQuoteSession(request,response,session=getQuoteSession(request)){
  response.headers.set('Set-Cookie',`${cookieName}=${session}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=900${new URL(request.url).protocol==='https:'?'; Secure':''}`);return response;
 }
