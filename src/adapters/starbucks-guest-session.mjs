@@ -17,9 +17,11 @@ function waitFor(promise, signal) {
     promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
   });
 }
-export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, timeoutMs = 8000, maxSessions = 128, idleTtlMs = 900000, backoffMs = 60000} = {}) {
+export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, timeoutMs = 8000, maxSessions = 128, idleTtlMs = 900000, backoffMs = 60000, maxPendingPerSession = 4, maxPendingQuotes = 32} = {}) {
   for (const value of [timeoutMs,maxSessions,idleTtlMs,backoffMs]) if (!Number.isSafeInteger(value) || value <= 0) throw fail('INVALID_REQUEST',400);
+  if(!Number.isSafeInteger(maxPendingPerSession)||maxPendingPerSession<1||maxPendingPerSession>64||!Number.isSafeInteger(maxPendingQuotes)||maxPendingQuotes<1||maxPendingQuotes>1024)throw fail('INVALID_REQUEST',400);
   const sessions = new Map();
+  let pendingQuotes=0;
   let rateLimitedUntil = 0, closed = false;
   function cooldown(state, code, status, delay) {
     state.until = now() + delay; state.error = {code,status};
@@ -129,24 +131,47 @@ export function createStarbucksGuestSource({fetchImpl = fetch, now = Date.now, t
       let encoded;try{if(!body || typeof body!=='object'||Array.isArray(body))throw Error();encoded=JSON.stringify(body);if(new TextEncoder().encode(encoded).length>65536)throw Error();}catch{throw fail('INVALID_REQUEST',400);}
       if(signal?.aborted)throw fail('ABORTED',499);
       if(rateLimitedUntil>now())throw fail('RATE_LIMITED',429,rateLimitedUntil-now());
-      for(const [key,s] of sessions)if(!s.bootstrap && !s.active && now()-s.used>=idleTtlMs && now()>=s.until)sessions.delete(key);
+      for(const [key,s] of sessions)if(!s.bootstrap && !s.active && !s.running && !s.queue?.length && now()-s.used>=idleTtlMs && now()>=s.until)sessions.delete(key);
+      if(pendingQuotes>=maxPendingQuotes)throw fail('BUSY',503,1000);
       let state=sessions.get(sessionKey);
       if(!state){if(sessions.size>=maxSessions)throw fail('SESSION_LIMIT',503);state={cookies:new Map(),ready:false,used:now(),until:0,active:0,controller:new AbortController()};sessions.set(sessionKey,state);}
       state.used=now();
       if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());
-      state.active++;
-      try {
-        if(state.controller.signal.aborted)throw fail('ABORTED',499);
-
-        const pending=(state.quotes??Promise.resolve()).then(async()=>{
-          if(signal?.aborted||state.controller.signal.aborted)throw fail('ABORTED',499);
-          if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());
-          await ensureGuest(state,signal);
-          return request(state,QUOTE,encoded,signal);
-        });
-        state.quotes=pending.then(()=>undefined,()=>undefined);
-        return await waitFor(pending,signal);
-      } finally {state.active--;state.used=now();}
+      if(state.active>=maxPendingPerSession||pendingQuotes>=maxPendingQuotes)throw fail('BUSY',503,1000);
+      state.active++;pendingQuotes++;
+      return new Promise((resolve,reject)=>{
+        const controller=new AbortController();
+        const job={controller,signal,resolve,reject,started:false,settled:false};
+        const release=()=>{
+          if(job.settled)return;
+          job.settled=true;state.active--;pendingQuotes--;state.used=now();
+          signal?.removeEventListener('abort',cancel);
+          state.controller.signal.removeEventListener('abort',cancel);
+          if(state.active===0&&state.bootstrap){state.controller.abort();if(sessions.get(sessionKey)===state)sessions.delete(sessionKey);}
+        };
+        const cancel=()=>{
+          controller.abort();
+          if(!job.started){const index=state.queue.indexOf(job);if(index>=0)state.queue.splice(index,1);}
+          release();reject(fail('ABORTED',499));
+        };
+        job.run=async()=>{
+          job.started=true;
+          try{
+            if(controller.signal.aborted||state.controller.signal.aborted)throw fail('ABORTED',499);
+            if(state.until>now())throw fail(state.error.code,state.error.status,state.until-now());
+            await ensureGuest(state,controller.signal);
+            resolve(await request(state,QUOTE,encoded,controller.signal));
+          }catch(error){reject(error);}finally{release();}
+        };
+        state.queue??=[];state.queue.push(job);
+        signal?.addEventListener('abort',cancel,{once:true});
+        state.controller.signal.addEventListener('abort',cancel,{once:true});
+        if(signal?.aborted||state.controller.signal.aborted)cancel();
+        if(!state.running){
+          state.running=true;
+          void(async()=>{try{while(state.queue.length)await state.queue.shift().run();}finally{state.running=false;}})();
+        }
+      });
     },
     clear(sessionKey){const state=sessions.get(sessionKey);if(state){state.controller.abort();state.cookies.clear();state.ready=false;}sessions.delete(sessionKey);}
   };

@@ -31,7 +31,15 @@ test('allowed admission permits valid turn and preserves local use without bindi
   const response=await handleApi(request({'CF-Connecting-IP':'192.0.2.1'}),configured);assert.equal(response.status,200);
  }
 });
-test('malformed turns are rejected before admission quota is consumed',async()=>{
+test('malformed turns consume admission before validation',async()=>{
  let calls=0;const response=await handleApi(request({'CF-Connecting-IP':'192.0.2.1'},{...input,text:''}),{...env,TURN_RATE_LIMITER:{limit:async()=>{calls++;return {success:true};}}});
- assert.equal(response.status,400);assert.equal(calls,0);
+ assert.equal(response.status,400);assert.equal(calls,1);
+});
+
+test('denied turn admission never reads or validates its body',async()=>{
+ let pulled=0;
+ const body=new ReadableStream({pull(controller){pulled++;controller.enqueue(new TextEncoder().encode('{'));controller.close();}},{highWaterMark:0});
+ const request=new Request('https://barista.example/api/turn',{method:'POST',headers:{'Content-Type':'application/json','CF-Connecting-IP':'127.0.0.1'},body,duplex:'half'});
+ const response=await handleApi(request,{REQUIRE_TURN_RATE_LIMIT:'true',TURN_RATE_LIMITER:{limit:async()=>({success:false})}});
+ assert.equal(response.status,429);assert.equal(pulled,0);
 });

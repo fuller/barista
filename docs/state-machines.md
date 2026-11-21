@@ -39,7 +39,7 @@ The order domain still validates immutable commands. Model confidence, coverage 
 
 ## Preparation and request ownership
 
-Preparation moves through `idle`, `waiting`, `debouncing`, `pending`, `ready`, `failed`, and `invalidated`. Unchanged trimmed interim text keeps its original 650 ms debounce deadline. Corrections before dispatch restart that timer. After dispatch, corrections, withdrawals and oversized interim text invalidate the candidate and leave that microphone session's speculative budget spent.
+Preparation moves through `idle`, `waiting`, `debouncing`, `pending`, `ready`, `failed`, and `invalidated`. Unchanged trimmed interim text keeps its original 650 ms debounce deadline. Corrections before dispatch restart that timer. Each microphone session allows at most two preparation attempts, with one active candidate. After dispatch, changed interim text aborts the stale candidate and restarts the 650 ms debounce if one attempt remains. Withdrawn or oversized text clears the candidate and waits for valid text. After both attempts are spent, further changes enter `invalidated` until a new microphone session begins. A mismatched or failed preparation can still use one ordinary final request, for at most three HTTP turns per session.
 
 Only an exact trimmed final transcript with the same cart revision can take pending or ready work. Taking returns the original turn ID, promise and abort controller, then resets preparation to `idle`. The final submission owns those resources from that point, so preparation cleanup cannot abort adopted work. A failure observed before adoption allows an ordinary final request. Failure after adoption is reported without an automatic retry.
 

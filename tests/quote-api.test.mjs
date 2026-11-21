@@ -75,3 +75,17 @@ test('explicit refresh header bypasses server quote cache while quote echoes pri
  let forceRefresh;const handler=createQuoteApi({resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'1',quantity:1}],unpriced:[]}),service:{quote:async(key,input,options)=>{forceRefresh=options.forceRefresh;return quote;}}});
  const response=await handler(request(undefined,{'X-Price-Refresh':'1'}));assert.equal(forceRefresh,true);assert.match((await response.json()).cacheScope,/^[a-f0-9]{64}$/);
 });
+
+test('private queue overflow retains bounded retry metadata through the public quote API',async()=>{
+ const {createPricingServiceHandler}=await import('../src/services/pricing-api.mjs');
+ const {createStarbucksPricingSource}=await import('../src/adapters/starbucks-pricing-source.mjs');
+ const {createStarbucksQuoteService}=await import('../src/application/starbucks-quote-service.mjs');
+ const token='private-pricing-token-'.repeat(3);
+ const store={...selectedStore,source:'starbucks',address:{lines:['104 Jay St'],city:'Brooklyn',region:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40.7,longitude:-73.9}};
+ let calls=0;const privateApi=createPricingServiceHandler({token,source:{quote:async()=>{calls++;throw Object.assign(Error('private queue internals'),{code:'BUSY',retryAfterMs:1000});}}});
+ const source=createStarbucksPricingSource({url:'https://pricing.example',token,fetchImpl:(url,init)=>privateApi(new Request(url,init))});
+ const service=createStarbucksQuoteService({source});
+ const handler=createQuoteApi({verifyStore:async()=>store,resolveOrder:async()=>({items:[{itemId:'menu-1',sku:'11183225',quantity:1}],unpriced:[]}),service,onFailure:()=>{}});
+ const response=await handler(request());assert.equal(response.status,503);assert.equal(response.headers.get('Retry-After'),'1');
+ assert.deepEqual(await response.json(),{error:'Live pricing unavailable'});assert.equal(calls,1);
+});

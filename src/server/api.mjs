@@ -82,12 +82,12 @@ export async function handleApi(request,env={}){
  if(request.method!=='POST')return json({error:'Method not allowed'},405);
  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'Origin not allowed'},403);
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'Use application/json'},415);
+ const denied=await admitTurn(request,env);if(denied)return denied;
  try{
   const input=validateTurnInput(await limitedJson(request));
   if(!schedulingValid)return json({error:'The server decision scheduling is not configured correctly.'},503);
   if(questionProfile===null)return json({error:'The server menu question profile is not configured correctly.'},503);
   if(!env.OPENROUTER_API_KEY||!registry.has(provider))return json({error:'Live decision provider is not configured. Configure a supported provider and the server-only OPENROUTER_API_KEY.'},503);
-  const denied=await admitTurn(request,env);if(denied)return denied;
   const adapter=registry.resolve(provider,{apiKey:env.OPENROUTER_API_KEY,model,questionProfile,scheduling,cache:decisionCache});
 
   const result=await interpretInput(input,{interpretTurn:(turn,context)=>adapter.interpretTurn({...turn,text:input.text,clarificationContext:undefined},context)},{signal:request.signal});

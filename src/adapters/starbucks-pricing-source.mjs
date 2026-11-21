@@ -15,7 +15,7 @@ export function createStarbucksPricingSource({url,token,fetchImpl=fetch,timeoutM
   signal?.throwIfAborted();
   try{
    const response=await fetchImpl(origin+path,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body),redirect:'manual',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(timeoutMs)]):AbortSignal.timeout(timeoutMs)});
-   if(!response.ok){void response.body?.cancel().catch(()=>{});if(response.status===429){const retry=response.headers.get('Retry-After');const ms=retry!==null&&/^\d+$/.test(retry)?Math.min(Number(retry)*1000,3600000):60000;throw new StarbucksGuestError('RATE_LIMITED',429,ms);}throw unavailable();}
+   if(!response.ok){void response.body?.cancel().catch(()=>{});const retry=response.headers.get('Retry-After');const ms=retry!==null&&/^\d+$/.test(retry)?Math.max(1000,Math.min(Number(retry)*1000,3600000)):null;if(response.status===429)throw new StarbucksGuestError('RATE_LIMITED',429,ms??60000);if(response.status===503&&ms!==null)throw new StarbucksGuestError('BUSY',503,ms);throw unavailable();}
    if(!response.headers.get('Content-Type')?.includes('application/json')||Number(response.headers.get('Content-Length'))>LIMIT)throw unavailable();
    const reader=response.body?.getReader();if(!reader)throw unavailable();const chunks=[];let size=0;
    for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>LIMIT){await reader.cancel();throw unavailable();}chunks.push(value);}

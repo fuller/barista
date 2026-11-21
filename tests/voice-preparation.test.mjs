@@ -25,8 +25,8 @@ for(const [text,revision] of [['Latte',6],['latte.',6],['latte',7]])test(`mismat
 test('interim corrections replace timer before dispatch',()=>{
  const h=harness();h.preparation.begin({revision:1});h.preparation.update('latte');const first=[...h.timers.keys()][0];h.preparation.update('iced latte');assert.equal(h.timers.has(first),false);assert.equal(h.timers.size,1);h.fire();assert.equal(h.calls[0].text,'iced latte');
 });
-for(const text of ['', 'new latte', 'x'.repeat(601)])test(`changed or invalid interim after dispatch invalidates once (${text.length})`,async()=>{
- const pending=deferred(),h=harness(()=>pending.promise);h.preparation.begin({revision:1});h.preparation.update('latte');h.fire();h.preparation.update(text);assert.equal(h.calls[0].signal.aborted,true);h.preparation.update('latte');assert.equal(h.timers.size,0);assert.equal(h.preparation.take('latte',1),null);pending.resolve({commands:[]});await flush();assert.equal(h.previews.filter(([value])=>value!==null).length,0);
+for(const text of ['', 'new latte', 'x'.repeat(601)])test(`changed or invalid interim after dispatch cancels stale work (${text.length})`,async()=>{
+ const pending=deferred(),h=harness(()=>pending.promise);h.preparation.begin({revision:1});h.preparation.update('latte');h.fire();h.preparation.update(text);assert.equal(h.calls[0].signal.aborted,true);h.preparation.update('latte');assert.equal(h.timers.size,1);assert.equal(h.preparation.take('latte',1),null);assert.equal(h.timers.size,0);pending.resolve({commands:[]});await flush();assert.equal(h.previews.filter(([value])=>value!==null).length,0);
 });
 test('invalid interim never dispatches; empty interim cancels pending debounce',()=>{
  const h=harness();h.preparation.begin({revision:1});for(const text of ['  ','x'.repeat(601)])h.preparation.update(text);assert.equal(h.timers.size,0);h.preparation.update('latte');h.preparation.update('');assert.equal(h.timers.size,0);assert.equal(h.calls.length,0);

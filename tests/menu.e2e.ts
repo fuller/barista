@@ -142,7 +142,9 @@ test('reduced motion preserves rapid modifier and undo results without animation
  const order=screen.getByRole('complementary',{name:'Your order'});
  await order.getByText(/^Customize\s*\+$/).click();
  await order.getByLabel('shots',{exact:true}).fill('3');
+ await order.getByRole('heading').first().click();
  await order.getByLabel('shots',{exact:true}).fill('4');
+ await order.getByRole('heading').first().click();
  await expect(order.getByText('$7.75',{exact:true}).first()).toBeVisible();
  await order.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(order.getByLabel('shots',{exact:true})).toHaveValue('3');
@@ -174,6 +176,7 @@ test('committed modifiers and undo show authoritative final price',async({app,sc
  const order=screen.getByRole('complementary',{name:'Your order'});
  await order.getByText(/^Customize\s*\+$/).click();
  await order.getByLabel('shots',{exact:true}).fill('3');
+ await order.getByRole('heading').first().click();
  await expect(order.getByText('$6.50',{exact:true}).first()).toBeVisible();
  await order.getByRole('button',{name:'Undo',exact:true}).click();
  await expect(order.getByLabel('shots',{exact:true})).toHaveValue('2');

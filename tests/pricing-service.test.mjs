@@ -67,3 +67,27 @@ test('health reads HTTP guest status without creating sessions',async()=>{
  const response=await handler(new Request('http://localhost/health',{headers:{Authorization:`Bearer ${token}`}}));
  assert.deepEqual(await response.json(),{ready:true,sessions:0});
 });
+
+test('quote forwards caller cancellation and maps bounded queue overflow safely',async()=>{
+ const controller=new AbortController();let received;
+ const handler=createPricingServiceHandler({token,source:{quote:async(key,body,options)=>{received=options.signal;throw Object.assign(Error('private queue detail'),{code:'BUSY',retryAfterMs:1000});}}});
+ const response=await handler(new Request('http://localhost/quote',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify({sessionKey:'s',body,selectedStore:store}),signal:controller.signal}));
+ assert.equal(received.aborted,false);controller.abort();assert.equal(received.aborted,true);
+ assert.equal(response.status,503);assert.equal(response.headers.get('Retry-After'),'1');assert.deepEqual(await response.json(),{error:'busy'});
+});
+
+test('HTTP bridge keeps completed request bodies live until response finishes and aborts disconnects',async()=>{
+ const {createPricingHttpHandler}=await import('../src/services/pricing-api.mjs');
+ const {Readable}=await import('node:stream');const {EventEmitter}=await import('node:events');
+ for(const disconnect of [false,true]){
+  const req=Readable.from([Buffer.from('{}')]);req.url='/quote';req.method='POST';req.headers={};
+  const res=new EventEmitter();res.destroyed=false;res.writableFinished=false;res.writeHead=()=>{};res.end=()=>{res.writableFinished=true;res.emit('close');};
+  let received,release;const gate=new Promise(resolve=>{release=resolve;});let entered;
+  const started=new Promise(resolve=>{entered=resolve;});
+  const work=createPricingHttpHandler(async request=>{received=request.signal;entered();await gate;return Response.json({ok:true});})(req,res);
+  await started;assert.equal(received.aborted,false);
+  if(disconnect){res.destroyed=true;res.emit('close');assert.equal(received.aborted,true);}
+  release();await work;assert.equal(received.aborted,disconnect);
+  assert.equal(req.listenerCount('aborted'),0);assert.equal(res.listenerCount('close'),0);
+ }
+});

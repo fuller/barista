@@ -92,3 +92,78 @@ test('explicit refresh bypasses cached quote but concurrent refreshes share pend
  const refreshed=service.quote('session',input(),{forceRefresh:true});await Promise.resolve();assert.equal(calls,2);
  const duplicate=service.quote('session',input(),{forceRefresh:true});await Promise.resolve();assert.equal(calls,2);release();await Promise.all([refreshed,duplicate]);
 });
+
+test('shared producer signal stays live until its final subscriber cancels',async()=>{
+ const gate=deferred();let producerSignal,body,calls=0;
+ const service=createStarbucksQuoteService({maxPending:1,source:{quote:(_key,value,{signal})=>{calls++;body=value;producerSignal=signal;return calls===1?gate.promise:Promise.resolve(response(value));},clear(){}}});
+ const first=new AbortController(),second=new AbortController();
+ const a=service.quote('a',input(),{signal:first.signal}),b=service.quote('a',input(),{signal:second.signal});
+ await Promise.resolve();first.abort();await assert.rejects(a,{name:'AbortError'});assert.equal(producerSignal.aborted,false);
+ second.abort();await assert.rejects(b,{name:'AbortError'});assert.equal(producerSignal.aborted,true);
+ await service.quote('a',input());gate.resolve(response(body));await new Promise(resolve=>setImmediate(resolve));
+ await service.quote('a',input());assert.equal(calls,2);
+});
+test('a late abandoned response cannot populate the quote cache',async()=>{
+ const gate=deferred();let producerSignal,body,calls=0;
+ const service=createStarbucksQuoteService({source:{quote:(_key,value,{signal})=>{calls++;body=value;producerSignal=signal;return calls===1?gate.promise:Promise.resolve(response(value));},clear(){}}});
+ const controller=new AbortController(),pending=service.quote('a',input(),{signal:controller.signal});
+ await Promise.resolve();controller.abort();await assert.rejects(pending,{name:'AbortError'});assert.equal(producerSignal.aborted,true);
+ gate.resolve(response(body));await new Promise(resolve=>setImmediate(resolve));await service.quote('a',input());assert.equal(calls,2);
+});
+test('clear aborts producer and settles all waiters even when source ignores cancellation',async()=>{
+ let producerSignal;const service=createStarbucksQuoteService({source:{quote:(_key,_body,{signal})=>{producerSignal=signal;return new Promise(()=>{});},clear(){}}});
+ const a=service.quote('a',input()),b=service.quote('a',input());const rejected=[assert.rejects(a,e=>e.code==='unavailable'),assert.rejects(b,e=>e.code==='unavailable')];
+ await Promise.resolve();service.clear('a');assert.equal(producerSignal.aborted,true);await Promise.all(rejected);
+});
+
+test('close cancels owned producers and rejects subsequent work',async()=>{
+ let producerSignal,closed=0;const service=createStarbucksQuoteService({source:{quote:(_key,_body,{signal})=>{producerSignal=signal;return new Promise(()=>{});},clear(){},close:async()=>{closed++;}}});
+ const pending=service.quote('a',input()),rejected=assert.rejects(pending,e=>e.code==='unavailable');await Promise.resolve();
+ await service.close();await rejected;assert.equal(producerSignal.aborted,true);assert.equal(closed,1);await assert.rejects(service.quote('a',input()),e=>e.code==='unavailable');
+});
+test('public request cancellation reaches HTTP pricing after real order resolution',async()=>{
+ const {createQuoteApi}=await import('../src/server/quote-api.mjs');
+ const {createStarbucksPricingSource}=await import('../src/adapters/starbucks-pricing-source.mjs');
+ const {resolveOrderQuote}=await import('../src/application/resolve-order-quote.mjs');
+ const {createOrder,applyCommands}=await import('../src/domain/order.mjs');
+ const {default:directory}=await import('../src/catalog/data/starbucks-menu-directory.json',{with:{type:'json'}});
+ const {default:catalog}=await import('../src/catalog/data/starbucks.snapshot.json',{with:{type:'json'}});
+ const controller=new AbortController();let transportSignal,started;const ready=new Promise(resolve=>{started=resolve;});
+ const source=createStarbucksPricingSource({url:'https://pricing.example',token:'pricing-service-fixture-'.repeat(2),fetchImpl:async(url,options)=>{
+  transportSignal=options.signal;started();return new Promise((resolve,reject)=>{options.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')),{once:true});});
+ }});
+ const service=createStarbucksQuoteService({source});
+ const handler=createQuoteApi({onFailure:()=>{},verifyStore:async()=>({storeId:'store',sourceStoreNumber:'85278-313836'}),service,resolveOrder:(order,{signal})=>resolveOrderQuote(order,{directory,catalog,signal})});
+ const order=applyCommands(createOrder(),[{type:'add-menu',identity:'407:Hot'}]);
+ const request=new Request('https://barista.example/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({order,storeId:'store',selectionToken:'fixture'}),signal:controller.signal});
+ const pending=handler(request);await ready;assert.equal(transportSignal.aborted,false);controller.abort();
+ assert.equal((await pending).status,503);assert.equal(transportSignal.aborted,true);await service.close();
+});
+
+test('cancelled subscribers detach listeners and never clone the surviving quote',async()=>{
+ const {getEventListeners}=await import('node:events');
+ const gate=deferred();let body;const survivor=new AbortController();
+ const service=createStarbucksQuoteService({source:{quote:(_key,value)=>{body=value;return gate.promise;},clear(){}}});
+ const pending=service.quote('a',input(),{signal:survivor.signal});await Promise.resolve();
+ const signals=[];
+ for(let i=0;i<100;i++){
+  const controller=new AbortController();signals.push(controller.signal);
+  const cancelled=service.quote('a',input(),{signal:controller.signal});controller.abort();await assert.rejects(cancelled,{name:'AbortError'});
+  assert.equal(getEventListeners(controller.signal,'abort').length,0);
+ }
+ const original=globalThis.structuredClone;let clones=0;
+ globalThis.structuredClone=value=>{clones++;return original(value);};
+ try{gate.resolve(response(body));assert.equal((await pending).totalCents,844);assert.equal(clones,1);}finally{globalThis.structuredClone=original;}
+ assert.equal(getEventListeners(survivor.signal,'abort').length,0);
+ for(const signal of signals)assert.equal(getEventListeners(signal,'abort').length,0);
+});
+
+test('shared producer subscriber capacity is bounded and cancelled waiters free a slot',async()=>{
+ const gate=deferred();let body,calls=0;
+ const service=createStarbucksQuoteService({maxSubscribers:2,source:{quote:(_key,value)=>{calls++;body=value;return gate.promise;},clear(){}}});
+ const first=new AbortController();const a=service.quote('a',input(),{signal:first.signal}),b=service.quote('a',input());
+ await assert.rejects(service.quote('a',input()),error=>error.code==='busy'&&error.retryAfterMs===1000);
+ first.abort();await assert.rejects(a,{name:'AbortError'});const replacement=service.quote('a',input());
+ gate.resolve(response(body));await Promise.all([b,replacement]);assert.equal(calls,1);
+ for(const maxSubscribers of [0,-1,1.5,4097])assert.throws(()=>createStarbucksQuoteService({maxSubscribers}));
+});

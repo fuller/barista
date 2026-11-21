@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import type {Order,Quote,ItemQuote} from '../contracts';
 import type {Store} from './StorePicker';
@@ -32,12 +32,14 @@ export function useLiveQuote(order:Order,available:boolean,store:Store|null,cach
   refetchOnWindowFocus:false,refetchOnReconnect:false,
   refetchInterval:query=>query.state.status==='error'||!query.state.data?false:Math.max(1000,query.state.data.expiresAt-Date.now()),
  });
- const current=enabled?materializeQuoteRecord(order,query.data,store,effectiveScope):null;
+ const fresh=Boolean(query.data&&query.data.expiresAt>Date.now());
+ const current=useMemo(()=>enabled?materializeQuoteRecord(order,query.data,store,effectiveScope):null,[enabled,order,query.data,store,effectiveScope,query.isFetching,fresh]);
  const verified=current&&current.subtotalCents!==null&&current.taxCents!==null&&current.totalCents!==null&&current.items.every((item:ItemQuote)=>item.unitCents!==null&&item.totalCents!==null)?current:null;
  const demo=useMemo(()=>quoteDemoOrder(order),[order]);
+ const refresh=useCallback(()=>{if(enabled&&hasItems){cache.delete(order,store,effectiveScope);refreshFor.current=identity;void query.refetch();}},[enabled,hasItems,cache,order,store,effectiveScope,identity,query.refetch]);
  return {
   quote:(verified??demo) as Quote,loading:enabled&&query.isFetching,
-  refresh:()=>{if(enabled&&hasItems){cache.delete(order,store,effectiveScope);refreshFor.current=identity;void query.refetch();}},
+  refresh,
   status:verified?(query.isFetching?'Checking live prices…':`Live prices · ${store?.name}`):!store?'Demo prices · choose a store for live prices':!available||!hasItems?'Demo prices':query.isError?(query.error?.message==='Choose your store again to refresh live prices.'?'Demo prices · '+query.error.message:'Demo prices · live pricing unavailable'):query.isFetching?'Demo prices · live quote pending':'Demo prices',
  };
 }

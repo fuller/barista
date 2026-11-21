@@ -46,7 +46,7 @@ export function createQuoteApi({resolveOrder,service,verifyStore=async()=>{throw
    const code=['rate_limited','busy','invalid_request','unavailable'].includes(error?.code)?error.code:'unknown';
    const type=['Error','TypeError','RangeError','AbortError','StarbucksQuoteError'].includes(error?.name)?error.name:'unknown';
    try{onFailure({event:'pricing_unavailable',stage,code,type});}catch{}
-   const response=json({error:'Live pricing unavailable'},error.code==='rate_limited'?429:503);if(error.code==='rate_limited')response.headers.set('Retry-After',String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000))));return withCookie(response);}finally{resolving--;}
+   const response=json({error:'Live pricing unavailable'},error.code==='rate_limited'?429:503);if(['rate_limited','busy'].includes(error.code)){const delay=Number.isSafeInteger(error.retryAfterMs)?Math.min(3600000,Math.max(1000,error.retryAfterMs)):error.code==='busy'?1000:60000;response.headers.set('Retry-After',String(Math.ceil(delay/1000)));}return withCookie(response);}finally{resolving--;}
  };
 }
 export function handleQuoteApi(request,env){

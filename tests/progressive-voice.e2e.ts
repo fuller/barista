@@ -92,3 +92,23 @@ test('overlong final clears prepared prefix and its late response cannot commit'
  try{await expect(screen.getByRole('alert')).toContainText('600 characters');await expect(screen.getByRole('complementary',{name:'Voice order preview'})).toHaveCount(0);}finally{release();}await settle(browser);
  await expect(screen.getByRole('complementary',{name:'Voice order preview'})).toHaveCount(0);await expect(screen.getByRole('complementary',{name:'Your order'}).getByRole('heading',{name:'Caffè Americano',exact:true})).toHaveCount(0);expect(calls).toBe(1);
 });
+
+test('corrected interim re-prepares once and exact final reuses the latest interpretation',async({app,screen,browser})=>{
+ await setup(browser);const texts:string[]=[];
+ await browser.route('**/api/turn',async route=>{const body=JSON.parse(route.request.postData??'{}');texts.push(body.text);await route.fulfill({json:{turnId:body.turnId,baseRevision:body.baseRevision,commands:[{type:'add',productId:body.text==='one americano'?'americano':'latte'}],clarification:null,pending:null}});});
+ await app.open('/');await chooseStore(screen);await screen.getByRole('button',{name:'Start microphone'}).click();await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one americano'));
+ const preview=screen.getByRole('complementary',{name:'Voice order preview'}),cart=screen.getByRole('complementary',{name:'Your order'});
+ await expect(preview.getByRole('heading',{name:'Caffè Americano',exact:true})).toBeVisible();await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one latte'));
+ await expect(preview.getByRole('heading',{name:'Caffè Latte',exact:true})).toBeVisible();await expect(cart.getByRole('heading',{name:'Caffè Latte',exact:true})).toHaveCount(0);
+ await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one latte',true));await expect(cart.getByRole('heading',{name:'Caffè Latte',exact:true})).toBeVisible();await expect(cart.getByRole('heading',{name:'Caffè Americano',exact:true})).toHaveCount(0);expect(texts).toEqual(['one americano','one latte']);
+});
+
+test('further interim corrections exhaust two preparations and final sends at most one fresh request',async({app,screen,browser})=>{
+ await setup(browser);const texts:string[]=[];
+ await browser.route('**/api/turn',async route=>{const body=JSON.parse(route.request.postData??'{}');texts.push(body.text);await route.fulfill({json:{turnId:body.turnId,baseRevision:body.baseRevision,commands:[{type:'add',productId:body.text==='one americano'?'americano':body.text==='one latte'?'latte':'cold-brew'}],clarification:null,pending:null}});});
+ await app.open('/');await chooseStore(screen);await screen.getByRole('button',{name:'Start microphone'}).click();const preview=screen.getByRole('complementary',{name:'Voice order preview'}),cart=screen.getByRole('complementary',{name:'Your order'});
+ await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one americano'));await expect(preview.getByRole('heading',{name:'Caffè Americano',exact:true})).toBeVisible();
+ await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one latte'));await expect(preview.getByRole('heading',{name:'Caffè Latte',exact:true})).toBeVisible();
+ await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one cold brew'));await settle(browser);expect(texts).toEqual(['one americano','one latte']);await expect(cart.getByRole('heading',{name:'Cold Brew',exact:true})).toHaveCount(0);
+ await browser.evaluate(()=>window.voiceTest.sessions[0].emit('one cold brew',true));await expect(cart.getByRole('heading',{name:'Cold Brew',exact:true})).toBeVisible();expect(texts).toEqual(['one americano','one latte','one cold brew']);await expect(cart.getByRole('heading',{name:'Caffè Latte',exact:true})).toHaveCount(0);
+});

@@ -46,3 +46,11 @@ test('pricing service requires canonical configuration and exposes only HTTP ope
  assert.equal(pricingServiceConfigured({...configured,PRICING_SERVICE_TOKEN:'short'}),false);
  assert.deepEqual(Object.keys(createStarbucksPricingSource({url:'https://pricing.example',token})).sort(),['clear','quote','searchStores']);
 });
+
+test('overload retry hints are bounded without reading private error bodies or retrying',async()=>{
+ for(const [retry,expected] of [['1',1000],['999999999999999999999',3600000],['0',1000],['invalid',null],[null,null]]){
+  let calls=0;const source=createStarbucksPricingSource({url:'https://pricing.example',token,fetchImpl:async()=>{calls++;return new Response('private queue internals',{status:503,headers:retry===null?{}:{'Retry-After':retry}});}});
+  await assert.rejects(source.quote('a',{}),error=>expected===null?error.code==='UNAVAILABLE'&&error.retryAfterMs===undefined:error.code==='BUSY'&&error.retryAfterMs===expected);
+  assert.equal(calls,1);
+ }
+});

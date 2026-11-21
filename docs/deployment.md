@@ -43,7 +43,7 @@ The `standard-1` instance stops after 15 minutes of inactivity. Version changes 
 
 ## Public endpoint limits
 
-Speculative voice preparation uses the same API and rate-limit quota as final submissions. Matching final text reuses its HTTP turn; a correction or failed preparation can require one additional final HTTP turn (at most two per microphone session).
+Speculative voice preparation uses the same API and rate-limit quota as final submissions. Each microphone session permits at most two preparation attempts, with one active candidate. Matching final text reuses that request; a mismatch or failed preparation may require one ordinary final turn, for at most three HTTP turns per microphone session.
 
 The `TURN_RATE_LIMITER` native binding permits approximately 10 turn requests per 60 seconds per IP at each Cloudflare location. `REQUIRE_TURN_RATE_LIMIT=true` makes live turns fail closed when this binding or trusted Cloudflare IP metadata is unavailable. Keep that setting enabled for this deployment.
 

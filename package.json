@@ -19,7 +19,8 @@
     "release:archive": "node scripts/release.mjs",
     "deploy": "wrangler deploy",
     "deploy:dry-run": "wrangler deploy --dry-run",
-    "pricing:service": "node scripts/pricing-service.mjs"
+    "pricing:service": "node scripts/pricing-service.mjs",
+    "benchmark:interactions": "E2E_TELEMETRY_DISABLED=1 e2e run tests/interaction-performance.e2e.ts --no-cache"
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",

@@ -26,7 +26,7 @@ Exact validated decisions can be cached or share pending provider work within on
 
 [XState actors](state-machines.md) own voice, speculative preparation, final submission and cancellation. React renders actor state and keeps view-only state. Manual edits, cancellation and replacement turns invalidate stale responses.
 
-Stable interim speech can prepare one interpretation without changing the cart. Only matching final text and an unchanged revision can adopt it. Speech synthesis uses accepted acknowledgements. See the state-machine guide for states, events and resource ownership.
+Stable interim speech can prepare an interpretation without changing the cart. One replacement preparation is allowed after a transcript correction; each microphone session has at most two preparation attempts and one active candidate. Only matching final text and an unchanged revision can adopt it. Speech synthesis uses accepted acknowledgements. See the state-machine guide for states, events and resource ownership.
 
 ## Menu and pricing
 

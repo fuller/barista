@@ -144,3 +144,42 @@ test('bootstrap sends the same verified API request header as quote',async()=>{
  const s=createStarbucksGuestSource({fetchImpl:async(u,i)=>{assert.equal(i.headers['X-Requested-With'],'XMLHttpRequest');return ok(['sid=x; Path=/']);}});
  await s.quote('a',{});
 });
+
+test('quote admission bounds caller and global work and releases cancelled queue slots',async()=>{
+ let release;const gate=new Promise(resolve=>{release=resolve;});let calls=0;
+ const source=createStarbucksGuestSource({maxPendingPerSession:2,maxPendingQuotes:3,fetchImpl:async url=>{calls++;if(url.endsWith('/guest'))return ok();await gate;return new Response('{}');}});
+ const first=source.quote('a',{});await new Promise(resolve=>setImmediate(resolve));
+ const controller=new AbortController();const queued=source.quote('a',{},{signal:controller.signal});
+ await assert.rejects(source.quote('a',{}),e=>code('BUSY')(e)&&e.retryAfterMs===1000);
+ const other=source.quote('b',{});await assert.rejects(source.quote('c',{}),code('BUSY'));
+ controller.abort();await assert.rejects(queued,code('ABORTED'));
+ const replacement=source.quote('a',{});release();await Promise.all([first,other,replacement]);
+ assert.equal(calls,5);await source.quote('c',{});await source.close();
+});
+test('clear and close release every admitted quote without stranded queued promises',async()=>{
+ const source=createStarbucksGuestSource({maxPendingPerSession:2,maxPendingQuotes:2,fetchImpl:()=>new Promise(()=>{})});
+ const first=source.quote('a',{}),second=source.quote('a',{});const rejected=[assert.rejects(first,code('ABORTED')),assert.rejects(second,code('ABORTED'))];
+ await new Promise(resolve=>setImmediate(resolve));source.clear('a');await Promise.all(rejected);
+ const next=source.quote('b',{});const aborted=assert.rejects(next,code('ABORTED'));await source.close();await aborted;
+});
+test('last cancelled bootstrap waiter leaves no orphan guest initialization',async()=>{
+ let signal;const source=createStarbucksGuestSource({fetchImpl:async(url,options)=>{signal=options.signal;return new Promise(()=>{});}});
+ const controller=new AbortController(),pending=source.quote('a',{},{signal:controller.signal});
+ await new Promise(resolve=>setImmediate(resolve));controller.abort();await assert.rejects(pending,code('ABORTED'));
+ assert.equal(signal.aborted,true);assert.equal(source.status().sessions,0);await source.close();
+});
+test('quote queue limits reject invalid configurations',()=>{
+ for(const options of [{maxPendingPerSession:0},{maxPendingQuotes:0},{maxPendingPerSession:65},{maxPendingQuotes:1025}])assert.throws(()=>createStarbucksGuestSource(options),code('INVALID_REQUEST'));
+});
+
+test('failed bootstrap releases global capacity and clear releases it synchronously',async()=>{
+ let phase='fail';const source=createStarbucksGuestSource({maxPendingQuotes:1,fetchImpl:async url=>{
+  if(phase==='fail')throw Error('network');
+  if(phase==='hold')return new Promise(()=>{});
+  return url.endsWith('/guest')?ok():new Response('{}');
+ }});
+ await assert.rejects(source.quote('failed',{}),code('UNAVAILABLE'));
+ phase='hold';const held=source.quote('held',{});const rejected=assert.rejects(held,code('ABORTED'));
+ await new Promise(resolve=>setImmediate(resolve));source.clear('held');phase='ok';
+ await source.quote('replacement',{});await rejected;await source.close();
+});

@@ -41,6 +41,18 @@ export function createPricingServiceHandler({token,source,stores=createPublicSto
   if(url.pathname!=='/quote'||request.method!=='POST')return Response.json({error:'not_found'},{status:404});
   let input,body,selectedStore;
   try{const text=await request.text();if(text.length>65536)throw Error();input=JSON.parse(text);if(!input||Object.keys(input).sort().join(',')!=='body,selectedStore,sessionKey'||typeof input.sessionKey!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(input.sessionKey))throw Error();body=validateQuoteBody(input.body);selectedStore=validateSelectedStore(input.selectedStore,body.variables.order.storeNumber);}catch{return Response.json({error:'invalid_request'},{status:400});}
-  try{return Response.json(sanitizeEnvelope(await source.quote(input.sessionKey,body,{selectedStore}),body),{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:error?.code==='RATE_LIMITED'?'rate_limited':error?.code==='SETUP_REQUIRED'?'setup_required':'unavailable'},{status:error?.code==='RATE_LIMITED'?429:503,headers:{'Cache-Control':'no-store',...(error?.code==='RATE_LIMITED'?{'Retry-After':String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000)))}:{})}});}
+  try{return Response.json(sanitizeEnvelope(await source.quote(input.sessionKey,body,{selectedStore,signal:request.signal}),body),{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:error?.code==='BUSY'?'busy':error?.code==='RATE_LIMITED'?'rate_limited':error?.code==='SETUP_REQUIRED'?'setup_required':'unavailable'},{status:error?.code==='RATE_LIMITED'?429:503,headers:{'Cache-Control':'no-store',...(['RATE_LIMITED','BUSY'].includes(error?.code)?{'Retry-After':String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000)))}:{})}});}
  };
 }
+
+export function createPricingHttpHandler(handler){return async(req,res)=>{
+  const controller=new AbortController();
+  const abort=()=>controller.abort();
+  const disconnected=()=>{if(!res.writableFinished)abort();};
+  req.once('aborted',abort);res.once('close',disconnected);
+  try{
+   const chunks=[];let length=0;for await(const chunk of req){length+=chunk.length;if(length>65536){res.writeHead(413);res.end();return;}chunks.push(chunk);}
+   const request=new Request(`http://localhost${req.url}`,{method:req.method,headers:req.headers,signal:controller.signal,...(req.method==='GET'||req.method==='HEAD'?{}:{body:Buffer.concat(chunks)})});
+   const response=await handler(request);if(res.destroyed)return;res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
+  }catch{if(!res.destroyed){res.writeHead(503,{'Content-Type':'application/json'});res.end('{"error":"unavailable"}');}}finally{req.off('aborted',abort);res.off('close',disconnected);}
+ };}

@@ -10,10 +10,19 @@ test('machine exposes debounce, pending, ready, and ownership transfer states',a
  resolve({commands:[]});await new Promise(setImmediate);assert.equal(p.getSnapshot().value,'ready');
  const candidate=p.take('latte',1);assert.ok(candidate);assert.equal(p.getSnapshot().value,'idle');p.cancel();assert.equal(candidate.controller.signal.aborted,false);
 });
-test('spent speculative budget is an explicit terminal session mode',()=>{
- let fire;let calls=0;
- const p=createVoicePreparation({request:()=>{calls++;return new Promise(()=>{});},setTimer:fn=>{fire=fn;return 1;},clearTimer:()=>{}});
- p.begin({revision:1});p.update('latte');fire();p.update('changed');assert.equal(p.getSnapshot().value,'invalidated');p.update('latte');assert.equal(p.getSnapshot().value,'invalidated');assert.equal(calls,1);
+test('two attempts bound corrections and reset on a new microphone session',()=>{
+ const timers=new Map(),calls=[];let next=0;
+ const p=createVoicePreparation({request:input=>{calls.push(input);return new Promise(()=>{});},setTimer:fn=>{timers.set(++next,fn);return next;},clearTimer:id=>timers.delete(id)});
+ const fire=()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();};
+ p.begin({revision:1});p.update('latte');fire();p.update('iced latte');assert.equal(calls[0].signal.aborted,true);assert.equal(p.getSnapshot().value,'debouncing');fire();assert.equal(calls.length,2);assert.equal(calls[1].signal.aborted,false);
+ p.update('iced latte with oat milk');assert.equal(calls[1].signal.aborted,true);assert.equal(p.getSnapshot().value,'invalidated');p.update('latte');assert.equal(timers.size,0);assert.equal(calls.length,2);assert.equal(p.take('latte',1),null);
+ p.begin({revision:2});p.update('cold brew');fire();assert.equal(calls.length,3);p.dispose();
+});
+test('withdrawn first attempt waits for new text and stale results cannot replace second preview',async()=>{
+ const timers=new Map(),pending=[],previews=[];let next=0;
+ const p=createVoicePreparation({request:input=>new Promise(resolve=>pending.push({input,resolve})),onPreview:value=>previews.push(value),setTimer:fn=>{timers.set(++next,fn);return next;},clearTimer:id=>timers.delete(id)});
+ const fire=()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();};
+ p.begin({revision:1});p.update('latte');fire();p.update('');assert.equal(p.getSnapshot().value,'waiting');assert.equal(timers.size,0);p.update('cold brew');fire();pending[0].resolve({old:true});await new Promise(setImmediate);assert.equal(previews.filter(Boolean).length,0);pending[1].resolve({current:true});await new Promise(setImmediate);assert.deepEqual(previews.filter(Boolean),[{current:true}]);assert.ok(p.take('cold brew',1));p.dispose();
 });
 test('dispose cancels debounce and active work but preserves detached work',()=>{
  const timers=new Map();let next=0;

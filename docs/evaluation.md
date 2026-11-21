@@ -39,6 +39,6 @@ Latency benchmarks compare control, cold and warm conditions. They measure model
 
 ## Progressive voice preparation
 
-After 650 ms of stable interim recognition text, the browser can prepare one interpretation without committing the cart. Final speech adopts it only when trim-normalized text and cart revision match. Changed or withdrawn interim text invalidates preparation. If matching preparation is pending, final speech waits for that request.
+After 650 ms of stable interim recognition text, the browser can prepare an interpretation without committing the cart. Final speech adopts it only when trim-normalized text and cart revision match. Changed or withdrawn interim text cancels the stale candidate. One replacement preparation is allowed per microphone session, with the same debounce and exact-match validation. If matching preparation is pending, final speech waits for that request.
 
 The [opt-in synthetic voice checks](../experiments/live-voice/README.md) exercise real-provider integration and request reuse. Their synthetic recognition events and next-frame callbacks do not measure microphone latency or physical display paint.

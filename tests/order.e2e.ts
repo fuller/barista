@@ -25,6 +25,7 @@ test('orders a drink, edits a modifier, and updates sample pricing', async ({ ap
 
   await order.getByText(/^Customize\s*\+$/).click();
   await screen.getByLabel('shots').fill('3');
+ await order.getByRole('heading').first().click();
 
   await expect(order.getByText('$6.50', { exact: true }).first()).toBeVisible();
   await expect(order.getByText('Subtotal', { exact: true })).toBeVisible();
