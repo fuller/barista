@@ -17,6 +17,7 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    state.page.on('response',response=>{
     const guest=response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest';
     const status=response.status();
+    if(sessions.get(key)===state&&guest&&status===429)cooldownUntil=Math.max(cooldownUntil,now()+60000);
     if(sessions.get(key)===state&&guest&&status===200){state.ready=true;state.setupFailure=null;}
     // Keep numeric statuses only; never inspect provider bodies or challenge text.
     if(state.setupPending&&Number.isInteger(status)&&status>=100&&status<=599){
@@ -26,7 +27,7 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    });
    state.page.on('close',()=>{state.ready=false;});
    await state.page.bringToFront();
-   try{await setup(state.page,{selectedStore});if(!state.ready&&state.page.waitForResponse)await state.page.waitForResponse(response=>response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200,{timeout:2000});}catch{/* Ordinary UI failed; leave visible setup tab for operator. */}
+   try{await setup(state.page,{selectedStore,canContinue:()=>now()>=cooldownUntil});if(!state.ready&&state.page.waitForResponse)await state.page.waitForResponse(response=>response.url()==='https://www.starbucks.com/apiproxy/v1/account/signin/guest'&&response.status()===200,{timeout:2000});}catch{/* Ordinary UI failed; leave visible setup tab for operator. */}
    if(sessions.get(key)!==state)throw Error('unavailable');
    state.setupPending=false;
    if(!state.ready){const statuses=[state.documentStatus,state.guestStatus];state.setupFailure=statuses.includes(403)?'access_denied':statuses.includes(429)?'rate_limited':'setup_incomplete';}
@@ -44,6 +45,7 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    preparations.set(sessionKey,entry);state=await entry.promise;
   }else if(state.setupPending){const entry=preparations.get(sessionKey);if(!entry)throw Error('unavailable');state=await entry.promise;}
   if(sessions.get(sessionKey)!==state)throw Error('unavailable');
+  if(now()<cooldownUntil)throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED',retryAfterMs:Math.max(0,cooldownUntil-now())});
   if(!state.ready){await state.page.bringToFront();throw Object.assign(Error('setup required'),{code:'SETUP_REQUIRED'});}
   if(state.page.isClosed()||new URL(state.page.url()).origin!=='https://www.starbucks.com')throw Error('unavailable');
   state.lastUsed=now();return state;

@@ -45,6 +45,6 @@ export function createBrowserPricingHandler({token,transport}){
   if(url.pathname!=='/quote'||request.method!=='POST')return Response.json({error:'not_found'},{status:404});
   let input,body,selectedStore;
   try{const text=await request.text();if(text.length>65536)throw Error();input=JSON.parse(text);if(!input||Object.keys(input).sort().join(',')!=='body,selectedStore,sessionKey'||typeof input.sessionKey!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(input.sessionKey))throw Error();body=validateQuoteBody(input.body);selectedStore=validateSelectedStore(input.selectedStore,body.variables.order.storeNumber);}catch{return Response.json({error:'invalid_request'},{status:400});}
-  try{return Response.json(sanitizeEnvelope(await transport.quote(input.sessionKey,body,{selectedStore}),body),{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:error?.code==='RATE_LIMITED'?'rate_limited':error?.code==='SETUP_REQUIRED'?'setup_required':'unavailable'},{status:error?.code==='RATE_LIMITED'?429:503,headers:{'Cache-Control':'no-store'}});}
+  try{return Response.json(sanitizeEnvelope(await transport.quote(input.sessionKey,body,{selectedStore}),body),{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:error?.code==='RATE_LIMITED'?'rate_limited':error?.code==='SETUP_REQUIRED'?'setup_required':'unavailable'},{status:error?.code==='RATE_LIMITED'?429:503,headers:{'Cache-Control':'no-store',...(error?.code==='RATE_LIMITED'?{'Retry-After':String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000)))}:{})}});}
  };
 }

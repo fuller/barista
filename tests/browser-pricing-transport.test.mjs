@@ -76,3 +76,12 @@ test('store change during preparation invalidates old setup without recreating i
  const transport=await createHeadedTransport({launch:f.launch,setup:async(page,{selectedStore})=>{count++;if(selectedStore.sourceStoreNumber==='1-1')await gate;f.contexts.find(c=>!c.closed)?.ready();}});
  try{const old=transport.prepare('caller',{selectedStore:{sourceStoreNumber:'1-1'}});await new Promise(r=>setImmediate(r));assert.deepEqual(await transport.prepare('caller',{selectedStore:{sourceStoreNumber:'2-2'}}),{ready:true});release();await assert.rejects(old);assert.equal(f.contexts.length,2);assert.equal(count,2);assert.equal(f.contexts[0].closed,true);assert.equal(transport.status().sessions,1);}finally{release();await transport.close();}
 });
+
+test('guest setup rate limit enforces global cooldown without another setup attempt',async()=>{
+ const f=fake();let time=1000;
+ const transport=await createHeadedTransport({launch:f.launch,now:()=>time,setup:async()=>f.contexts.at(-1).response({url:()=> 'https://www.starbucks.com/apiproxy/v1/account/signin/guest',status:()=>429})});
+ try{await assert.rejects(transport.prepare('caller',{selectedStore:{sourceStoreNumber:'1-1'}}),error=>error.code==='RATE_LIMITED'&&error.retryAfterMs>=60000);assert.equal(transport.status().cooldownMs,60000);
+ await assert.rejects(transport.prepare('new-caller',{selectedStore:{sourceStoreNumber:'1-1'}}),{code:'RATE_LIMITED'});assert.equal(f.contexts.length,1);assert.equal(f.contexts[0].calls,0);
+ time+=60001;await assert.rejects(transport.prepare('caller',{selectedStore:{sourceStoreNumber:'1-1'}}),{code:'SETUP_REQUIRED'});assert.equal(f.contexts.length,1);
+ }finally{await transport.close();}
+});
