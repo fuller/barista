@@ -5,8 +5,8 @@ import {randomUUID} from 'node:crypto';
 import type {Order} from '../../src/contracts';
 
 type Expected={identity:string;size:string|null;quantity:number;instructions:string[]};
-type SafeTurn={status:number;totalRequests:number|null;extractionRequests:number|null;decisionRequests:number|null;cacheHits:number|null;finalToResponseMs?:number};
-type Harness={turns:SafeTurn[];active:number;sent:number;dispatches:Array<{text:string;turnId:string;at:number}>;finalAt:number|null;prematureCart?:boolean;emit?:(text:string,final:boolean)=>void;stopped:boolean};
+type SafeTurn={status:number;totalRequests:number|null;extractionRequests:number|null;decisionRequests:number|null;cacheHits:number|null;finalToResponseMs?:number|null};
+type Harness={turns:SafeTurn[];active:number;sent:number;maxRequests:number;dispatches:Array<{text:string;turnId:string;at:number}>;finalAt:number|null;prematureCart?:boolean;emit?:(text:string,final:boolean)=>void;stopped:boolean};
 type Result={caseId:string;phase:string;pass:boolean;httpTurns:number;preFinalHttpTurns?:number;postFinalHttpTurns?:number;providerRequests:number|null;providerBefore?:number;providerAfter?:number;turns:SafeTurn[];milestones:Record<string,number>;micToNextFrameMs?:number;actualCart?:Array<{identity:string;size:string|null;quantity:number;instructions:string[]}>;finalToCommandsMs:number|null;finalToNextFrameMs:number|null;failure?:string;clarification?:string;diagnostics?:{reason?:string;field?:string}};
 const latte=(size:string|null=null,instructions:string[]=['one latte']):Expected=>({identity:'407:Hot',size,quantity:1,instructions});
 const allCases=[
@@ -18,9 +18,13 @@ const allCases=[
  {id:'iced-oat-extra-shot',phase:'new-phrase',text:'one grande iced latte with oat milk and one extra shot',expected:[{identity:'407:Iced',size:'Grande',quantity:1,instructions:['one grande iced latte with oat milk and one extra shot']}]},
  {id:'followup-size-decaf',phase:'manual-iced-modifier-seed-followup',text:'make it venti and decaf',seed:'iced-modified',expected:[{identity:'407:Iced',size:'Venti',quantity:1,instructions:['oat milk','one extra shot','make it venti and decaf']}]},
  {id:'trenti-half-syrup-ownership',phase:'new-phrase',text:'one trenti cold brew, a shaken espresso with half the syrup',expected:[{identity:'2121255:Iced',size:'Trenta',quantity:1,instructions:['one trenti cold brew']},{identity:'2123425:Iced',size:null,quantity:1,instructions:[', a shaken espresso with half the syrup']}]},
+ {id:'holdout-independent-quantities',phase:'holdout-new-phrase',text:'two tall Americanos and one trenta cold brew',expected:[{identity:'406:Hot',size:'Tall',quantity:2,instructions:['two tall Americanos ']},{identity:'2121255:Iced',size:'Trenta',quantity:1,instructions:['and one trenta cold brew']}]},
+ {id:'holdout-shared-oat',phase:'holdout-shared-scope',text:'one latte and one cold brew, both with oat milk',expected:[{identity:'407:Hot',size:null,quantity:1,instructions:['one latte ', ', both with oat milk']},{identity:'2121255:Iced',size:null,quantity:1,instructions:['and one cold brew', ', both with oat milk']}]},
  {id:'prepared-stable',phase:'prepared-new-phrase',text:'one tall latte',prepared:['one tall latte'],expected:[latte('Tall',['one tall latte'])]},
  {id:'prepared-revised',phase:'prepared-new-phrases',text:'one venti latte',prepared:['one short latte','one venti latte'],expected:[latte('Venti',['one venti latte'])]},
 ];
+const providerBudget=Number(process.env.LIVE_VOICE_MAX_REQUESTS??60);
+if(!Number.isInteger(providerBudget)||providerBudget<1||providerBudget>100)throw Error('Live voice provider budget must be an integer from1to100');
 const selectedIds=process.env.LIVE_VOICE_CASES?.split(',').map(id=>id.trim()).filter(Boolean);
 if(selectedIds?.some(id=>!allCases.some(c=>c.id===id)))throw Error('Unknown live voice case ID');
 const cases=selectedIds?allCases.filter(c=>selectedIds.includes(c.id)):allCases;
@@ -32,10 +36,10 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
  const rows:Result[]=[];let model='',provider='',fatal=false;
  const output=path.resolve('work/live-voice-smoke',`real-${Date.now()}-${randomUUID()}.json`);
  let providerStart=0;
- const budget=async()=>await browser.evaluate(async()=>{const response=await fetch('/_benchmark/status');if(!response.ok)throw Error('Benchmark budget guard unavailable');const value=await response.json();return {requestCount:value.requestCount,serverRequests:value.serverRequests,maxRequests:value.maxRequests,budgetExceeded:value.budgetExceeded};}) as {requestCount:number;serverRequests?:number;maxRequests:number;budgetExceeded:boolean};
+ const budget=async()=>await browser.evaluate(async()=>{const response=await fetch('/_benchmark/status');if(!response.ok)throw Error('Benchmark budget guard unavailable');const value=await response.json();return {requestCount:value.requestCount,serverRequests:Number.isSafeInteger(value.serverRequests)?value.serverRequests:null,maxRequests:value.maxRequests,budgetExceeded:value.budgetExceeded};}) as {requestCount:number;serverRequests:number|null;maxRequests:number;budgetExceeded:boolean};
  await browser.addInitScript(()=>{
   const scope=window as unknown as {liveVoice:Harness;SpeechRecognition:unknown};
-  scope.liveVoice={turns:[],active:0,sent:0,dispatches:[],finalAt:null,stopped:false};
+  scope.liveVoice={turns:[],active:0,sent:0,maxRequests:0,dispatches:[],finalAt:null,stopped:false};
   class Recognition{
    onresult:((event:unknown)=>void)|null=null;onaudiostart:(()=>void)|null=null;onspeechend:(()=>void)|null=null;
    start(){scope.liveVoice.finalAt=null;scope.liveVoice.emit=(text,final)=>{if(final){scope.liveVoice.finalAt=performance.now();this.onspeechend?.();}this.onresult?.({results:[{isFinal:final,0:{transcript:text}}]});};this.onaudiostart?.();}
@@ -46,15 +50,15 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
   window.fetch=async(...args)=>{
    if(args[0]!=='/api/turn')return original(...args);
    const state=scope.liveVoice;
-   if(state.stopped||state.sent>=12){state.stopped=true;throw Error('Live benchmark budget exhausted');}
-   const body=JSON.parse(String(args[1]?.body??'{}'));state.dispatches.push({text:body.text,turnId:body.turnId,at:performance.now()});
+   if(state.stopped||state.sent>=14){state.stopped=true;throw Error('Live benchmark budget exhausted');}
+   const body=JSON.parse(String(args[1]?.body??'{}'));state.dispatches.push({text:typeof body.text==='string'?body.text:'',turnId:typeof body.turnId==='string'?body.turnId:'',at:performance.now()});
    state.active++;state.sent++;
    try{
     const response=await original(...args),data=await response.clone().json().catch(()=>null);
     const count=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
     const metrics=data?.metrics;
-    state.turns.push({finalToResponseMs:state.finalAt===null?undefined:Math.max(0,performance.now()-state.finalAt),status:response.status,totalRequests:count(metrics?.totalRequests),extractionRequests:count(metrics?.extractionRequests),decisionRequests:count(metrics?.decisionRequests),cacheHits:count(metrics?.cacheHits)});
-    if(!response.ok||!metrics||state.turns.reduce((n,row)=>n+(row.totalRequests??0),0)>60)state.stopped=true;
+    state.turns.push({finalToResponseMs:state.finalAt===null?null:Math.max(0,performance.now()-state.finalAt),status:response.status,totalRequests:count(metrics?.totalRequests),extractionRequests:count(metrics?.extractionRequests),decisionRequests:count(metrics?.decisionRequests),cacheHits:count(metrics?.cacheHits)});
+    if(!response.ok||!metrics||state.turns.reduce((n,row)=>n+(row.totalRequests??0),0)>state.maxRequests)state.stopped=true;
     return response;
    }catch(error){if(args[1]?.signal?.aborted||error instanceof DOMException&&error.name==='AbortError')state.turns.push({status:0,totalRequests:null,extractionRequests:null,decisionRequests:null,cacheHits:null});else{state.stopped=true;state.turns.push({status:-1,totalRequests:null,extractionRequests:null,decisionRequests:null,cacheHits:null});}throw error;}finally{state.active--;}
   };
@@ -76,14 +80,14 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
   const configResponse=browser.waitForResponse('**/api/config');await app.open('/');
   const config=await(await configResponse).json() as {liveAvailable?:boolean;model?:string;provider?:string};
   expect(config.liveAvailable).toBe(true);model=typeof config.model==='string'?config.model:'';provider=typeof config.provider==='string'?config.provider:'';
-  const initialBudget=await budget();expect(initialBudget.maxRequests).toBe(60);expect(initialBudget.serverRequests??initialBudget.requestCount).toBe(0);providerStart=initialBudget.requestCount;
+  const initialBudget=await budget();expect(initialBudget.maxRequests).toBe(providerBudget);await browser.evaluate(max=>(window as unknown as {liveVoice:Harness}).liveVoice.maxRequests=max,providerBudget);expect(initialBudget.serverRequests??initialBudget.requestCount).toBe(0);providerStart=initialBudget.requestCount;
   await screen.getByRole('button',{name:'Search stores',exact:true}).click();await screen.getByRole('radio').first().click();await screen.getByRole('button',{name:'Use this store',exact:true}).click();
   for(const c of cases){
    const start=await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.turns.length);
    const sentBefore=await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.sent);let stage='budget';console.log(JSON.stringify({caseId:c.id,stage}));
    const row:Result={caseId:c.id,phase:c.phase,pass:false,httpTurns:0,providerRequests:null,turns:[],milestones:{},finalToCommandsMs:null,finalToNextFrameMs:null};
    try{
-    const beforeBudget=await budget();row.providerBefore=beforeBudget.requestCount;if(beforeBudget.budgetExceeded||beforeBudget.requestCount>=60){fatal=true;throw Error('request_budget_or_transport');}
+    const beforeBudget=await budget();row.providerBefore=beforeBudget.requestCount;if(beforeBudget.budgetExceeded||beforeBudget.requestCount>=providerBudget){fatal=true;throw Error('request_budget_or_transport');}
     const stopped=await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.stopped);if(stopped){fatal=true;throw Error('request_budget_or_transport');}
     stage='setup';console.log(JSON.stringify({caseId:c.id,stage}));
     if(!('preserve'in c))await screen.getByRole('button',{name:'Start new order',exact:true}).click();
@@ -115,10 +119,10 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
       if(prepared.length>1){await new Promise(resolve=>setTimeout(resolve,900));state.emit?.(prepared[1],false);await new Promise(resolve=>setTimeout(resolve,1100));}
       else await new Promise(resolve=>setTimeout(resolve,1200));
       state.prematureCart=Boolean(document.querySelector('aside[aria-label="Your order"] [data-item-id]'));
-      state.emit?.(text,true);
+      state.emit?.(text,true);return null;
      },{text:c.text,prepared:c.prepared});
      expect(await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.prematureCart)).toBe(false);
-    }else await browser.evaluate(text=>(window as unknown as {liveVoice:Harness}).liveVoice.emit?.(text,true),c.text);
+    }else await browser.evaluate(text=>{(window as unknown as {liveVoice:Harness}).liveVoice.emit?.(text,true);return null;},c.text);
     if(finalResponse){const response=await finalResponse;expect(response.status).toBe(200);const data=await response.json() as {clarification?:string|null;commands?:unknown[];diagnostics?:{reason?:string;field?:string}};row.clarification=typeof data.clarification==='string'?data.clarification.slice(0,600):undefined;row.diagnostics={...(typeof data.diagnostics?.reason==='string'?{reason:data.diagnostics.reason.slice(0,100)}:{}),...(typeof data.diagnostics?.field==='string'?{field:data.diagnostics.field.slice(0,100)}:{})};if('clarify'in c){stage='clarification';console.log(JSON.stringify({caseId:c.id,stage}));expect(Boolean(data.clarification)).toBe(true);expect(data.commands).toEqual([]);expect(await committed()).toEqual(beforeOrder);row.actualCart=(beforeOrder.menuItems??[]).map(({identity,size,quantity,instructions})=>({identity,size,quantity,instructions}));row.pass=true;}else{stage='unexpected_clarification';console.log(JSON.stringify({caseId:c.id,stage}));expect(data.clarification??null).toBe(null);}}
     if(!('clarify'in c)){
     stage='cart_commit';console.log(JSON.stringify({caseId:c.id,stage}));
@@ -145,12 +149,12 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
     stage='dom_correlation';await expect.poll(async()=>await browser.evaluate(()=>document.querySelectorAll('aside[aria-label="Your order"] [data-item-id]').length)).toBe(c.expected.length);
     row.pass=true;
     }
-   }catch{row.failure=stage+'_assertion_failed';await browser.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(button=>button.textContent==='Cancel request');button?.click();});}
+   }catch{row.failure=stage+'_assertion_failed';await browser.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(button=>button.textContent==='Cancel request');button?.click();return null;});}
    try{await expect.poll(async()=>await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.active)).toBe(0);}catch{row.pass=false;row.failure='unfinished_request';fatal=true;}
-   row.turns=await browser.evaluate(start=>(window as unknown as {liveVoice:Harness}).liveVoice.turns.slice(start),start);
+   row.turns=await browser.evaluate(start=>JSON.parse(JSON.stringify((window as unknown as {liveVoice:Harness}).liveVoice.turns.slice(start))),start);
    row.httpTurns=await browser.evaluate(()=>(window as unknown as {liveVoice:Harness}).liveVoice.sent)-sentBefore;
    const afterBudget=await budget();row.providerAfter=afterBudget.requestCount;row.providerRequests=row.providerBefore===undefined?null:afterBudget.requestCount-row.providerBefore;
-   if(afterBudget.budgetExceeded||afterBudget.requestCount>60){fatal=true;row.pass=false;row.failure='provider_budget_exhausted';}
+   if(afterBudget.budgetExceeded||afterBudget.requestCount>providerBudget){fatal=true;row.pass=false;row.failure='provider_budget_exhausted';}
    if('prepared'in c){
     const dispatch=await browser.evaluate(start=>{const state=(window as unknown as {liveVoice:Harness}).liveVoice;return {requests:state.dispatches.slice(start),finalAt:state.finalAt};},sentBefore);
     row.preFinalHttpTurns=dispatch.requests.filter(request=>dispatch.finalAt!==null&&request.at<dispatch.finalAt).length;row.postFinalHttpTurns=dispatch.requests.length-row.preFinalHttpTurns;
@@ -165,8 +169,8 @@ test('real OpenRouter accuracy and latency with synthetic recognition, cold warm
   const finalBudget=await budget().catch(()=>null);
   const actualProviderRequests=finalBudget?finalBudget.requestCount-providerStart:rows.reduce((n,row)=>n+(row.providerRequests??0),0);
   await fs.mkdir(path.dirname(output),{recursive:true});
-  await fs.writeFile(output,JSON.stringify({schemaVersion:2,model,provider,measurement:'Real OpenRouter; synthetic recognition excludes physical ASR, natural endpointing and physical paint. Prepared stable final emitted at1200ms; revised interim at900ms/final2000ms regardless provider readiness. Cold requires fresh server. Background store search, photos and pricing are isolated.',providerBudget:60,httpTurnLimit:12,actualProviderRequests,complete:rows.length===cases.length,selectedCases:cases.map(c=>c.id),budgetExceeded:finalBudget?.budgetExceeded??null,rows},null,2)+'\n',{flag:'wx'});
+  await fs.writeFile(output,JSON.stringify({schemaVersion:2,model,provider,measurement:'Real OpenRouter; synthetic recognition excludes physical ASR, natural endpointing and physical paint. Prepared stable final emitted at1200ms; revised interim at900ms/final2000ms regardless provider readiness. Cold requires fresh server. Background store search, photos and pricing are isolated.',providerBudget,httpTurnLimit:14,actualProviderRequests,complete:rows.length===cases.length,selectedCases:cases.map(c=>c.id),budgetExceeded:finalBudget?.budgetExceeded??null,rows},null,2)+'\n',{flag:'wx'});
   console.log(JSON.stringify({output,cases:rows.length,passed:rows.filter(row=>row.pass).length,actualProviderRequests}));
  }
- expect(rows.length).toBe(cases.length);expect(rows.every(row=>row.pass)).toBe(true);expect(rows.reduce((n,row)=>n+(metric(row.providerRequests)??60),0)).toBeLessThanOrEqual(60);
+ expect(rows.length).toBe(cases.length);expect(rows.every(row=>row.pass)).toBe(true);expect(rows.reduce((n,row)=>n+(metric(row.providerRequests)??providerBudget),0)).toBeLessThanOrEqual(providerBudget);
 });

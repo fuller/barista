@@ -29,5 +29,34 @@ test('cancellation and malformed evidence cannot produce accepted boundaries',as
  const duplicateKeys=await locateMenuBoundaries({text:'latte and then, mocha',post:async(_r,p)=>response(p.questions,{b0:'split'})});assert.equal(duplicateKeys.clauses.map(c=>c.text).join(''),'latte and then, mocha');
 });
 test('preparation profile preserves plural item local trailing preparation without changing native boundaries',async()=>{
- const text='two croissants, warmed',calls=[];const result=await locateMenuBoundaries({text,boundaryProfile:'preparation-v1',post:async(_route,payload)=>{calls.push(payload);return response(payload.questions);}});assert.equal(result.clauses[0].text,text);assert.equal(result.clauses.length,1);assert.match(calls[0].questions.b0.instructions,/including plural or multiple copies/);assert.deepEqual(calls[0].questions.b0.criteria,{split:'Separate source clauses here',continue:'Keep one owning source clause',unclear:'Boundary is genuinely unclear'});
+ const text='two croissants, warmed',calls=[];const result=await locateMenuBoundaries({text,boundaryProfile:'preparation-v1',post:async(_route,payload)=>{calls.push(payload);return response(payload.questions);}});assert.equal(result.clauses[0].text,text);assert.equal(result.clauses.length,1);assert.match(calls[0].questions.b0.instructions,/including plural or multiple copies/);assert.deepEqual(calls[0].questions.b0.criteria,{split:'Separate cart item/action, or explicitly shared scope across items',continue:'Same owning item: ingredient amount/count, preparation, negation or correction',unclear:'Text leaves ownership between same item and separate/shared request unresolved'});
+});
+for(const [text,choice,count] of [
+ ['one grande iced latte with oat milk and one extra shot','continue',1],
+ ['one latte and two pumps vanilla','continue',1],
+ ['one latte and add one extra espresso shot','continue',1],
+ ['one latte and one espresso','split',2],
+ ['one latte and one cold brew','split',2],
+ ['one latte, all with oat milk','split',2],
+])test('ownership choices explicitly distinguish ingredient amounts from independent items: '+text,async()=>{
+ let asked;
+ const result=await locateMenuBoundaries({text,post:async(_route,payload)=>{asked=payload;return response(payload.questions,{b0:choice});}});
+ assert.equal(result.clauses.length,count);assert.equal(result.clauses.map(clause=>clause.text).join(''),text);
+ const question=asked.questions.b0;
+ const instructions=question.instructions+' '+asked.state.rules;
+ assert.match(instructions,/one extra shot/);
+ assert.match(instructions,/two pumps vanilla/);
+ assert.match(instructions,/and one espresso/);
+ assert.match(question.instructions,/shared/i);
+ assert.match(question.criteria.continue,/ingredient.*(?:count|amount)/i);
+ assert.match(question.criteria.split,/separate cart item/i);
+ assert.match(question.criteria.unclear,/ownership/i);
+ assert.equal(Object.keys(question.criteria).length,3);
+});
+test('local ingredient ownership never bypasses low-confidence or uncertain evidence',async()=>{
+ const text='one grande iced latte with oat milk and one extra shot';
+ for(const [choice,prob] of [['continue',.84],['continue',.5],['unclear',.99]]){
+  const result=await locateMenuBoundaries({text,post:async(_route,payload)=>response(payload.questions,{b0:choice},prob)});
+  assert.deepEqual(result.clauses,[]);assert.equal(result.failure.reason,'decision_low_confidence');
+ }
 });

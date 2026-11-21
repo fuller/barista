@@ -19,7 +19,7 @@ test('pure concurrent packets share physical request while owner cancellation le
  const get=cache.get.bind(cache);cache.get=key=>{const value=get(key);if(++lookups===2)joined.resolve();return value;};
  const fetchImpl=async(_url,{signal})=>{calls++;upstream=signal;entered.resolve();await pending.promise;return {ok:true,json:async()=>answer()};};
  const owner=fixture({cache,fetchImpl}),joiner=fixture({cache,fetchImpl}),controller=new AbortController();const first=owner.transport.post('decisions',packet('identity','shared'),controller.signal);const rejected=assert.rejects(first,{name:'AbortError'});await entered.promise;
- const second=joiner.transport.post('decisions',packet('identity','shared'));await joined.promise;controller.abort();await rejected;assert.equal(upstream.aborted,false);pending.resolve();assert.deepEqual(await second,answer());assert.equal(calls,1);assert.equal(owner.admissions.length,0);assert.equal(joiner.admissions.length,1);assert.equal(owner.metrics.totalRequests,1);assert.equal(joiner.metrics.totalRequests,0);assert.equal(joiner.metrics.inflightHits,1);assert.equal(joiner.metrics.cacheHits,0);assert.equal(cache.stats().entries,0);
+ const second=joiner.transport.post('decisions',packet('identity','shared'));await joined.promise;controller.abort();await rejected;assert.equal(upstream.aborted,false);pending.resolve();assert.deepEqual(await second,answer());assert.equal(calls,1);assert.equal(owner.admissions.length,0);assert.equal(joiner.admissions.length,1);assert.equal(owner.metrics.totalRequests,1);assert.equal(joiner.metrics.totalRequests,0);assert.equal(joiner.metrics.inflightHits,1);assert.equal(joiner.metrics.cacheHits,0);assert.equal(owner.transport.attemptsUsed,1);assert.equal(joiner.transport.attemptsUsed,1);assert.equal(cache.stats().entries,0);
 });
 test('key context isolates credential model profile menu thresholds endpoint and body',async()=>{
  const seen=[],cache={keyFor:async context=>{seen.push(context);return undefined;},get:()=>undefined};
@@ -30,7 +30,7 @@ test('coverage and extractions always execute live and never admit',async()=>{
  for(let i=0;i<2;i++)await transport.post('decisions',packet('coverage'));for(let i=0;i<2;i++)await transport.post('extractions',packet('identity'));assert.equal(calls,4);assert.equal(keys,0);assert.equal(admissions.length,0);assert.equal(metrics.decisionRequests,2);assert.equal(metrics.extractionRequests,2);
 });
 test('normalization packets are pure and completed cache hits avoid fetch',async()=>{
- const cache=createDecisionCache();let calls=0;const f=fixture({cache,fetchImpl:async()=>{calls++;return {ok:true,json:async()=>answer('mod_milk')};}});const p=packet('mod_milk');await f.transport.post('decisions',p);assert.equal(f.admissions.length,1);cache.set(...f.admissions[0]);const result=await f.transport.post('decisions',p);assert.deepEqual(result,answer('mod_milk'));assert.equal(calls,1);assert.equal(f.metrics.cacheHits,1);assert.equal(f.metrics.totalRequests,1);
+ const cache=createDecisionCache();let calls=0;const f=fixture({cache,fetchImpl:async()=>{calls++;return {ok:true,json:async()=>answer('mod_milk')};}});const p=packet('mod_milk');await f.transport.post('decisions',p);assert.equal(f.admissions.length,1);cache.set(...f.admissions[0]);const result=await f.transport.post('decisions',p);assert.deepEqual(result,answer('mod_milk'));assert.equal(calls,1);assert.equal(f.metrics.cacheHits,1);assert.equal(f.metrics.totalRequests,1);assert.equal(f.transport.attemptsUsed,2);
 });
 for(const [label,value] of [['low confidence',answer('identity','yes',.6)],['unclear',answer('identity','unclear')],['truncated',{...answer(),truncated:true}],['unchanged identity',{answers:{identity:{type:'choice',choice:'unchanged',probabilities:{unchanged:.99,yes:.01}}}}]])test(`no admission for ${label}`,async()=>{
  const p=label==='unchanged identity'?{state:{},questions:{identity:{...choice,criteria:{yes:'Yes',unchanged:'Keep'}}}}:packet();const f=fixture({cache:createDecisionCache(),fetchImpl:async()=>({ok:true,json:async()=>value})});await f.transport.post('decisions',p);assert.equal(f.admissions.length,0);
@@ -56,4 +56,12 @@ test('real digest keys prevent sharing across credentials and decision contexts'
 test('caller aborted while response JSON resolves cannot admit stale cache packet',async()=>{
  const controller=new AbortController();const f=fixture({cache:createDecisionCache(),fetchImpl:async()=>({ok:true,json:async()=>{controller.abort();return answer();}})});
  await assert.rejects(f.transport.post('decisions',packet('identity','stale-json'),controller.signal),{name:'AbortError'});assert.equal(f.admissions.length,0);
+});
+
+test('cached logical attempts still enforce the twenty-request budget',async()=>{
+ const cache={keyFor:async()=> 'f'.repeat(64),get:()=>answer()};
+ const f=fixture({cache,fetchImpl:()=>assert.fail('cache should serve requests')});
+ for(let i=0;i<20;i++)await f.transport.post('decisions',packet());
+ assert.equal(f.transport.attemptsUsed,20);assert.equal(f.metrics.totalRequests,0);
+ await assert.rejects(f.transport.post('decisions',packet()),/budget exhausted/);assert.equal(f.transport.attemptsUsed,20);
 });

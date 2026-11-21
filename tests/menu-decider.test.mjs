@@ -193,3 +193,12 @@ test('v10 package and correction instructions survive final packet construction'
  assert.match(q.quantityRequested.instructions,/final explicit count correction/);
  assert.match(q.action.criteria.update,/set final copy count/);
 });
+
+test('another explicitly named Tall latte routes as a new addition with disjoint duplicate criteria',async()=>{
+ const text='another Tall latte',order=applyCommands(createOrder(),[{type:'add-menu',identity:'407:Hot',size:'Grande'}]);
+ const f=fixture({text,questionProfile:'lean-v10',plans:[{identity:'407:Hot',action:'add',sizeRequested:'requested',size:'Tall',quantity:'1'}]});
+ const result=await f.adapter.interpretTurn({text,order});assert.equal(result.clarification,null);assert.equal(result.commands[0].type,'add-menu');assert.equal(result.commands[0].size,'Tall');assert.equal(result.commands[0].quantity,1);
+ const action=f.requests.find(request=>request.body.questions.action).body.questions.action;
+ assert.match(action.instructions,/another Tall latte.*ADD/i);assert.match(action.criteria.add,/another Tall latte/);assert.match(action.criteria.duplicate,/another named drink is ADD/);
+ const after=applyCommands(order,result.commands);assert.equal(after.menuItems.length,2);assert.equal(after.menuItems[0].size,'Grande');
+});

@@ -17,7 +17,7 @@ export function createDecisionTransport({apiKey,model,questionProfile,cache=null
    return true;
   }catch{return false;}
  };
- return {async post(route,payload,requestSignal,admissionSink=admissions){
+ return {get attemptsUsed(){return attempts;},async post(route,payload,requestSignal,admissionSink=admissions){
   requestSignal?.throwIfAborted();
   if(attempts>=20)throw new Error('Turn request budget exhausted');
   attempts++;

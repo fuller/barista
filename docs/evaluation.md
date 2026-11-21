@@ -42,3 +42,9 @@ Latency benchmarks compare control, cold and warm conditions. They measure model
 After 650 ms of stable interim recognition text, the browser can prepare an interpretation without committing the cart. Final speech adopts it only when trim-normalized text and cart revision match. Changed or withdrawn interim text cancels the stale candidate. One replacement preparation is allowed per microphone session, with the same debounce and exact-match validation. If matching preparation is pending, final speech waits for that request.
 
 The [opt-in synthetic voice checks](../experiments/live-voice/README.md) exercise real-provider integration and request reuse. Their synthetic recognition events and next-frame callbacks do not measure microphone latency or physical display paint.
+
+## Independent addition batching
+
+The current `lean-v10` profile can combine independent beverage additions on an empty cart into packets of at most two clauses and twelve questions. Group, identity, count, size and coverage remain independently gated at the existing confidence and margin. Unsupported sizes, incomplete responses, shared dependencies and uncertainty cannot produce partial commits. Nonapplicable packets fall back to the ordinary pipeline; batching is skipped when its fallback reservation cannot fit the unchanged 20-attempt turn budget. That budget counts cache and shared-request hits as well as network calls.
+
+The opt-in [real voice benchmark](../experiments/live-voice/README.md) covers the reported add/duplicate and ingredient-boundary failures, source ownership, different quantities/sizes, shared modifications and fixed-cadence voice preparation. Default evaluation validation makes no provider calls. Live timing uses synthetic recognition events with real inference; physical ASR and physical paint are excluded.

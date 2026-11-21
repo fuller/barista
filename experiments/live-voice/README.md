@@ -7,13 +7,13 @@ npm run build
 node experiments/live-voice/server.mjs
 ```
 
-Run the explicit suite in another terminal. Its same-origin `GET /_benchmark/status` must return `{requestCount,maxRequests:60,budgetExceeded}`. The benchmark reads no credentials and starts no server. Do not share that server with another benchmark.
+Run the explicit suite in another terminal. Its same-origin `GET /_benchmark/status` must return `{requestCount,maxRequests,budgetExceeded}`. The benchmark reads no credentials and starts no server. Do not share that server with another benchmark.
 
 ```sh
 LIVE_VOICE_BASE_URL=http://127.0.0.1:4185 E2E_TELEMETRY_DISABLED=1 npm exec -- e2e run --no-cache --config e2e.live-voice.config.ts --output work/live-voice-browser
 ```
 
-Ten sequential cases cover cold latte, warm identical repeat, second-latte setup, ambiguous target requiring clarification with unchanged cart, American/cold-brew recognition, iced/oat/extra-shot modifiers, size/decaf follow-up, trenti/half-syrup ownership, stable preparation and revised preparation. No retries. The browser allows at most twelve HTTP turns and stops admitting cases at sixty provider requests; the server enforces the absolute sixty-request cap, including canceled preparation work.
+Twelve sequential cases cover cold latte, warm identical repeat, second-latte setup, ambiguous target requiring clarification with unchanged cart, American/cold-brew recognition, iced/oat/extra-shot modifiers, size/decaf follow-up, trenti/half-syrup ownership, stable preparation, revised preparation, independent quantity/size holdout and shared-oat ownership holdout. No retries. The browser allows at most fourteen HTTP turns and stops admitting cases at the configured provider cap; the server enforces that same absolute cap, including canceled preparation work.
 
 Configuration and interpretation endpoints remain real. Only product photos, store search and background pricing are isolated. The store fixture enables the UI gate without starting external pricing sessions.
 
@@ -25,4 +25,8 @@ Unique JSON artifacts under `work/live-voice-smoke/` record model, case IDs, pha
 
 Default application E2E configuration excludes this directory. Listing this explicit suite makes no provider calls.
 
-Use `LIVE_VOICE_CASES` as a comma-separated list of case IDs to select a budgeted subset; defaults to all ten. Ambiguity and modifier follow-ups use independent manual seeds, consuming no provider requests. Timing is captured before cart accuracy assertions. Unexpected clarification remains a failure with safe reason/field and clarification diagnostics.
+Use `LIVE_VOICE_CASES` as a comma-separated list of case IDs to select a budgeted subset; defaults to all twelve. Ambiguity and modifier follow-ups use independent manual seeds, consuming no provider requests. Timing is captured before cart accuracy assertions. Unexpected clarification remains a failure with safe reason/field and clarification diagnostics.
+
+Holdout `holdout-independent-quantities` requires Tall Americano quantity two and Trenta cold brew quantity one. Holdout `holdout-shared-oat` requires one default-size latte and cold brew, each retaining only its original owning clause plus `, both with oat milk`. Offline boundary-span checks establish those exact source slices without provider calls.
+
+`LIVE_VOICE_MAX_REQUESTS` sets the shared cumulative provider cap (default60, integer1–100). It must match the guard server’s reported `maxRequests`; restarting a server does not reset earlier spend when its ledger is retained. Preparation completed before final speech records `finalToResponseMs:null`, keeping every browser result JSON-safe.

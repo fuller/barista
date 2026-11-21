@@ -8,7 +8,9 @@ if(!process.env.OPENROUTER_API_KEY)throw Error('OPENROUTER_API_KEY is required')
 const port=Number(process.env.LIVE_VOICE_PORT??4185);
 if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid LIVE_VOICE_PORT');
 fs.mkdirSync('work/live-voice-smoke',{recursive:true});
-const evidence={model:process.env.DECISION_MODEL??'perplexity/pplx-decider-v1.3:free',maxRequests:60,requestCount:0,budgetExceeded:false,requests:[]};
+const maxRequests=Number(process.env.LIVE_VOICE_MAX_REQUESTS??60);
+if(!Number.isInteger(maxRequests)||maxRequests<1||maxRequests>100)throw Error('Invalid LIVE_VOICE_MAX_REQUESTS');
+const evidence={model:process.env.DECISION_MODEL??'perplexity/pplx-decider-v1.3:free',maxRequests,requestCount:0,budgetExceeded:false,requests:[]};
 const output=`work/live-voice-smoke/provider-${Date.now()}-${randomUUID()}.json`,originalFetch=globalThis.fetch;
 const save=()=>fs.writeFileSync(output,JSON.stringify(evidence,null,2)+'\n');
 globalThis.fetch=async(input,options)=>{

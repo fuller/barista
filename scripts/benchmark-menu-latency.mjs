@@ -31,7 +31,7 @@ export async function runLatencyBenchmark(cases,{apiKey,model=DEFAULT_MODEL,maxR
  return {schemaVersion:1,measurement:'model-through-atomic-cart-application; excludes microphone and browser paint',profile,controlProfile,controlScheduling,scheduling,maxRequests,concurrency,totalRequests,pass:conditions.every(c=>c.report.summary.failed===0&&c.report.summary.notRun===0&&c.report.summary.unsafeMutations===0),conditions};
 }
 async function fingerprint(){
- const files=['scripts/report-output.mjs','scripts/benchmark-menu-latency.mjs','src/adapters/menu-decider.mjs','src/adapters/config.mjs','src/adapters/menu-identity.mjs','src/adapters/decision-cache.mjs','src/adapters/menu-boundary-locator.mjs','src/adapters/decision-choice.mjs','src/domain/order.mjs','src/catalog/data/starbucks-menu-directory.json','src/evals/menu-runner.mjs'];
+ const files=['scripts/report-output.mjs','scripts/benchmark-menu-latency.mjs','src/adapters/menu-decider.mjs','src/adapters/config.mjs','src/adapters/menu-identity.mjs','src/adapters/decision-cache.mjs','src/adapters/menu-boundary-locator.mjs','src/adapters/menu-add-batch.mjs','src/adapters/decision-choice.mjs','src/domain/order.mjs','src/catalog/data/starbucks-menu-directory.json','src/evals/menu-runner.mjs'];
  const adapterFiles=(await fs.readdir(path.join(root,'src/adapters'))).filter(file=>file.endsWith('.mjs')).map(file=>'src/adapters/'+file);
  const allFiles=[...new Set([...files,...adapterFiles])].sort();
  return menuHash(await Promise.all(allFiles.map(async file=>[file,await fs.readFile(path.join(root,file),'utf8')])));

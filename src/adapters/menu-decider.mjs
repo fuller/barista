@@ -8,6 +8,7 @@ import { readDecisionChoice } from './decision-choice.mjs';
 import { DEFAULT_MODEL, DEFAULT_MENU_PROFILE } from './config.mjs';
 import { clarification } from './clarification.mjs';
 import { applyCommands } from '../domain/order.mjs';
+import {tryMenuAddBatch} from './menu-add-batch.mjs';
 const menu = validateMenuDirectory(directory), products = new Map(menu.products.map(p => [p.identity, p]));
 export function buildMenuIdentityGroups(rows) {
     const types = new Map();
@@ -40,7 +41,7 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
     if (cache !== null && (!cache || ['keyFor', 'get', 'set'].some(key => typeof cache[key] !== 'function')))
         throw new Error('Invalid decision cache');
     function read(answer, q) { return readDecisionChoice(answer, q, { threshold, margin }); }
-    return { async interpretTurn({ text, order, activeItemId }, { signal } = {}) {
+    return { async interpretTurn({ text, order, activeItemId, pending, clarificationContext }, { signal } = {}) {
             signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(60000)]) : AbortSignal.timeout(60000);
             const started = clock(), metrics = { extractionRequests: 0, decisionRequests: 0, totalRequests: 0, clauseCount: 0, ...(cache ? { cacheHits: 0 } : {}), strategy: 'sequential', extractionMs: 0, decisionMs: 0, totalMs: 0 };
             const admissions = [];
@@ -64,7 +65,8 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                 return { ...result, source: 'decider', metrics: { ...metrics, totalMs: Math.max(0, clock() - started) } };
             };
             const retry = (message, stage, reason, field) => finish(clarification(message, { mode: 'retry', stage, reason, ...(field ? { field } : {}) }));
-            const {post}=createDecisionTransport({apiKey,model,questionProfile,cache,fetchImpl,threshold,margin,clock,menuVersion:menu.version,metrics,admissions});
+            const transport=createDecisionTransport({apiKey,model,questionProfile,cache,fetchImpl,threshold,margin,clock,menuVersion:menu.version,metrics,admissions});
+            const {post}=transport;
             const resolveSize = async (selectedProducts, source, optional = false) => {
                 const sizeCodes = selectedProducts[0].sizes.map(s => s.sizeCode).filter(code => selectedProducts.every(p => p.sizes.some(s => s.sizeCode === code)));
                 const question = choice((optional ? 'Choose unchanged when no size is explicitly requested. Use the LAST correction when earlier sizes are superseded. ' : '') + 'Resolve the explicitly stated serving/package size against ONLY these source size codes. trenti means Trenta. Match ounces/weight/package counts to a listed source code; item copies and ingredient amounts are not size. Choose __source_invalid__ if no source code represents the request; never substitute.', { ...(optional ? {unchanged:'No explicit serving or package size requested; preserve prior size/default'} : {}), __source_invalid__: 'Requested size is not available for the selected product(s)', ...criteria(sizeCodes) });
@@ -123,6 +125,10 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                 if (extracted.failure)
                     return await retry(extracted.failure.message, 'extraction', extracted.failure.reason);
                 metrics.clauseCount = extracted.clauses.length;
+                if(questionProfile==='lean-v10'&&!pending&&!clarificationContext&&order.items.length+(order.menuItems?.length??0)===0){
+                    const batch=await tryMenuAddBatch({clauses:extracted.clauses,groups:identityGroups,post,signal,threshold,margin,requests:transport.attemptsUsed});
+                    if(batch){applyCommands(order,batch);metrics.strategy='batch';return await finish({commands:batch,clarification:null});}
+                }
                 let draft = order;
                 const commands = [], addedThisTurnIds = [];
                 for (const [clauseIndex, clause] of extracted.clauses.entries()) {
@@ -146,12 +152,12 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                     if (questionProfile === 'lean-v10') {
                         state.cart = compactMenuCart(state.cart);
                         questions.coverage.instructions = 'Can this clause express ONE cart action with the entire wording retained as notes? complete for an order, one existing-item edit (including setting its copy count), a shared edit, or one global action. Explicit corrections supersede earlier size/count/form choices and remain one action. Target/product ambiguity belongs to the target/identity questions, not coverage. unclear only for multiple independent actions/items still combined in this clause or unresolved conflicting instructions.';
-                        questions.action.instructions = 'Select the cart operation, not a recipe operation. A new/noun-only order stays ADD through in-clause corrections, including actually make it another product; it does not update a cart line. Make/change an EXISTING described/ordinal line is UPDATE even if no matching target exists: never add a replacement for a missing target. Setting copies on an existing line is UPDATE. Explicit duplicate/copy is DUPLICATE even with a different base product or form on the new line. Ingredient removal is UPDATE; whole-line removal is REMOVE. Global undo/clear/confirm act on the whole cart.';
+                        questions.action.instructions = 'Select the cart operation, not a recipe operation. A new/noun-only order stays ADD through in-clause corrections, including actually make it another product; it does not update a cart line. Make/change an EXISTING described/ordinal line is UPDATE even if no matching target exists: never add a replacement for a missing target. Setting copies on an existing line is UPDATE. Explicit duplicate/copy is DUPLICATE even with a different base product or form on the new line. Ingredient removal is UPDATE; whole-line removal is REMOVE. Global undo/clear/confirm act on the whole cart. Another plus an explicit product name, such as another Tall latte, means ADD one NEW independent line even when the cart already contains that product. Only explicit duplicate/copy/repeat of an existing line means DUPLICATE; never infer duplicate from another named product.';
                         questions.action.criteria = {
-                            add:'New independent menu line, including correction of this new order',
+                            add:'New independent menu line: another Tall latte adds one new named drink; includes correction of this new order',
                             update:'Edit existing line(s), including set final copy count: make the first item two copies',
                             remove:'Delete the entire existing line, never just an ingredient',
-                            duplicate:'Duplicate/copy an existing cart line, optionally change its product, size or notes on the NEW line',
+                            duplicate:'Explicit duplicate/copy/repeat of an existing line; another named drink is ADD, not duplicate',
                             undo:'Restore the latest undo snapshot', clear:'Empty the entire cart', confirm:'Confirm the current cart', unclear:'No unique cart operation'
                         };
                     }
@@ -174,11 +180,11 @@ export function createMenuDeciderAdapter({ apiKey, model = DEFAULT_MODEL, fetchI
                         questions.sizeRequested.instructions += ' Serving ounces, package weight and package contents such as 12-count are also sizes. Use the final explicitly corrected size; superseded earlier sizes are not conflicting.';
                         questions.quantityRequested.instructions += ' Preserve means no copy change, including milk/ice/caffeine-only changes. Use the final explicit count correction; earlier superseded counts are not conflicting.';
                     }
-                    const singleAddEligible = ['lean-v9', 'lean-v10'].includes(questionProfile) && extracted.clauses.length === 1 && !/\b(?:short|tall|grande|venti|trenta|trenti|ounces?|oz|pounds?|lbs?|grams?|kilograms?|kg)\b/i.test(clause.text) && beverageSchedulingHint({ text: clause.text, clauseIndex, initiallyEmpty: order.items.length + (order.menuItems?.length ?? 0) === 0, draftEmpty: all.length === 0, requests: metrics.totalRequests, remainingClauses: 1 }) !== null;
+                    const singleAddEligible = ['lean-v9', 'lean-v10'].includes(questionProfile) && extracted.clauses.length === 1 && !/\b(?:short|tall|grande|venti|trenta|trenti|ounces?|oz|pounds?|lbs?|grams?|kilograms?|kg)\b/i.test(clause.text) && beverageSchedulingHint({ text: clause.text, clauseIndex, initiallyEmpty: order.items.length + (order.menuItems?.length ?? 0) === 0, draftEmpty: all.length === 0, requests: transport.attemptsUsed, remainingClauses: 1 }) !== null;
                     if (singleAddEligible)
                         questions.singleAddQuantity = choice('Optional ADD shortcut: is the final LINE-COPY outcome confidently one copy? single covers all noun-only additions, articles a/an and explicit final absolute one. Package pounds/ounces/12-count contents, ingredient amounts/pumps, ordinal positions and cart totals do not count item copies. Explicit self-correction uses the final count. detail for every non-ADD action, other numeric counts, relative counts such as one more, one of each, conflicting or unresolved copy instructions. Never guess; uncertainty uses detail.', { single: 'ADD with confidently one final line copy, whether implicit default, article a/an or explicit final one.', detail: 'Non-ADD, or ADD requiring selected-product quantity detail because copies are other than one, relative, conflicting or unresolved.' });
                     if (scheduling === 'guarded-overlap') {
-                        const group = beverageSchedulingHint({ text: clause.text, clauseIndex, initiallyEmpty: order.items.length + (order.menuItems?.length ?? 0) === 0, draftEmpty: all.length === 0, requests: metrics.totalRequests, remainingClauses: extracted.clauses.length - clauseIndex });
+                        const group = beverageSchedulingHint({ text: clause.text, clauseIndex, initiallyEmpty: order.items.length + (order.menuItems?.length ?? 0) === 0, draftEmpty: all.length === 0, requests: transport.attemptsUsed, remainingClauses: extracted.clauses.length - clauseIndex });
                         if (group) {
                             const controller = new AbortController(), staged = [];
                             const result = post('decisions', buildMenuIdentityPacket({ group, text: clause.text, questionProfile }), AbortSignal.any([signal, controller.signal]), staged).then(value => ({ ok: true, value }), error => ({ ok: false, error }));
