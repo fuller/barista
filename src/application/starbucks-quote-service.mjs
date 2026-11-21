@@ -23,12 +23,12 @@ export function createStarbucksQuoteService({source=createStarbucksGuestSource()
  const cache=new Map(),pending=new Map();
  const prune=()=>{const time=now();for(const [key,entry] of cache)if(entry.quote.expiresAt<=time)cache.delete(key);};
  return {
-  async quote(sessionKey,input,{signal,selectedStore}={}){
+  async quote(sessionKey,input,{signal,selectedStore,forceRefresh=false}={}){
    if(signal?.aborted)throw abortError();
    if(!validKey(sessionKey))throw new StarbucksQuoteError('invalid_request');
    let prepared;try{prepared=buildStarbucksQuoteRequest(input);}catch{throw new StarbucksQuoteError('invalid_request');}
    prune();const key=JSON.stringify([sessionKey,prepared.cacheKey]),cached=cache.get(key);
-   if(cached){cache.delete(key);cache.set(key,cached);return structuredClone(cached.quote);}
+   if(cached&&!forceRefresh){cache.delete(key);cache.set(key,cached);return structuredClone(cached.quote);}
    const existing=pending.get(key);if(existing)return consume(existing.promise,signal);
    if(pending.size>=maxPending)throw new StarbucksQuoteError('busy');
    const entry={sessionKey,promise:null},startedAt=now();

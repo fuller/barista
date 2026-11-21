@@ -27,6 +27,7 @@ export function createStarbucksBrowserSource({url,token,fetchImpl=fetch,timeoutM
    try{query=normalizeStoreQuery(query);}catch{throw unavailable();}
    return send('/stores',{query},signal);
   },
+  prepare:(sessionKey,{signal,selectedStore}={})=>{const {selectionToken,...store}=selectedStore??{};return send('/prepare',{sessionKey,selectedStore:store},signal);},
   quote:(sessionKey,body,{signal,selectedStore}={})=>{const {selectionToken,...store}=selectedStore??{};return send('/quote',{sessionKey,body,selectedStore:store},signal);},
   clear(sessionKey){void send('/clear',{sessionKey}).catch(()=>{});}
  };

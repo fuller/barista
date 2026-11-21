@@ -5,7 +5,7 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
  if(!Number.isInteger(maxSessions)||maxSessions<1||maxSessions>16||!Number.isInteger(idleTtlMs)||idleTtlMs<1)throw Error('Invalid browser session limits');
  if(!launch){const {chromium}=await import('playwright-core');launch=options=>chromium.launch(options);}
  const browser=await launch({channel:'chrome',headless:false});
- const sessions=new Map();let cooldownUntil=0,searchPending=false;
+ const sessions=new Map(),preparations=new Map();let cooldownUntil=0,searchPending=false;
  const destroy=async(key,state)=>{if(sessions.get(key)===state)sessions.delete(key);state.ready=false;await state.context?.close();};
  const expire=async()=>{await Promise.all([...sessions].filter(([,s])=>!s.busy&&now()-s.lastUsed>=idleTtlMs).map(([key,s])=>destroy(key,s)));};
  const idleTimer=setInterval(()=>{void expire().catch(()=>{});},Math.min(idleTtlMs,30000));idleTimer.unref?.();
@@ -34,6 +34,20 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
   }catch{if(state.context)await destroy(key,state);else if(sessions.get(key)===state)sessions.delete(key);throw Error('unavailable');}
   finally{state.busy=false;}
  };
+ async function ensureSession(sessionKey,selectedStore){
+  if(now()<cooldownUntil)throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED',retryAfterMs:Math.max(0,cooldownUntil-now())});
+  await expire();let state=sessions.get(sessionKey);
+  if(state&&(state.storeNumber!==selectedStore?.sourceStoreNumber||state.page?.isClosed())){await destroy(sessionKey,state);if(sessions.has(sessionKey))throw Error('unavailable');state=null;}
+  if(!state){
+   const entry={promise:null};
+   entry.promise=create(sessionKey,selectedStore).finally(()=>{if(preparations.get(sessionKey)===entry)preparations.delete(sessionKey);});
+   preparations.set(sessionKey,entry);state=await entry.promise;
+  }else if(state.setupPending){const entry=preparations.get(sessionKey);if(!entry)throw Error('unavailable');state=await entry.promise;}
+  if(sessions.get(sessionKey)!==state)throw Error('unavailable');
+  if(!state.ready){await state.page.bringToFront();throw Object.assign(Error('setup required'),{code:'SETUP_REQUIRED'});}
+  if(state.page.isClosed()||new URL(state.page.url()).origin!=='https://www.starbucks.com')throw Error('unavailable');
+  state.lastUsed=now();return state;
+ }
  return {
   async searchStores(query){
    query=validateStoreQuery(query);if(searchPending)throw Error('unavailable');searchPending=true;let context;
@@ -60,19 +74,14 @@ export async function createHeadedTransport({launch,timeoutMs=15000,now=Date.now
    }
    return {ready:[...sessions.values()].some(s=>s.ready&&!s.page?.isClosed()),sessions:sessions.size,awaitingSetup:[...sessions.values()].filter(s=>!s.ready).length,sessionCapacity:maxSessions,busy:[...sessions.values()].some(s=>s.busy),cooldownMs:Math.max(0,cooldownUntil-now()),setupFailures,setupHttpStatuses,setup:'Each caller gets a fresh visible guest tab. Automatic ordinary UI setup was attempted. If awaiting setup, select a cafe, add a drink, and review the cart. Do not sign in.'};
   },
+  async prepare(sessionKey,{selectedStore}={}){await ensureSession(sessionKey,selectedStore);return {ready:true};},
   async quote(sessionKey,body,{selectedStore}={}){
-   if(now()<cooldownUntil)throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED'});
-   await expire();let state=sessions.get(sessionKey);
-   if(state&&(state.storeNumber!==selectedStore?.sourceStoreNumber||state.page?.isClosed())){await destroy(sessionKey,state);if(sessions.has(sessionKey))throw Error('unavailable');state=null;}
-   if(!state)state=await create(sessionKey,selectedStore);
+   const state=await ensureSession(sessionKey,selectedStore);
    if(state.busy)throw Error('unavailable');
-   if(sessions.get(sessionKey)!==state)throw Error('unavailable');
-   if(!state.ready){await state.page.bringToFront();throw Object.assign(Error('setup required'),{code:'SETUP_REQUIRED'});}
-   if(state.page.isClosed()||new URL(state.page.url()).origin!=='https://www.starbucks.com')throw Error('unavailable');
    state.lastUsed=now();state.busy=true;
    try{
     const result=await state.page.evaluate(async({body,timeoutMs})=>{const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);try{const response=await fetch('/apiproxy/v1/orchestra/price-order-guest',{method:'POST',credentials:'same-origin',redirect:'error',headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest','Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal});if(!response.ok)return {status:response.status,retryAfter:response.headers.get('retry-after')};const text=await response.text();if(text.length>1048576)throw Error('unavailable');return {status:response.status,envelope:JSON.parse(text)};}finally{clearTimeout(timer);}},{body,timeoutMs});
-    if(result.status===429){const numeric=Number(result.retryAfter);const date=Date.parse(result.retryAfter);const delay=result.retryAfter&&Number.isFinite(numeric)?numeric*1000:Number.isFinite(date)?date-now():60000;cooldownUntil=now()+Math.min(3600000,Math.max(60000,delay));throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED'});}
+    if(result.status===429){const numeric=Number(result.retryAfter);const date=Date.parse(result.retryAfter);const delay=result.retryAfter&&Number.isFinite(numeric)?numeric*1000:Number.isFinite(date)?date-now():60000;cooldownUntil=now()+Math.min(3600000,Math.max(60000,delay));throw Object.assign(Error('unavailable'),{code:'RATE_LIMITED',retryAfterMs:Math.max(0,cooldownUntil-now())});}
     if(result.status===401||result.status===403)state.ready=false;
     if(result.status!==200||sessions.get(sessionKey)!==state)throw Error('unavailable');return result.envelope;
    }finally{state.busy=false;state.lastUsed=now();}

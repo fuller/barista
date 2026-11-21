@@ -76,3 +76,7 @@ test('a rejected container start does not persist deployment version',async()=>{
  await assert.rejects(proxy.fetch(request()),/start rejected/);assert.equal(await persisted.get('deploymentVersion'),'v1');
  fails=false;await proxy.fetch(request());assert.equal(await persisted.get('deploymentVersion'),'v2');assert.equal(starts,2);assert.equal(destroys,1);
 });
+test('preparation is admitted only through the authenticated fixed POST route',()=>{
+ assert.equal(admit(request('/prepare'),token),null);assert.equal(admit(request('/prepare',{headers:{}}),token),401);
+ assert.equal(admit(new Request('https://browser.example/prepare',{headers:{Authorization:`Bearer ${token}`}}),token),404);
+});

@@ -85,3 +85,10 @@ test('known upstream rate limits preserve only safe retry metadata',async()=>{
  const service=createStarbucksQuoteService({source:{quote:async()=>{throw new StarbucksGuestError('RATE_LIMITED',429,60000);},clear(){}}});
  await assert.rejects(service.quote('a',input()),error=>error.code==='rate_limited'&&error.status===429&&error.retryAfterMs===60000);
 });
+test('explicit refresh bypasses cached quote but concurrent refreshes share pending work',async()=>{
+ let calls=0,release;const gate=new Promise(resolve=>{release=resolve;});
+ const service=createStarbucksQuoteService({source:{quote:async(_session,body)=>{calls++;if(calls===2)await gate;return response(body);},clear(){}}});
+ await service.quote('session',input());await service.quote('session',input());assert.equal(calls,1);
+ const refreshed=service.quote('session',input(),{forceRefresh:true});await Promise.resolve();assert.equal(calls,2);
+ const duplicate=service.quote('session',input(),{forceRefresh:true});await Promise.resolve();assert.equal(calls,2);release();await Promise.all([refreshed,duplicate]);
+});

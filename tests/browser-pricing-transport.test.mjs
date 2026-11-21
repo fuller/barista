@@ -59,3 +59,20 @@ test('coordinate store lookup executes only fixed location URL and rejects inval
  globalThis.fetch=async(url,options)=>{fetched={url,options};return Response.json([]);};
  try{await transport.searchStores({latitude:0,longitude:-73.986861});assert.equal(fetched.url,'/apiproxy/v1/locations?lat=0&lng=-73.9869');assert.equal(fetched.options.credentials,'same-origin');assert.equal(contexts,1);assert.equal(closed,1);await assert.rejects(transport.searchStores({latitude:0,longitude:181}));assert.equal(contexts,1);}finally{globalThis.fetch=originalFetch;await transport.close();}
 });
+test('prepare and first quote share one guest initialization without a price request during prepare',async()=>{
+ const f=fake();let release,setups=0;const gate=new Promise(resolve=>{release=resolve;});
+ const selectedStore={sourceStoreNumber:'1-1'};
+ const transport=await createHeadedTransport({launch:f.launch,setup:async()=>{setups++;await gate;f.contexts.at(-1).ready();}});
+ try{
+  assert.equal(typeof transport.prepare,'function');
+  const prepared=transport.prepare('caller',{selectedStore});await new Promise(r=>setImmediate(r));
+  const quote=transport.quote('caller',{}, {selectedStore});await new Promise(r=>setImmediate(r));assert.equal(f.contexts.length,1);assert.equal(f.contexts[0].calls,0);
+  release();assert.deepEqual(await prepared,{ready:true});assert.deepEqual(await quote,{ok:true});assert.equal(setups,1);assert.equal(f.contexts[0].calls,1);
+  assert.deepEqual(await transport.prepare('caller',{selectedStore}),{ready:true});assert.equal(setups,1);
+ }finally{release();await transport.close();}
+});
+test('store change during preparation invalidates old setup without recreating its context',async()=>{
+ const f=fake();let release;const gate=new Promise(resolve=>{release=resolve;});let count=0;
+ const transport=await createHeadedTransport({launch:f.launch,setup:async(page,{selectedStore})=>{count++;if(selectedStore.sourceStoreNumber==='1-1')await gate;f.contexts.find(c=>!c.closed)?.ready();}});
+ try{const old=transport.prepare('caller',{selectedStore:{sourceStoreNumber:'1-1'}});await new Promise(r=>setImmediate(r));assert.deepEqual(await transport.prepare('caller',{selectedStore:{sourceStoreNumber:'2-2'}}),{ready:true});release();await assert.rejects(old);assert.equal(f.contexts.length,2);assert.equal(count,2);assert.equal(f.contexts[0].closed,true);assert.equal(transport.status().sessions,1);}finally{release();await transport.close();}
+});

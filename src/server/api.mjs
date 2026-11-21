@@ -9,7 +9,9 @@ import {registerCatalogSnapshot} from '../catalog/service.mjs';
 import {createDecisionCache} from '../adapters/decision-cache.mjs';
 import {createMenuDeciderAdapter} from '../adapters/menu-decider.mjs';
 import menuDirectory from '../catalog/data/starbucks-menu-directory.json' with {type:'json'};
-import {handleQuoteApi,initializeQuoteSession} from './quote-api.mjs';
+import {handleQuoteApi} from './quote-api.mjs';
+import {handlePrepareApi} from './prepare-api.mjs';
+import {getQuoteSession,initializeQuoteSession,quoteCacheScope} from './pricing-session.mjs';
 import {handleStoresApi} from './stores-api.mjs';
 import {browserPricingConfigured} from '../adapters/starbucks-browser-source.mjs';
 registerCatalogSnapshot(previousSnapshot);
@@ -66,8 +68,16 @@ export async function handleApi(request,env={}){
   const result=catalogResponse(request);return new Response(result.body===null?null:JSON.stringify(result.body),{status:result.status,headers:result.headers});
  }
  if(path==='/api/config'&&request.method==='GET'){
-  const available=browserPricingConfigured(env),response=json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{estimated:false,taxCalculated:true,available}});
-  return available?initializeQuoteSession(request,response):response;
+  const available=browserPricingConfigured(env),session=available?getQuoteSession(request):null;
+  const cacheScope=session?await quoteCacheScope(session):null;
+  const response=json({provider,model,questionProfile,scheduling:schedulingValid?scheduling:null,liveAvailable:admissionConfigured(env)&&schedulingValid&&questionProfile!==null&&registry.has(provider)&&Boolean(env.OPENROUTER_API_KEY),pricing:{estimated:false,taxCalculated:true,available,cacheScope}});
+  return available?initializeQuoteSession(request,response,session):response;
+ }
+ if(path==='/api/pricing/prepare'){
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Origin not allowed'},403);
+  const denied=await admitTurn(request,env,'prepare');if(denied)return denied;
+  return handlePrepareApi(request,env);
  }
  if(path==='/api/stores'){const denied=await admitTurn(request,env,'stores');if(denied)return denied;return handleStoresApi(request,env);}
  if(path==='/api/quote'){

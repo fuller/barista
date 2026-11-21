@@ -49,6 +49,7 @@ test('mobile order composer and search remain legible without page overflow',asy
  expect(geometry.content).toBeLessThanOrEqual(geometry.width);
  for(const fontSize of geometry.fields)expect(fontSize).toBeGreaterThanOrEqual(16);
  for(const target of geometry.targets){expect(target.width).toBeGreaterThanOrEqual(44);expect(target.height).toBeGreaterThanOrEqual(44);}
+ await app.screenshot('order-composer-mobile');
 });
 
 

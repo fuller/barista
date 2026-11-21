@@ -37,3 +37,8 @@ test('oversized, malformed and aborted quotes never escape the transport',async(
  const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async()=>{called=true;}});await assert.rejects(source.quote('session',{}, {signal:controller.signal}));assert.equal(called,false);
 });
 test('browser lookup normalizes coordinates and rejects unbounded or extra fields',async()=>{let calls=0;const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async(url,init)=>{calls++;assert.deepEqual(JSON.parse(init.body),{query:{latitude:0,longitude:-73.9869}});return Response.json([]);}});await source.searchStores({latitude:0,longitude:-73.986861});for(const query of [{latitude:91,longitude:0},{latitude:0,longitude:Infinity},{latitude:'0',longitude:0},{latitude:0,longitude:0,url:'https://bad.example'},null,[]])await assert.rejects(source.searchStores(query));assert.equal(calls,1);});
+test('preparation uses fixed authenticated route and strips selection proof from browser metadata',async()=>{
+ let sent;const source=createStarbucksBrowserSource({url:'https://service.example',token,fetchImpl:async(url,init)=>{sent={url,...init};return Response.json({ready:true});}});
+ assert.deepEqual(await source.prepare('caller',{selectedStore:{storeId:'store',selectionToken:'proof'}}),{ready:true});
+ assert.equal(sent.url,'https://service.example/prepare');assert.equal(sent.headers.Authorization,`Bearer ${token}`);assert.deepEqual(JSON.parse(sent.body),{sessionKey:'caller',selectedStore:{storeId:'store'}});
+});

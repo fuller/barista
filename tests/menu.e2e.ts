@@ -10,7 +10,7 @@ async function mockModifierPrices(browser:Browser){
  await browser.route('**/api/config',route=>route.fulfill({json:{liveAvailable:true,provider:'test-fixture',model:'deterministic-test-only',pricing:{available:true}}}));
  await browser.route('**/api/quote',route=>{
   const {order,storeId}=JSON.parse(route.request.postData??'{}'),quote=quoteOrder(order);
-  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:quote.subtotalCents===null?null:0}});
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',estimated:false,storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:quote.subtotalCents===null?null:0}});
  });
 }
 
@@ -60,6 +60,19 @@ test('an invalid refreshed recipe retains the old menu and current cart',async({
  await screen.getByRole('button',{name:'Start new order',exact:true}).click();
  await screen.getByRole('button',{name:'Add Flat White'}).click();
  await expect(screen.getByRole('complementary',{name:'Your order'}).getByRole('heading',{name:'Flat White',exact:true})).toBeVisible();
+});
+
+test('desktop order panel fills the left column with the composer above the cart',async({app,screen,browser})=>{
+ await browser.setViewport({width:1440,height:900});await app.open('/');await chooseStore(screen);
+ await expect(screen.getByRole('textbox',{name:'Tell us your order'})).toBeVisible();
+ const geometry=await browser.evaluate(()=>{const rail=document.querySelector('.order-rail')!.getBoundingClientRect(),menu=document.querySelector('.menu-column')!.getBoundingClientRect(),composer=document.querySelector('.conversation')!.getBoundingClientRect(),cart=document.querySelector('aside.cart')!.getBoundingClientRect();return {rail:{left:rail.left,right:rail.right,top:rail.top,bottom:rail.bottom,height:rail.height},menuLeft:menu.left,composerBottom:composer.bottom,cartTop:cart.top,cartBottom:cart.bottom,height:innerHeight};});
+ expect(geometry.rail.right).toBeLessThan(geometry.menuLeft);
+ expect(geometry.composerBottom).toBeLessThanOrEqual(geometry.cartTop+1);
+ expect(geometry.rail.height).toBeGreaterThanOrEqual(geometry.height-geometry.rail.top-24);
+ expect(geometry.rail.bottom).toBeLessThanOrEqual(geometry.height);
+ await screen.getByRole('button',{name:'Add Caffè Latte',exact:true}).click();
+ await expect(screen.getByRole('complementary',{name:'Your order'}).getByRole('heading',{name:'Caffè Latte',exact:true})).toBeVisible();
+ await app.screenshot('left-order-panel-desktop');
 });
 
 test('first desktop fold exposes drink add actions and the persistent composer',async({app,screen,browser})=>{

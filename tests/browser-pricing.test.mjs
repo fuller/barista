@@ -51,3 +51,15 @@ test('authenticated store lookup validates query and returns only sanitized publ
  const response=await handler(new Request('http://localhost/stores',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify({query:'11201'})}));assert.equal(response.status,200);assert.equal(calls,1);assert.doesNotMatch(await response.text(),/private|secret/);
 });
 test('authenticated coordinate lookup normalizes and strictly validates coordinate payload',async()=>{let calls=0;const handler=createBrowserPricingHandler({token,transport:{searchStores:async query=>{calls++;assert.deepEqual(query,{latitude:0,longitude:-73.9869});return [];}}});for(const query of [{latitude:0,longitude:-73.986861},{latitude:91,longitude:0},{latitude:0,longitude:0,extra:true},{latitude:0},{latitude:'0',longitude:0}]){const response=await handler(new Request('http://localhost/stores',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify({query})}));assert.equal(response.status,calls===1&&query.longitude===-73.986861?200:400);}assert.equal(calls,1);});
+test('authenticated preparation accepts only bounded store and caller metadata and never quotes',async()=>{
+ const selectedStore={storeId:'abc',source:'starbucks',sourceStoreNumber:'85278-313836',name:'Cafe',address:{lines:['1 Main'],city:'Brooklyn',region:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40,longitude:-73}};
+ let calls=0;const handler=createBrowserPricingHandler({token,transport:{prepare:async(key,{selectedStore:store})=>{calls++;assert.equal(key,'caller');assert.deepEqual(store,selectedStore);return {ready:true};},quote:()=>assert.fail('must not quote')}});
+ const req=value=>new Request('http://localhost/prepare',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify(value)});
+ for(const value of [{sessionKey:'caller'},{sessionKey:'caller',selectedStore:{...selectedStore,sourceStoreNumber:'not-a-store'}},{sessionKey:'caller',selectedStore,body:{}}])assert.equal((await handler(req(value))).status,400);
+ const response=await handler(req({sessionKey:'caller',selectedStore}));assert.equal(response.status,200);assert.deepEqual(await response.json(),{ready:true});assert.equal(calls,1);
+});
+test('preparation rate limits retain bounded retry metadata without provider details',async()=>{
+ const selectedStore={storeId:'abc',source:'starbucks',sourceStoreNumber:'85278-313836',name:'Cafe',address:{lines:['1 Main'],city:'Brooklyn',region:'NY',postalCode:'11201',countryCode:'US'},coordinates:{latitude:40,longitude:-73}};
+ const handler=createBrowserPricingHandler({token,transport:{prepare:async()=>{throw Object.assign(Error('private browser token'),{code:'RATE_LIMITED',retryAfterMs:120000});}}});
+ const response=await handler(new Request('http://localhost/prepare',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify({sessionKey:'caller',selectedStore})}));assert.equal(response.status,429);assert.equal(response.headers.get('Retry-After'),'120');assert.deepEqual(await response.json(),{error:'rate_limited'});
+});

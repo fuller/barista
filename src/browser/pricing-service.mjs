@@ -36,6 +36,11 @@ export function createBrowserPricingHandler({token,transport}){
    let query;try{const text=await request.text();if(text.length>1024)throw Error();const input=JSON.parse(text);if(!input||Object.keys(input).join(',')!=='query')throw Error();query=validateStoreQuery(input.query);}catch{return Response.json({error:'invalid_request'},{status:400});}
    try{return Response.json(sanitizePublicStores(await transport.searchStores(query)),{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});}
   }
+  if(url.pathname==='/prepare'&&request.method==='POST'){
+   let input,selectedStore;
+   try{const text=await request.text();if(text.length>8192)throw Error();input=JSON.parse(text);if(!input||Object.keys(input).sort().join(',')!=='selectedStore,sessionKey'||typeof input.sessionKey!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(input.sessionKey))throw Error();selectedStore=validateSelectedStore(input.selectedStore,input.selectedStore?.sourceStoreNumber);}catch{return Response.json({error:'invalid_request'},{status:400});}
+   try{const result=await transport.prepare(input.sessionKey,{selectedStore});if(result?.ready!==true)throw Error();return Response.json({ready:true},{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:error?.code==='RATE_LIMITED'?'rate_limited':error?.code==='SETUP_REQUIRED'?'setup_required':'unavailable'},{status:error?.code==='RATE_LIMITED'?429:503,headers:{'Cache-Control':'no-store',...(error?.code==='RATE_LIMITED'?{'Retry-After':String(Math.max(1,Math.ceil((error.retryAfterMs??60000)/1000)))}:{})}});}
+  }
   if(url.pathname==='/clear' &&request.method==='POST'){try{const text=await request.text();if(text.length>256)throw Error();const value=JSON.parse(text);if(Object.keys(value).join(',')!=='sessionKey'||typeof value.sessionKey!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(value.sessionKey))throw Error();await transport.clear(value.sessionKey);return Response.json({cleared:true});}catch{return Response.json({error:'invalid_request'},{status:400});}}
   if(url.pathname!=='/quote'||request.method!=='POST')return Response.json({error:'not_found'},{status:404});
   let input,body,selectedStore;

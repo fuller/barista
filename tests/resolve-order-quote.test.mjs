@@ -8,6 +8,19 @@ import {resolveOrderQuote} from '../src/application/resolve-order-quote.mjs';
 const product=directory.products.find(p=>p.identity==='407:Hot');
 const menu=(instructions=[],size='Grande',quantity=1)=>applyCommands(createOrder(),[{type:'add-menu',identity:product.identity,size,quantity,instructions}]);
 const options={directory,catalog,resolveProduct:async()=>detail};
+test('independent size details overlap with at most four fetches and retain cart order',async()=>{
+ const products=directory.products.filter(p=>p.defaultSize?.displayName!=='Tall'&&p.sizes.some(s=>s.sizeCode==='Tall')).slice(0,6);
+ const order=applyCommands(createOrder(),products.map(p=>({type:'add-menu',identity:p.identity,size:'Tall'})));
+ let release;const gate=new Promise(resolve=>{release=resolve;});let started=0,active=0,peak=0;
+ const result=resolveOrderQuote(order,{...options,resolveProduct:async identity=>{started++;active++;peak=Math.max(peak,active);await gate;active--;const p=products.find(p=>p.identity===identity);return {products:[{productNumber:p.productNumber,formCode:p.formCode,sizes:[{sizeCode:'Tall',sku:'41'}]}]};}});
+ try{await new Promise(resolve=>setImmediate(resolve));assert.equal(started,4);assert.equal(peak,4);}finally{release();}
+ const quote=await result;assert.equal(peak,4);assert.deepEqual(quote.items.map(i=>i.itemId),order.menuItems.map(i=>i.id));
+});
+test('one resolution shares product details across identical menu identities',async()=>{
+ const order=applyCommands(createOrder(),Array.from({length:3},()=>({type:'add-menu',identity:product.identity,size:'Tall'})));let calls=0;
+ const quote=await resolveOrderQuote(order,{...options,resolveProduct:async()=>{calls++;return detail;}});
+ assert.equal(calls,1);assert.equal(quote.items.length,3);
+});
 test('selected menu size resolves exact detail SKU',async()=>assert.deepEqual((await resolveOrderQuote(menu([],'Tall'),options)).items,[{itemId:'menu-1',sku:'41',quantity:1,modifiers:[]}]));
 test('default menu size uses trusted directory SKU without detail',async()=>{const q=await resolveOrderQuote(menu([],null),{...options,resolveProduct:()=>{throw Error('not called')}});assert.equal(q.items[0].sku,product.defaultSize.sku)});
 test('plain exact name and limited wrapper grammar resolve',async()=>{for(const text of ['Grande Caffè Latte','Can I get a grande hot latte please?','I would like one grande latte.'])assert.equal((await resolveOrderQuote(menu([text]),options)).items.length,1,text)});

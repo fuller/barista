@@ -6,13 +6,10 @@ import directory from '../catalog/data/starbucks-menu-directory.json' with {type
 import {currentCatalogSnapshot,getCatalogService} from '../catalog/service.mjs';
 import {createStarbucksWebsiteSource} from '../adapters/starbucks-website.mjs';
 import {storeServices} from './stores-api.mjs';
+import {getQuoteSession,initializeQuoteSession,quoteCacheScope} from './pricing-session.mjs';
+export {initializeQuoteSession} from './pricing-session.mjs';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const handlers=new WeakMap();
-export function initializeQuoteSession(request,response){
- const matches=(request.headers.get('Cookie')??'').split(';').map(c=>c.trim()).filter(c=>c.startsWith('barista_quote='));
- if(matches.length===1&&/^barista_quote=[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(matches[0]))return response;
- response.headers.set('Set-Cookie',`barista_quote=${crypto.randomUUID()}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=900${new URL(request.url).protocol==='https:'?'; Secure':''}`);return response;
-}
 async function readInput(request){
  const reader=request.body?.getReader();if(!reader)throw Error();let size=0;const chunks=[];
  for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536){await reader.cancel();throw Object.assign(Error(),{status:413});}chunks.push(value);}
@@ -28,11 +25,8 @@ export function createQuoteApi({resolveOrder,service,verifyStore=async()=>{throw
   if(!request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'Use application/json'},415);
   let input,order,selectedStore;try{input=await readInput(request);order=input.order;}catch(error){return json({error:'Invalid price request'},error.status??400);}
   try{selectedStore=await verifyStore(input.storeId,input.selectionToken);}catch{return json({error:'Choose your store again to refresh live prices.',code:'store_selection_required'},400);}
-  const cookies=(request.headers.get('Cookie')??'').split(';').map(c=>c.trim()).filter(c=>c.startsWith('barista_quote='));
-  const supplied=cookies.length===1?cookies[0].slice('barista_quote='.length):'';
-  const valid=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(supplied);
-  const session=valid?supplied:crypto.randomUUID();
-  const withCookie=response=>{if(!valid)response.headers.set('Set-Cookie',`barista_quote=${session}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=900${url.protocol==='https:'?'; Secure':''}`);return response;};
+  const session=getQuoteSession(request),cacheScope=await quoteCacheScope(session);
+  const withCookie=response=>initializeQuoteSession(request,response,session);
   if(resolving>=8)return withCookie(json({error:'Pricing is busy'},503));
   resolving++;
   let stage='resolve';
@@ -40,11 +34,11 @@ export function createQuoteApi({resolveOrder,service,verifyStore=async()=>{throw
    const {items,unpriced}=await resolveOrder(order,{signal:request.signal});
    request.signal.throwIfAborted();
    stage='quote';
-   const price=items.length?await service.quote(session,{storeNumber:selectedStore.sourceStoreNumber,items},{signal:request.signal,selectedStore}):{currency:'USD',estimated:false,source:'starbucks',storeNumber:selectedStore.sourceStoreNumber,expiresAt:now()+60000,items:[],subtotalCents:0,taxCents:0,totalCents:0,taxLabel:'Tax',provenance:'No verified prices for this configuration'};
+   const price=items.length?await service.quote(session,{storeNumber:selectedStore.sourceStoreNumber,items},{signal:request.signal,selectedStore,forceRefresh:request.headers.get('X-Price-Refresh')==='1'}):{currency:'USD',estimated:false,source:'starbucks',storeNumber:selectedStore.sourceStoreNumber,expiresAt:now()+60000,items:[],subtotalCents:0,taxCents:0,totalCents:0,taxLabel:'Tax',provenance:'No verified prices for this configuration'};
    stage='response';
    const lines=[...order.items,...(order.menuItems??[])];
    const unavailable=new Set(unpriced.map(item=>item.itemId));
-   const result={...price,storeId:selectedStore.storeId,revision:order.revision,unavailable:unpriced,items:lines.map(item=>price.items.find(line=>line.itemId===item.id)??{itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})};
+   const result={...price,cacheScope,storeId:selectedStore.storeId,revision:order.revision,unavailable:unpriced,items:lines.map(item=>price.items.find(line=>line.itemId===item.id)??{itemId:item.id,quantity:item.quantity,unitCents:null,totalCents:null,lines:[]})};
    if(unavailable.size){result.pricedSubtotalCents=price.subtotalCents;result.unpricedItemCount=lines.filter(item=>unavailable.has(item.id)).reduce((n,item)=>n+item.quantity,0);result.subtotalCents=null;result.taxCents=null;result.totalCents=null;result.taxLabel='Tax unavailable';}
    const response=json(result);
    return withCookie(response);

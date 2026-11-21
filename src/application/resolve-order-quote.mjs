@@ -45,20 +45,27 @@ export async function resolveOrderQuote(order,{directory,catalog,resolveProduct,
   if(Object.entries(defaults).some(([key,value])=>!['quantity'].includes(key)&&!same(item[key],value))){unavailable(item,'unsupported_configuration');continue;}
   items.push(configured(item,size.sku));
  }
- for(const item of order.menuItems??[]){
+ const menu=order.menuItems??[],results=new Array(menu.length),details=new Map();let next=0;
+ const resolveMenuLine=async item=>{
   signal?.throwIfAborted();
+  const missing=reason=>({unpriced:{itemId:item.id,reason}});
   const product=directory.products.find(p=>p.identity===item.identity);
-  if(!product||item.size!==null&&!product.sizes.some(s=>s.sizeCode===item.size)){unavailable(item,'product_unavailable');continue;}
-  if(item.instructions.some(text=>!plainInstruction(text,item,product))){unavailable(item,'unsupported_instructions');continue;}
-  if(item.size===null||item.size===product.defaultSize?.displayName){if(validSku(product.defaultSize?.sku))items.push(configured(item,product.defaultSize.sku));else unavailable(item,'size_unavailable');continue;}
+  if(!product||item.size!==null&&!product.sizes.some(s=>s.sizeCode===item.size))return missing('product_unavailable');
+  if(item.instructions.some(text=>!plainInstruction(text,item,product)))return missing('unsupported_instructions');
+  if(item.size===null||item.size===product.defaultSize?.displayName)return validSku(product.defaultSize?.sku)?{item:configured(item,product.defaultSize.sku)}:missing('size_unavailable');
   try{
-   const raw=await resolveProduct(product.identity,{signal});
+   if(!details.has(product.identity))details.set(product.identity,Promise.resolve().then(()=>{signal?.throwIfAborted();return resolveProduct(product.identity,{signal});}));
+   const raw=await details.get(product.identity);
    signal?.throwIfAborted();
    const matches=raw?.products?.filter(p=>String(p.productNumber)===product.productNumber&&p.formCode===product.formCode);
    const sizes=matches?.length===1?matches[0].sizes?.filter(s=>s.sizeCode===item.size):[];
-   if(sizes?.length!==1||!validSku(sizes[0].sku)){unavailable(item,'size_unavailable');continue;}
-   items.push(configured(item,sizes[0].sku));
-  }catch(error){signal?.throwIfAborted();if(error?.name==='AbortError')throw error;unavailable(item,'product_unavailable');}
- }
+   if(sizes?.length!==1||!validSku(sizes[0].sku))return missing('size_unavailable');
+   return {item:configured(item,sizes[0].sku)};
+  }catch(error){signal?.throwIfAborted();if(error?.name==='AbortError')throw error;return missing('product_unavailable');}
+ };
+ await Promise.all(Array.from({length:Math.min(4,menu.length)},async()=>{
+  for(;;){signal?.throwIfAborted();const index=next++;if(index>=menu.length)return;results[index]=await resolveMenuLine(menu[index]);}
+ }));
+ for(const result of results){if(result.item)items.push(result.item);else unpriced.push(result.unpriced);}
  return {items,unpriced};
 }

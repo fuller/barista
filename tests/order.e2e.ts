@@ -9,7 +9,7 @@ beforeEach(async({browser})=>{
  await browser.route('**/api/quote',route=>{
   const {order,storeId}=JSON.parse(route.request.postData??'{}') as {order:Order;storeId:string};
   const quote=quoteOrder(order);
-  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:0}});
+  return route.fulfill({json:{...quote,revision:order.revision,source:'starbucks',estimated:false,storeId,storeNumber:'85278-313836',expiresAt:Date.now()+60000,taxCents:0}});
  });
 });
 
